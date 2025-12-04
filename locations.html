@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Users’ locations</title>
+	<link rel="stylesheet" href="styles.css">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+	<style>
+		/* estilos mínimos para lista de perfiles y mini-mapas */
+		.locations-list-container, .profile-item { box-sizing: border-box; }
+		.profile-item { display:flex; gap:12px; align-items:flex-start; padding:10px; border-bottom:1px solid #eee; }
+		.profile-left { width:60px; flex:0 0 60px; }
+		.profile-avatar { width:56px; height:56px; border-radius:50%; object-fit:cover; display:block; }
+		.avatar-placeholder { width:56px; height:56px; border-radius:50%; background:#ddd; display:flex; align-items:center; justify-content:center; color:#666; font-weight:bold; }
+		.profile-main { flex:1; min-width:0; }
+		.profile-name { font-size:15px; }
+		.profile-info { margin-bottom:8px; color:#333; }
+		.profile-edit { display:flex; gap:8px; }
+		.location-input { flex:1; padding:6px 8px; border:1px solid #ccc; border-radius:4px; }
+		.save-location-btn { padding:6px 10px; border:0; background:#1a3a5c; color:#fff; border-radius:4px; cursor:pointer; }
+		.mini-map { width:180px; height:140px; flex:0 0 180px; border:1px solid #e6e6e6; border-radius:4px; overflow:hidden; }
+		@media (max-width:600px) {
+			.profile-item { flex-direction:column; }
+			.mini-map { width:100%; height:160px; flex:0 0 auto; margin-top:8px; }
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<nav class="navbar">
+			<div class="nav-texts">
+				<a href="index.html" class="nav-text-btn">Volver</a>
+				<span style="color:rgba(26,58,92,0.7);margin-left:8px">Ubicaciones</span>
+			</div>
+		</nav>
+	</header>
+	<main>
+		<div class="locations-list-container" id="locationsListContainer">
+			<!-- Perfiles se renderizan aquí -->
+		</div>
+	</main>
+
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+	<script src="locations.js"></script>
+</body>
+</html>

@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A1 Analytics - Sistema de Análisis Educativo Personalizado</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        /* Estilos específicos para el index */
+        body {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            margin: 0;
+            padding: 0;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #1a3a5c 0%, #0f2847 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 3px 12px rgba(26, 58, 92, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .hero-section h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-section p {
+            font-size: 14px;
+            max-width: 900px;
+            margin: 0 auto 20px;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+
+        .hero-google-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            color: #1f2937;
+            border: 2px solid #d4af37;
+            padding: 10px 18px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .hero-google-btn:hover {
+            background: #f0f0f0;
+            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Sidebar único a la izquierda */
+        /* Desktop: make sidebar part of the layout flow so it does not overlap content
+           and each layout column respects document order. On small screens the sidebar
+           reverts to overlay behavior. */
+        .avatar-section {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .sidebar {
+            position: relative;
+            width: 16px; /* collapsed width - narrow but visible stripe */
+            min-width: 16px;
+            height: calc(100vh - 80px);
+            max-height: calc(100vh - 80px); /* Respect max height, leave room for header */
+            background: transparent;
+            box-shadow: none;
+            transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            color: white;
+            overflow: hidden;
+            border-right: 4px solid #d4af37;
+            margin-right: 0;
+        }
+
+        /* Expanded state on hover only */
+        .sidebar:hover {
+            width: 280px;
+            min-width: 280px;
+            overflow: visible;
+            background: linear-gradient(180deg, #1a3a5c 0%, #0f2847 100%);
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+            max-height: calc(100vh - 80px); /* Keep max-height when expanded */
+        }
+
+        .avatar-container {
+            flex: 1 1 auto;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* On mobile: overlay behavior */
+        @media (max-width: 900px) {
+            .sidebar {
+                position: absolute;
+                top: 0;
+                left: -250px;
+                height: 100%;
+                box-shadow: 3px 0 15px rgba(0, 0, 0, 0.3);
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                z-index: 50;
+            }
+            .sidebar:hover { left: 0; }
+        }
+
+        /* Hide all interactive content when sidebar is collapsed (not hovered) - via opacity in elements above */
+
+        .sidebar-header {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 2px solid #d4af37;
+            flex-shrink: 0;
+            background: linear-gradient(180deg, #0f2847 0%, #1a3a5c 100%);
+            opacity: 0;
+            transition: opacity 0.3s 0.1s ease;
+        }
+
+        .sidebar:hover .sidebar-header {
+            opacity: 1;
+        }
+
+        .sidebar-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            border: 3px solid #d4af37;
+            display: block;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.3s 0.15s ease;
+        }
+
+        .sidebar:hover .sidebar-avatar {
+            opacity: 1;
+        }
+
+        .sidebar-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #d4af37;
+            margin-bottom: 8px;
+            word-break: break-word;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+
+        .sidebar:hover .sidebar-name {
+            opacity: 1;
+        }
+
+        .sidebar-email {
+            font-size: 12px;
+            color: #e0e0e0;
+            word-break: break-all;
+            line-height: 1.4;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+
+        .sidebar:hover .sidebar-email {
+            opacity: 1;
+        }
+
+        .sidebar-login-message {
+            text-align: center;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            opacity: 0;
+            transition: opacity 0.3s 0.1s ease;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .sidebar:hover .sidebar-login-message {
+            opacity: 1;
+        }
+
+        .sidebar-person-widget {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #d4af37 0%, #e4c961 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+            border: 3px solid white;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s 0.15s ease;
+        }
+
+        .sidebar:hover .sidebar-person-widget {
+            opacity: 1;
+        }
+
+        /* Cabeza - círculo pequeño */
+        .sidebar-person-widget::before {
+            content: '';
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+        }
+
+        /* Cuerpo - rectángulo redondeado */
+        .sidebar-person-widget::after {
+            content: '';
+            position: absolute;
+            width: 32px;
+            height: 28px;
+            background: white;
+            border-radius: 6px 6px 0 0;
+            top: 38px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        .sidebar-login-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+
+        .sidebar:hover .sidebar-login-text {
+            opacity: 1;
+        }
+
+        .sidebar-login-subtext {
+            font-size: 12px;
+            color: #e0e0e0;
+            text-align: center;
+            line-height: 1.5;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+
+        .sidebar:hover .sidebar-login-subtext {
+            opacity: 1;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            opacity: 0;
+            transition: opacity 0.3s 0.1s ease;
+            max-height: calc(100vh - 220px); /* Leave room for header + avatar section */
+        }
+
+        .sidebar:hover .sidebar-content {
+            opacity: 1;
+        }
+
+        .sidebar-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 3px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb:hover {
+            background: #e4c961;
+        }
+
+        /* === NUEVO LAYOUT DE MENÚ DE SESIÓN === */
+        .sidebar-menu-layout {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .sidebar-menu-header {
+            flex-shrink: 0;
+            padding: 15px 20px;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+            background: linear-gradient(180deg, rgba(15, 40, 71, 0.5) 0%, rgba(26, 58, 92, 0.3) 100%);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+
+        .sidebar:hover .sidebar-menu-header {
+            opacity: 1;
+        }
+
+        .sidebar-menu-body {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 10px 0;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+
+        .sidebar:hover .sidebar-menu-body {
+            opacity: 1;
+        }
+
+        .sidebar-menu-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-menu-body::-webkit-scrollbar-track {
+            background: rgba(212, 175, 55, 0.05);
+            margin: 10px 0;
+        }
+
+        .sidebar-menu-body::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 3px;
+            min-height: 30px;
+        }
+
+        .sidebar-menu-body::-webkit-scrollbar-thumb:hover {
+            background: #e4c961;
+            box-shadow: 0 0 6px rgba(212, 175, 55, 0.4);
+        }
+
+        .sidebar-menu-footer {
+            flex-shrink: 0;
+            padding: 15px 20px;
+            border-top: 2px solid rgba(212, 175, 55, 0.3);
+            background: linear-gradient(180deg, rgba(26, 58, 92, 0.3) 0%, rgba(15, 40, 71, 0.5) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar:hover .sidebar-menu-footer {
+            opacity: 1;
+        }
+
+        .sidebar-menu-footer {
+            flex-shrink: 0;
+            padding: 15px 20px;
+            border-top: 2px solid rgba(212, 175, 55, 0.3);
+            background: linear-gradient(180deg, rgba(26, 58, 92, 0.3) 0%, rgba(15, 40, 71, 0.5) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 3px;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: #e4c961;
+        }
+        /* === FIN NUEVO LAYOUT === */
+        .sidebar-login-message::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-login-message::-webkit-scrollbar-track {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .sidebar-login-message::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 3px;
+        }
+
+        .sidebar-login-message::-webkit-scrollbar-thumb:hover {
+            background: #e4c961;
+        }
+
+        .sidebar-menu {
+            margin: 10px 0;
+            padding: 0 15px;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+
+        .sidebar:hover .sidebar-menu {
+            opacity: 1;
+        }
+
+        .sidebar-menu-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #d4af37;
+            text-transform: uppercase;
+            margin: 15px 0 8px 0;
+            letter-spacing: 1px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-menu-title::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 14px;
+            background: linear-gradient(180deg, #d4af37 0%, #e4c961 100%);
+            border-radius: 2px;
+        }
+
+        .sidebar-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            margin: 4px 0;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #e0e0e0;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+
+        .sidebar-menu-item::after {
+            content: '';
+            position: absolute;
+            right: 10px;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 0;
+            border-top: 4px solid #d4af37;
+            border-bottom: 4px solid #d4af37;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-menu-item:hover {
+            background: rgba(212, 175, 55, 0.15);
+            color: #d4af37;
+            border-left-color: #d4af37;
+            transform: translateX(4px);
+            padding-right: 20px;
+        }
+
+        .sidebar-menu-item:hover::after {
+            border-left: 4px solid #d4af37;
+            border-right: 4px solid transparent;
+            right: 6px;
+            opacity: 1;
+        }
+
+        .sidebar-menu-icon {
+            font-size: 16px;
+            min-width: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: inherit;
+            flex-shrink: 0;
+        }
+
+        .sidebar-menu-icon svg {
+            color: #d4af37;
+            filter: drop-shadow(0 0 2px rgba(212, 175, 55, 0.2));
+        }
+
+        .sidebar-menu-item:hover .sidebar-menu-icon svg {
+            filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.4));
+        }
+
+        .sidebar-user-info {
+            background: rgba(212, 175, 55, 0.15);
+            padding: 12px 15px;
+            margin: 10px 15px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #e0e0e0;
+            border-left: 3px solid #d4af37;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+
+        .sidebar:hover .sidebar-user-info {
+            opacity: 1;
+        }
+
+        .sidebar-user-info-label {
+            color: #d4af37;
+            font-weight: bold;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-user-info-value {
+            word-break: break-all;
+            line-height: 1.4;
+            color: #ffffff;
+            font-size: 11px;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #d4af37 0%, #e4c961 100%);
+            color: #0f2847;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 90%;
+            max-width: 200px;
+            flex-shrink: 0;
+            opacity: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+        }
+
+        .sidebar:hover .logout-btn {
+            opacity: 1;
+        }
+
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #e4c961 0%, #f0d960 100%);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .logout-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(212, 175, 55, 0.3);
+        }
+
+        .nav-button:hover {
+            background: linear-gradient(90deg, #2a5a7c 0%, #1a3a5c 100%);
+            box-shadow: 0 4px 12px rgba(26, 58, 92, 0.3);
+            transform: translateY(-2px);
+            border-color: #e4c961;
+        }
+
+        .info-section {
+            flex: 1;
+        }
+
+        .info-section h3 {
+            color: #1a3a5c;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .info-description {
+            color: #666666;
+            line-height: 1.6;
+            margin-bottom: 18px;
+            font-size: 12px;
+        }
+
+        .subsections {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+            margin-top: 18px;
+        }
+
+        .subsection {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 3px solid #d4af37;
+        }
+
+        .subsection h4 {
+            color: #1a3a5c;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .subsection p {
+            color: #666666;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .sub-button {
+            background: #1a3a5c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            text-decoration: none;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        .sub-button:hover {
+            background: #2a5a7c;
+            box-shadow: 0 2px 6px rgba(26, 58, 92, 0.3);
+        }
+
+        .footer-section {
+            background: #1a3a5c;
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .footer-section p {
+            margin: 6px 0;
+            font-size: 12px;
+        }
+
+        .footer-section a {
+            color: #d4af37;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: #e4c961;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .avatar-container {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-section h1 {
+                font-size: 22px;
+            }
+        }
+        /* Toast notification (bottom-right) */
+        #toastContainer {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            background: rgba(17,24,39,0.95);
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 8px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+            transform: translateY(20px) translateX(10px) scale(0.98);
+            opacity: 0;
+            transition: transform 300ms ease, opacity 300ms ease;
+            max-width: 340px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            line-height: 1.2;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0) translateX(0) scale(1);
+        }
+
+        .toast.hide {
+            opacity: 0;
+            transform: translateY(20px) translateX(10px) scale(0.98);
+        }
+
+        .toast-message { flex: 1; }
+
+        .toast-close {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            opacity: 0.9;
+        }
+
+        /* === ESTILOS PARA VENTANAS FLOTANTES (MODALES) === */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 2px solid #d4af37;
+            background: linear-gradient(135deg, #1a3a5c 0%, #0f2847 100%);
+            color: white;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: bold;
+            color: #d4af37;
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            font-size: 28px;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close-btn:hover {
+            color: #d4af37;
+            transform: scale(1.2);
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .modal-body h3 {
+            color: #1a3a5c;
+            font-size: 16px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .modal-body p {
+            margin: 10px 0;
+            text-align: justify;
+        }
+
+        .modal-body ul, .modal-body ol {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+
+        .modal-body li {
+            margin: 5px 0;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 2px solid #d4af37;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .modal-btn-close {
+            background: linear-gradient(135deg, #d4af37 0%, #e4c961 100%);
+            color: #0f2847;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn-close:hover {
+            background: linear-gradient(135deg, #e4c961 0%, #f0d960 100%);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5);
+        }
+        /* === FIN ESTILOS MODALES === */
+    </style>
+</head>
+<body>
+    <!-- Header / Navigation -->
+    <header style="position: relative; z-index: 1001; background: linear-gradient(180deg, #1a3a5c 0%, #0f2847 100%); box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+        <div class="navbar" style="flex-direction: row; align-items: center; gap: 20px; padding: 20px; justify-content: space-between;">
+            <div style="text-align: left; flex: 1;">
+                <h2 style="font-size: 24px; margin: 0 0 8px 0; font-weight: bold; color: white;">A1 Analytics - Sistema Educativo Integral</h2>
+                <p style="font-size: 13px; margin: 0; color: #e0e0e0;">Plataforma especializada en análisis estadístico y seguimiento personalizado del desempeño estudiantil con fines educativos</p>
+            </div>
+
+            <!-- Contenedor para botón de Google (solo si no hay sesión) -->
+            <div id="loginContainer" style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px;"></div>
+        </div>
+    </header>
+
+    <!-- Sección de Avatar con Navegación -->
+    <div class="avatar-section">
+        <!-- Sidebar único a la izquierda - DENTRO DE AVATAR-SECTION -->
+        <div id="sidebar" class="sidebar">
+            <!-- Contenido cuando NO hay sesión -->
+            <div id="sidebarLoginContent" class="sidebar-login-message" style="display: flex;">
+                <div class="sidebar-person-widget"></div>
+                <div class="sidebar-login-text">Inicia Sesión</div>
+                <div class="sidebar-login-subtext">Haz clic en el botón de Google en el encabezado para acceder a tu cuenta</div>
+            </div>
+
+            <!-- Contenido cuando SÍ hay sesión -->
+            <div id="sidebarSessionContent" style="display: none; flex-direction: column; height: 100%; overflow: hidden; gap: 0;">
+                <div class="sidebar-header">
+                    <img id="sidebarAvatar" class="sidebar-avatar" alt="Avatar">
+                    <div class="sidebar-name" id="sidebarName"></div>
+                    <div class="sidebar-email" id="sidebarEmail"></div>
+                </div>
+                <div class="sidebar-menu-layout">
+                    <div class="sidebar-menu-header">
+                        <span style="font-weight: bold; color: #d4af37;">Menú de Navegación</span>
+                    </div>
+                    <div class="sidebar-menu-body">
+                        <div id="sidebarMenuContainer"></div>
+                    </div>
+                    <div class="sidebar-menu-footer">
+                        <button class="logout-btn" id="logoutBtn" onclick="handleLogout()">Cerrar Sesión</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="avatar-container">
+            <div class="info-section" style="grid-column: 1 / -1;">
+                <h3>Centro de Información y Análisis</h3>
+                <p class="info-description">
+                    A1 Analytics es un sistema de gestión y análisis educativo para instituciones académicas. Integra herramientas estadísticas avanzadas, visualización de datos en tiempo real y análisis predictivos. Permite identificar patrones, fortalezas, áreas de mejora y tendencias académicas de cada estudiante.
+                </p>
+
+                <div class="subsections">
+                    <div class="subsection">
+                        <h4>Análisis Estadístico</h4>
+                        <p>Visualiza datos académicos mediante gráficos interactivos, métricas de desempeño, distribuciones de calificaciones y análisis comparativos entre períodos académicos.</p>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Seguimiento Personalizado</h4>
+                        <p>Monitorea el progreso individual de cada estudiante con indicadores personalizados, metas académicas, alertas de desempeño y recomendaciones adaptadas.</p>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Calendario Académico</h4>
+                        <p>Organiza eventos académicos, períodos de evaluación, fechas límite y actividades importantes en un calendario visual e integrado.</p>
+                        <a href="calendar.html" class="sub-button">Ver Calendario</a>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Análisis Predictivo Neural</h4>
+                        <p>Utiliza modelos de inteligencia artificial para predecir tendencias futuras e identificar estudiantes en riesgo.</p>
+                        <a href="neural.html" class="sub-button">Ir a Predicciones</a>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Ciclos Educativos</h4>
+                        <p>Administra ciclos académicos, compara períodos, analiza evoluciones y mantén histórico completo de desempeño académico.</p>
+                        <a href="cycle.html" class="sub-button">Gestionar Ciclos</a>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Ubicaciones y Sedes</h4>
+                        <p>Organiza y administra diferentes sedes, salones y espacios educativos con seguimiento integral de estudiantes.</p>
+                        <a href="locations.html" class="sub-button">Ver Ubicaciones</a>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Base de Datos</h4>
+                        <p>Consulta y visualiza todos los perfiles de estudiantes con funciones de búsqueda avanzada para filtrar y analizar información.</p>
+                        <a href="database.html" class="sub-button">Ver Base de Datos</a>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Biblioteca Digital [LIB]</h4>
+                        <p>Base de datos colaborativa donde usuarios y administradores publican, organizan y buscan información académica con herramientas avanzadas de edición y clasificación alfabética automática.</p>
+                        <a href="biblioteca.html" class="sub-button">Acceder a Biblioteca</a>
+                    </div>
+                </div>
+
+                <div style="background: #e8f1f8; padding: 15px; border-radius: 4px; margin-top: 20px;">
+                    <p style="color: #1a3a5c; font-size: 12px; line-height: 1.6; margin-bottom: 10px;">
+                        <strong>Fines Educativos:</strong> Este sistema está desarrollado con objetivos pedagógicos claros: mejorar la calidad de la educación, facilitar la equidad en el acceso a información relevante, y potenciar las capacidades de docentes para intervenir de manera oportuna.
+                    </p>
+                    <p style="color: #1a3a5c; font-size: 12px; line-height: 1.6;">
+                        <strong>Seguridad:</strong> Todos los datos están encriptados, las conexiones son seguras (HTTPS), y cumplimos con normativas de protección de datos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-section">
+        <p><strong>A1 Analytics</strong> - Sistema Integral de Análisis Educativo</p>
+        <p>© 2026 - Plataforma para el Seguimiento Personalizado de Desempeño Estudiantil</p>
+        <p style="font-size: 12px;">Desarrollado con fines educativos | <a href="#" onclick="openModal('termsModal'); return false;">Términos de Servicio</a> | <a href="#" onclick="openModal('privacyModal'); return false;">Políticas de Privacidad</a></p>
+    </div>
+
+    <!-- MODALES FLOTANTES -->
+    <!-- Modal: Términos de Servicio -->
+    <div id="termsModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Términos de Servicio</h2>
+                <button class="modal-close-btn" onclick="closeModal('termsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3>1. Aceptación de Términos</h3>
+                <p>Al acceder y utilizar A1 Analytics, aceptas estar vinculado por estos Términos de Servicio. Si no estás de acuerdo con alguno de estos términos, no utilices el servicio.</p>
+
+                <h3>2. Descripción del Servicio</h3>
+                <p>A1 Analytics es una plataforma de análisis educativo que proporciona herramientas para el seguimiento del desempeño estudiantil, análisis estadísticos, predicciones basadas en IA y gestión de información académica.</p>
+
+                <h3>3. Uso Autorizado</h3>
+                <p>El acceso a A1 Analytics está limitado a usuarios autorizados por instituciones educativas. Los usuarios se comprometen a utilizar la plataforma exclusivamente para propósitos educativos y de acuerdo con la ley aplicable.</p>
+
+                <h3>4. Responsabilidades del Usuario</h3>
+                <ul>
+                    <li>Mantener confidencial la información de acceso de su cuenta</li>
+                    <li>No compartir credenciales con terceros no autorizados</li>
+                    <li>Reportar inmediatamente cualquier acceso no autorizado</li>
+                    <li>No realizar ni participar en actividades ilegales o dañinas</li>
+                </ul>
+
+                <h3>5. Limitación de Responsabilidad</h3>
+                <p>A1 Analytics se proporciona "tal como está" sin garantías explícitas o implícitas. No nos responsabilizamos por daños indirectos, incidentales, especiales o consecuentes derivados del uso de la plataforma.</p>
+
+                <h3>6. Modificación de Términos</h3>
+                <p>Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios serán efectivos inmediatamente después de su publicación. El uso continuado de la plataforma implica la aceptación de los términos modificados.</p>
+
+                <h3>7. Terminación de Servicios</h3>
+                <p>Podemos suspender o terminar el acceso a la plataforma si violás estos términos o incumples con las políticas de seguridad y uso aceptable.</p>
+
+                <h3>8. Otros</h3>
+                <p>Estos términos constituyen el acuerdo completo entre tú y A1 Analytics respecto al uso de la plataforma. Si alguna disposición es inválida, las disposiciones restantes permanecerán en vigor.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn-close" onclick="closeModal('termsModal')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Políticas de Privacidad -->
+    <div id="privacyModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Políticas de Privacidad</h2>
+                <button class="modal-close-btn" onclick="closeModal('privacyModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3>1. Información que Recopilamos</h3>
+                <p>A1 Analytics recopila información necesaria para proporcionar nuestros servicios, incluyendo:</p>
+                <ul>
+                    <li>Datos de identificación personal (nombre, correo electrónico)</li>
+                    <li>Información académica y de desempeño estudiantil</li>
+                    <li>Información de uso de la plataforma (logs, estadísticas de acceso)</li>
+                </ul>
+
+                <h3>2. Uso de la Información</h3>
+                <p>Utilizamos la información recopilada para:</p>
+                <ul>
+                    <li>Proporcionar y mejorar nuestros servicios</li>
+                    <li>Realizar análisis estadísticos y predictivos</li>
+                    <li>Garantizar la seguridad y detección de fraude</li>
+                    <li>Cumplir con regulaciones educativas y legales</li>
+                </ul>
+
+                <h3>3. Protección de Datos</h3>
+                <p>Implementamos medidas de seguridad técnicas y organizacionales para proteger la información personal contra acceso no autorizado, alteración, divulgación o destrucción. Contamos con encriptación HTTPS, controles de acceso y auditorías de seguridad regulares.</p>
+
+                <h3>4. Compartición de Información</h3>
+                <p>No compartimos información personal con terceros sin consentimiento explícito, excepto cuando sea requerido por ley o para cumplir con nuestras obligaciones contractuales con instituciones educativas.</p>
+
+                <h3>5. Derechos de Privacidad</h3>
+                <p>Tienes derecho a:</p>
+                <ul>
+                    <li>Acceder a tu información personal</li>
+                    <li>Solicitar la corrección de datos inexactos</li>
+                    <li>Solicitar la eliminación de datos bajo circunstancias específicas</li>
+                    <li>Revocar el consentimiento de recopilación de datos</li>
+                </ul>
+
+                <h3>6. Cookies y Tecnologías de Seguimiento</h3>
+                <p>Utilizamos cookies y similares tecnologías para mejorar tu experiencia de usuario, recordar preferencias y analizar el uso de la plataforma.</p>
+
+                <h3>7. Contacto y Reclamaciones</h3>
+                <p>Si tienes preguntas sobre nuestra política de privacidad o deseas ejercer tus derechos de privacidad, contacta con nuestro equipo de soporte a través del formulario de contacto en la plataforma.</p>
+
+                <h3>8. Cambios en la Política</h3>
+                <p>Nos reservamos el derecho de actualizar esta política de privacidad periódicamente. Los cambios significativos serán notificados a los usuarios. El uso continuado de la plataforma implica la aceptación de los cambios.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn-close" onclick="closeModal('privacyModal')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // NOTE: Email sending moved to backend; no client-side EmailJS initialization.
+
+        // Variable para controlar retraso en notificaciones de administrador
+        let lastAdminNotification = 0;
+        const ADMIN_NOTIFICATION_DELAY = 3000; // 3 segundos de retraso
+
+        // === FUNCIONES PARA MODALES ===
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Prevenir scroll de página
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = 'auto'; // Restaurar scroll
+            }
+        }
+
+        // Cerrar modal al hacer clic en el overlay
+        document.addEventListener('DOMContentLoaded', () => {
+            const modals = document.querySelectorAll('.modal-overlay');
+            modals.forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        const modalId = modal.id;
+                        closeModal(modalId);
+                    }
+                });
+            });
+        });
+        // === FIN FUNCIONES MODALES ===
+
+        // Floating toast notification
+        function showToast(message, duration = 4000) {
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.setAttribute('aria-live', 'polite');
+                container.setAttribute('aria-atomic', 'true');
+                document.body.appendChild(container);
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<div class="toast-message">${message}</div><button class="toast-close" aria-label="Cerrar">&times;</button>`;
+            container.appendChild(toast);
+
+            // Force reflow then show
+            requestAnimationFrame(() => toast.classList.add('show'));
+
+            const hide = () => {
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+            };
+
+            const closeBtn = toast.querySelector('.toast-close');
+            if (closeBtn) closeBtn.addEventListener('click', hide);
+
+            setTimeout(hide, duration);
+        }
+
+        // Función global para navegar a admin panel
+        function notifyAdmin() {
+            const now = Date.now();
+            
+            // Verificar si han pasado suficientes segundos desde la última notificación
+            if (now - lastAdminNotification < ADMIN_NOTIFICATION_DELAY) {
+                console.log('Esperando antes de mostrar otra notificación (Retraso antiabuso)');
+                return; // Ignorar clics rápidos
+            }
+            
+            lastAdminNotification = now; // Actualizar timestamp
+            
+            const userRole = localStorage.getItem('userRole');
+            const userApproved = localStorage.getItem('userApproved');
+            
+            // DEBUG: Exponer valores a window para inspeccionarlos en consola
+            window.DEBUG_userRole = userRole;
+            window.DEBUG_userApproved = userApproved;
+            console.log('DEBUG notifyAdmin():', {
+                userRole: userRole,
+                userRole_type: typeof userRole,
+                userApproved: userApproved,
+                userApproved_type: typeof userApproved,
+                condition: (userRole === 'admin' && userApproved === 'true')
+            });
+            
+            if (userRole === 'admin' && userApproved === 'true') {
+                window.location.href = 'admin.html';
+            } else {
+                showToast('Solo administradores pueden acceder al panel de administración.', 5000);
+            }
+        }
+
+        // Mostrar perfil del usuario
+        function showUserProfile(userName, userEmail) {
+            const loginContainer = document.getElementById('loginContainer');
+            const sidebar = document.getElementById('sidebar');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const sidebarLoginContent = document.getElementById('sidebarLoginContent');
+            const sidebarSessionContent = document.getElementById('sidebarSessionContent');
+
+            if (loginContainer) loginContainer.style.display = 'none';
+            if (logoutBtn) logoutBtn.style.display = 'block';
+
+            // Ocultar login, mostrar sesión
+            if (sidebarLoginContent) sidebarLoginContent.style.display = 'none';
+            if (sidebarSessionContent) sidebarSessionContent.style.display = 'flex';
+
+            // Rellenar datos en la sidebar
+            document.getElementById('sidebarName').textContent = userName || 'Usuario';
+            document.getElementById('sidebarEmail').textContent = userEmail || '';
+            document.getElementById('sidebarAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || userEmail)}&background=random`;
+
+            // Llenar el menú de navegación (SIN EMOJIS)
+            const menuContainer = document.getElementById('sidebarMenuContainer');
+            if (menuContainer) {
+                menuContainer.innerHTML = `
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-info-label">Correo:</div>
+                        <div class="sidebar-user-info-value">${userEmail}</div>
+                    </div>
+
+                    <div class="sidebar-menu">
+                        <div class="sidebar-menu-title">Herramientas</div>
+                        <a href="calendar.html" class="sidebar-menu-item">
+                            <span class="sidebar-menu-icon">
+                                <svg viewBox="0 0 24 24" style="width:20px;height:20px" fill="none" stroke="currentColor" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="3" y="5" width="18" height="16" rx="2"></rect>
+                                    <path d="M16 3v4M8 3v4" stroke-linecap="round"></path>
+                                </svg>
+                            </span>
+                            <span>Calendario</span>
+                        </a>
+                        <a href="neural.html" class="sidebar-menu-item">
+                            <span class="sidebar-menu-icon">
+                                <svg viewBox="0 0 24 24" style="width:20px;height:20px" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                                    <polygon points="12,4 20,20 4,20"></polygon>
+                                </svg>
+                            </span>
+                            <span>Predicciones IA</span>
+                        </a>
+                        <a href="cycle.html" class="sidebar-menu-item">
+                            <span class="sidebar-menu-icon">
+                                <svg viewBox="0 0 24 24" style="width:20px;height:20px" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                                    <circle cx="12" cy="12" r="8"></circle>
+                                </svg>
+                            </span>
+                            <span>Ciclos Educativos</span>
+                        </a>
+                        <a href="locations.html" class="sidebar-menu-item">
+                            <span class="sidebar-menu-icon">
+                                <svg viewBox="0 0 24 24" style="width:20px;height:20px" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                                    <polygon points="12,3 20,12 12,21 4,12"></polygon>
+                                </svg>
+                            </span>
+                            <span>Ubicaciones</span>
+                        </a>
+                    </div>
+
+                    <div class="sidebar-menu">
+                        <div class="sidebar-menu-title">Base de Datos</div>
+                        <a href="database.html" class="sidebar-menu-item">
+                            <span class="sidebar-menu-icon">
+                                <svg viewBox="0 0 24 24" style="width:20px;height:20px" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                                    <rect x="4" y="5" width="16" height="3" rx="1.5"></rect>
+                                    <rect x="4" y="10" width="16" height="3" rx="1.5"></rect>
+                                    <rect x="4" y="15" width="16" height="3" rx="1.5"></rect>
+                                </svg>
+                            </span>
+                            <span>Ver Base de Datos</span>
+                        </a>
+                        <a href="base.html" class="sidebar-menu-item">
+                            <span class="sidebar-menu-icon">
+                                <svg viewBox="0 0 24 24" style="width:20px;height:20px" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                                    <polygon points="6,6 18,6 14,18 2,18"></polygon>
+                                </svg>
+                            </span>
+                            <span>Editar Perfiles</span>
+                        </a>
+                    </div>
+
+                    <div class="sidebar-menu">
+                        <div class="sidebar-menu-title">Opciones</div>
+                        <a href="#" class="sidebar-menu-item" onclick="notifyAdmin(); return false;">
+                             <span class="sidebar-menu-icon">
+                                 <svg viewBox="0 0 24 24" style="width:20px;height:20px" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                                     <polygon points="12,2 19,7 19,17 12,22 5,17 5,7"></polygon>
+                                 </svg>
+                             </span>
+                             <span>Ir a Admin</span>
+                         </a>
+                     </div>
+                 `;
+             }
+
+             // Mostrar sidebar abierta automáticamente
+             if (sidebar) {
+                 sidebar.classList.add('active');
+                 setTimeout(() => {
+                     // La barra ahora se comporta normalmente con hover
+                 }, 5000);
+             }
+         }
+
+         // Logout
+         function handleLogout() {
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userApproved');
+            localStorage.removeItem('userRole');
+            location.reload();
+         }
+
+         // Inicializar Google Sign-In
+         function initializeGoogleSignIn() {
+             if (!window.google || !google.accounts || !google.accounts.id) {
+                 console.error('Google Sign-In script not loaded');
+                 return;
+             }
+             
+             google.accounts.id.initialize({
+                 client_id: '903625348841-j9ed7i8hb3me77lvhp7gai175c4rr68i.apps.googleusercontent.com',
+                 callback: handleCredentialResponse
+             });
+
+             google.accounts.id.renderButton(
+                 document.getElementById('loginContainer'),
+                 { 
+                     type: 'standard',
+                     theme: 'outline', 
+                     size: 'large',
+                     text: 'signin_with'
+                 }
+             );
+         }
+
+         // Iniciar Google Sign-In
+         function startGoogleSignIn() {
+             if (!window.google || !google.accounts || !google.accounts.id) {
+                 initializeGoogleSignIn();
+                 setTimeout(() => {
+                     if (window.google && google.accounts && google.accounts.id) {
+                         google.accounts.id.prompt();
+                     }
+                 }, 300);
+                 return;
+             }
+             google.accounts.id.prompt();
+         }
+
+         // Abrir/cerrar sidebar solo con hover (sin click)
+         (function enableSidebarHover() {
+             const sidebar = document.getElementById('sidebar');
+             if (!sidebar) return;
+             
+             sidebar.addEventListener('mouseenter', () => sidebar.classList.add('active'));
+             sidebar.addEventListener('mouseleave', () => sidebar.classList.remove('active'));
+         })();
+
+        // Verificar sesión al cargar — consultar al backend para status
+        document.addEventListener('DOMContentLoaded', async function() {
+            const userEmail = localStorage.getItem('userEmail');
+            const userName = localStorage.getItem('userName');
+
+            if (userEmail) {
+                try {
+                    const resp = await fetch('/status?email=' + encodeURIComponent(userEmail));
+                    if (!resp.ok) {
+                        console.error('status fetch failed', resp.status);
+                        localStorage.removeItem('userEmail');
+                        localStorage.removeItem('userName');
+                        initializeGoogleSignIn();
+                        return;
+                    }
+                    const data = await resp.json();
+                    // Guardar approved y role en localStorage para que admin.html pueda leerlos
+                    localStorage.setItem('userApproved', String(data.approved || false));
+                    localStorage.setItem('userRole', String(data.role || 'user'));
+                    if (data && data.approved) {
+                        if (data.role === 'admin') {
+                            window.location.href = 'admin.html';
+                            return;
+                        }
+                        showUserProfile(userName, userEmail);
+                    } else {
+                        showUserProfile(userName, userEmail);
+                    }
+                } catch (err) {
+                    console.error('status error', err);
+                    localStorage.removeItem('userEmail');
+                    localStorage.removeItem('userName');
+                    initializeGoogleSignIn();
+                }
+            } else {
+                initializeGoogleSignIn();
+            }
+        });
+
+         // Email sending moved to server; frontend will request approval via POST /request-approval
+
+         // Callback de autenticación
+         function handleCredentialResponse(response) {
+             try {
+                 const token = response.credential;
+                 const payload = JSON.parse(atob(token.split('.')[1]));
+                 const userEmail = payload.email;
+                 const userName = payload.name || userEmail.split('@')[0];
+                localStorage.setItem('userEmail', userEmail);
+                localStorage.setItem('userName', userName);
+
+                // Notify backend to create user (if needed) and send approval email from server
+                fetch('/request-approval', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: userEmail, name: userName })
+                }).then(() => {
+                    // Después de registrar, obtener status actualizado desde backend y guardar en localStorage
+                    return fetch('/status?email=' + encodeURIComponent(userEmail));
+                }).then(resp => {
+                    if (resp.ok) return resp.json();
+                    throw new Error('status fetch failed');
+                }).then(data => {
+                    // Guardar approved y role en localStorage
+                    localStorage.setItem('userApproved', String(data.approved || false));
+                    localStorage.setItem('userRole', String(data.role || 'user'));
+                    // show UI while awaiting approval; server owns approval logic
+                    showUserProfile(userName, userEmail);
+                }).catch(err => {
+                    console.error('request-approval or status error', err);
+                    // Guardar valores por defecto si hay error
+                    localStorage.setItem('userApproved', 'false');
+                    localStorage.setItem('userRole', 'user');
+                    showUserProfile(userName, userEmail);
+                });
+             } catch (err) {
+                 console.error('Token parsing error:', err);
+                 showToast('Error al procesar la autenticación. Intenta nuevamente.', 5000);
+             }
+         }
+
+        // The frontend never grants roles or approval via URL. Approval and role checks
+        // are performed by querying the server's /status endpoint.
+     </script>
+</body>
+</html>
+

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Users’ locations</title>
+	<link rel="stylesheet" href="styles.css">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+	<!-- Agregado: MapLibre GL CSS -->
+	<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" />
+	<style>
+		/* estilos mínimos para lista de perfiles y mini-mapas */
+		.locations-list-container, .profile-item { box-sizing: border-box; }
+		.profile-item { display:flex; gap:12px; align-items:flex-start; padding:10px; border-bottom:1px solid #eee; }
+		.profile-left { width:60px; flex:0 0 60px; }
+		.profile-avatar { width:56px; height:56px; border-radius:50%; object-fit:cover; display:block; }
+		.avatar-placeholder { width:56px; height:56px; border-radius:50%; background:#ddd; display:flex; align-items:center; justify-content:center; color:#666; font-weight:bold; }
+		.profile-main { flex:1; min-width:0; }
+		.profile-name { font-size:15px; }
+		.profile-info { margin-bottom:8px; color:#333; }
+		.profile-edit { display:flex; gap:8px; }
+		.location-input { flex:1; padding:6px 8px; border:1px solid #ccc; border-radius:4px; }
+		.save-location-btn { padding:6px 10px; border:0; background:#1a3a5c; color:#fff; border-radius:4px; cursor:pointer; }
+		/* mapa plano fullscreen: cubre todo el fondo sin afectar botones */
+		#map3d {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100vw;
+			height: 100vh;
+			border-radius: 0;
+			margin: 0;
+			overflow: hidden;
+			border: none;
+			display: block;
+			box-shadow: none;
+			background: linear-gradient(180deg,#eaf2f8 0%, #f7fbff 100%);
+			touch-action: none;
+			z-index: 1;
+		}
+		/* marcador simple personalizado (visualmente encima del globo) */
+		.marker-3d {
+			width: 28px;
+			height: 28px;
+			border-radius: 50%;
+			background: #2b5a86;
+			box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+			border: 2px solid #fff;
+			cursor: pointer;
+		}
+		#map3d.grab { cursor: grab; }
+		#map3d.grabbing { cursor: grabbing; }
+
+		/* Estilos para el botón de alternar satélite */
+		.sat-toggle {
+			position: fixed;
+			top: 10px;
+			right: 10px;
+			background: rgba(255, 255, 255, 0.8);
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			padding: 8px 12px;
+			cursor: pointer;
+			font-size: 14px;
+			z-index: 1400;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+		}
+		.sat-toggle:focus {
+			outline: none;
+			box-shadow: 0 0 0 3px rgba(26,58,92,0.5);
+		}
+		/* Botón Satélite en el header (al lado de Volver) */
+		.sat-toggle-header {
+			background: none;
+			border: none;
+			color: #fff;
+			font-weight: 600;
+			cursor: pointer;
+			padding: 8px 12px;
+			border-radius: 6px;
+			transition: all 0.1s ease;
+			display: inline-block;
+			text-decoration: none;
+			margin-left: 8px;
+		}
+		.sat-toggle-header:hover {
+			background: rgba(255, 255, 255, 0.15);
+		}
+		.sat-toggle-header[aria-pressed="true"] {
+			background: rgba(255, 255, 255, 0.25);
+		}
+		.sat-toggle-header:focus {
+			outline: none;
+			box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+		}
+		/* Estilos para el botón "Ir a Perú" */
+		.goto-btn {
+			position: absolute;
+			top: 10px;
+			right: 120px;
+			background: rgba(255, 255, 255, 0.8);
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			padding: 8px 12px;
+			cursor: pointer;
+			font-size: 14px;
+			z-index: 10;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+		}
+		.goto-btn:focus {
+			outline: none;
+			box-shadow: 0 0 0 3px rgba(26,58,92,0.5);
+		}
+		/* Estilos para el overlay de cuota Overpass */
+		.quota-overlay {
+			position: fixed;
+			bottom: 12px;
+			right: 12px;
+			background: rgba(255, 255, 255, 0.9);
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			padding: 10px 15px;
+			font-size: 14px;
+			z-index: 1500;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+		}
+		.quota-overlay div {
+			margin: 0;
+			padding: 0;
+			color: #333;
+		}
+		.quota-overlay strong {
+			color: #1a3a5c;
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<nav class="navbar">
+			<div class="nav-texts">
+				<a href="index.html" class="nav-text-btn">Inicio</a>
+				<button id="satToggle" class="sat-toggle-header" aria-pressed="false" title="Alternar textura satelital">Satélite</button>
+				<span style="color:rgba(26,58,92,0.7);margin-left:8px">Ubicaciones</span>
+			</div>
+		</nav>
+	</header>
+	<main>
+		<div class="locations-list-container" id="locationsListContainer" style="display:none;">
+			<!-- Perfiles se renderizan aquí (oculto: solo usamos el mapa) -->
+		</div>
+
+		<!-- Contenedor del mapa 3D (oculto hasta activar) -->
+		<div id="map3d" aria-hidden="false"></div>
+
+		<!-- Overlay de cuota / estado Overpass (arriba-derecha, no bloquea interacción) -->
+		<div id="overpassQuota" class="quota-overlay" aria-hidden="false" title="Estado de consultas OSM" aria-live="polite">
+			<div><strong>Overpass</strong></div>
+			<div id="quotaUsage">Usos: 0 / 10</div>
+			<div id="quotaReset">Reset: --:--</div>
+			<div id="quotaLast">Última: nunca</div>
+		</div>
+	</main>
+
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+	<!-- Agregado: MapLibre GL JS -->
+	<script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+	<script src="main.js"></script>
+
+	<script>
+		// Inicialización inmediata del mapa 3D tipo "globe" y API simple para marcadores
+		(function(){
+			const container = 'map3d';
+			const map3d = new maplibregl.Map({
+				container,
+				style: 'https://demotiles.maplibre.org/style.json',
+				center: [0, 20],
+				zoom: 1.4,
+				pitch: 0,
+				bearing: 0,
+				projection: 'mercator',
+				antialias: true,
+				interactive: true
+			});
+			map3d.addControl(new maplibregl.NavigationControl(), 'bottom-left');
+
+			// habilitar rotación/gestos si están disponibles
+			try { if (map3d.dragRotate) map3d.dragRotate.enable(); } catch(e){/*ignore*/ }
+			try { if (map3d.touchZoomRotate) map3d.touchZoomRotate.enableRotation(); } catch(e){/*ignore*/ }
+			try { if (map3d.scrollZoom) map3d.scrollZoom.enable(); } catch(e){/*ignore*/ }
+
+			// cursor grab/grabbing UX
+			const mapEl = document.getElementById('map3d');
+			if (mapEl) mapEl.classList.add('grab');
+			map3d.on('mousedown', () => { if (mapEl) mapEl.classList.add('grabbing'); });
+			map3d.on('mouseup', () => { if (mapEl) mapEl.classList.remove('grabbing'); });
+			map3d.on('dragend', () => { if (mapEl) mapEl.classList.remove('grabbing'); });
+
+			// intentar extruir edificios si existe la capa
+			map3d.on('style.load', () => {
+				try {
+					// buscar etiqueta/label layer para insertar después, si existe
+					const layers = map3d.getStyle().layers || [];
+					let labelLayerId = null;
+					for (let i = 0; i < layers.length; i++) {
+						if (layers[i].type === 'symbol' && layers[i].layout && layers[i].layout['text-field']) {
+							labelLayerId = layers[i].id; break;
+						}
+					}
+					// Solo añadir 3d-buildings si la fuente 'openmaptiles' existe en el estilo
+					const src = map3d.getSource && map3d.getSource('openmaptiles');
+					if (src) {
+						// evitar añadirla si ya existe
+						if (!map3d.getLayer || !map3d.getLayer('3d-buildings')) {
+							map3d.addLayer({
+								'id': '3d-buildings',
+								'source': 'openmaptiles',
+								'source-layer': 'building',
+								'filter': ['==', 'extrude', 'true'],
+								'type': 'fill-extrusion',
+								'minzoom': 15,
+								'paint': {
+									'fill-extrusion-color': '#aaa',
+									'fill-extrusion-height': ['get', 'height'],
+									'fill-extrusion-base': ['get', 'min_height'],
+									'fill-extrusion-opacity': 0.6
+								}
+							}, labelLayerId);
+						}
+					} else {
+						// source no disponible en este style — omitir sin lanzar error
+						// console.debug('openmaptiles source not present; skipping 3d-buildings');
+					}
+				} catch (e) { /* ignore */ }
+			});
+
+			const markers = new Map();
+
+			function escapeHtml(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]); }
+
+			// markers map stores group markers keyed by a location key
+
+			window.addOrUpdate3DMarker = function(id, coords, html) {
+				if (!coords || typeof coords.lat !== 'number' || typeof coords.lng !== 'number') return;
+				const key = String(id);
+				if (markers.has(key)) {
+					try { markers.get(key).setLngLat([coords.lng, coords.lat]); } catch(e){ /* ignore */ }
+					return;
+				}
+				const el = document.createElement('div');
+				el.className = 'marker-3d';
+				const marker = new maplibregl.Marker(el).setLngLat([coords.lng, coords.lat]).addTo(map3d);
+				if (html) {
+					const popup = new maplibregl.Popup({offset: 18}).setHTML(html);
+					marker.setPopup(popup);
+				}
+				markers.set(key, marker);
+			};
+
+			// Grouped markers: key by rounded coords to combine profiles sharing same location
+			window.addOrUpdateGroupMarker = function(locationKey, coords, profiles) {
+				if (!coords || typeof coords.lat !== 'number' || typeof coords.lng !== 'number') return;
+				const key = 'group:' + String(locationKey);
+				// build html listing all profiles for this location
+				const items = profiles.map(p => {
+					const avatar = escapeHtml((p.photo && (typeof p.photo === 'string' ? p.photo : p.photo.url)) || (p.avatar || p.image) || '');
+					const name = escapeHtml((p.fullName || (p.firstName||'') + ' ' + (p.lastName||'')).trim() || p.email || 'Usuario');
+					return `<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+						${avatar ? `<img src="${avatar}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #fff">` : ''}
+						<div style="line-height:1">
+							<div style="font-weight:700;color:#0d2a47">${name}</div>
+							${p.location ? `<div style="font-size:12px;color:#444">${escapeHtml(p.location)}</div>` : ''}
+						</div>
+					</div>`;
+				}).join('');
+				const html = `<div style="font-family:Arial;min-width:180px">${items}</div>`;
+				if (markers.has(key)) {
+					try { const m = markers.get(key); m.setLngLat([coords.lng, coords.lat]); if (m.getPopup) m.setPopup(new maplibregl.Popup({offset:18}).setHTML(html)); } catch(e){/*ignore*/}
+					return;
+				}
+				const el = document.createElement('div'); el.className = 'marker-3d';
+				const marker = new maplibregl.Marker(el).setLngLat([coords.lng, coords.lat]).addTo(map3d);
+				const popup = new maplibregl.Popup({offset: 18}).setHTML(html);
+				marker.setPopup(popup);
+				markers.set(key, marker);
+			 };
+
+			window.clear3DMarkers = function() { markers.forEach(m => m.remove()); markers.clear(); };
+			window.fit3DMarkers = function() {
+				if (markers.size === 0) return;
+				const bounds = new maplibregl.LngLatBounds();
+				markers.forEach(m => bounds.extend(m.getLngLat()));
+				try { map3d.fitBounds(bounds, { padding: 40, maxZoom: 16 }); } catch(e){ /* ignore */ }
+			};
+			window._map3d = map3d;
+
+			// === Añadir toggle satélite ===
+			const satBtn = document.getElementById('satToggle');
+			const SAT_SOURCE_ID = 'esri-sat-source';
+			const SAT_LAYER_ID = 'esri-sat-layer';
+
+			function findLabelLayerId() {
+				try {
+					const layers = map3d.getStyle().layers || [];
+					for (let i = 0; i < layers.length; i++) {
+						const ly = layers[i];
+						if (ly.type === 'symbol' && ly.layout && (ly.layout['text-field'] || ly.layout['text-max-width'])) {
+							return ly.id;
+						}
+					}
+				} catch(e){/*ignore*/}
+				return null;
+			}
+			async function addSatelliteLayer() {
+				if (!map3d || !map3d.getStyle) return;
+				// si ya existe solo mostrarla
+				if (map3d.getLayer && map3d.getLayer(SAT_LAYER_ID)) {
+					map3d.setLayoutProperty(SAT_LAYER_ID, 'visibility', 'visible');
+					return;
+				}
+				// crear fuente raster (Esri World Imagery)
+				try {
+					if (!map3d.getSource(SAT_SOURCE_ID)) {
+						map3d.addSource(SAT_SOURCE_ID, {
+							type: 'raster',
+							tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+							tileSize: 256,
+							maxzoom: 19
+						});
+					}
+					const labelBefore = findLabelLayerId();
+					map3d.addLayer({
+						id: SAT_LAYER_ID,
+						type: 'raster',
+						source: SAT_SOURCE_ID,
+						paint: { 'raster-opacity': 1.0 }
+					}, labelBefore || undefined);
+				} catch (err) {
+					console.error('Error añadiendo capa satélite', err);
+				}
+			}
+			function hideSatelliteLayer() {
+				try {
+					if (map3d.getLayer && map3d.getLayer(SAT_LAYER_ID)) {
+						map3d.setLayoutProperty(SAT_LAYER_ID, 'visibility', 'none');
+					}
+				} catch(e){/*ignore*/}
+			}
+
+			// actualizar toggle handler para también gestionar etiquetas
+			if (satBtn) {
+				satBtn.addEventListener('click', async () => {
+					const pressed = satBtn.getAttribute('aria-pressed') === 'true';
+					if (pressed) {
+						hideSatelliteLayer();
+						satBtn.setAttribute('aria-pressed', 'false');
+						satBtn.textContent = 'Satélite';
+					} else {
+						await addSatelliteLayer();
+						satBtn.setAttribute('aria-pressed', 'true');
+						satBtn.textContent = 'Mapa';
+					}
+				});
+			}
+
+			// Si el estilo recarga, reinsertar la capa satélite si estaba activa
+			map3d.on('styledata', () => {
+				if (satBtn && satBtn.getAttribute('aria-pressed') === 'true') {
+					setTimeout(() => { addSatelliteLayer(); }, 200);
+				}
+			});
+			// === fin satélite / etiquetas / Perú ===
+
+		})();
+	</script>
+</body>
+</html>

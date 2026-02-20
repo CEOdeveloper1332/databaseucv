@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A1 Analytics - Sistema de Análisis Educativo Personalizado</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/index.min.js"></script>
+    <style>
+        /* Estilos específicos para el index */
+        body {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #1a3a5c 0%, #0f2847 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 3px 12px rgba(26, 58, 92, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .hero-section h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-section p {
+            font-size: 14px;
+            max-width: 900px;
+            margin: 0 auto 20px;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+
+        .hero-google-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            color: #1f2937;
+            border: 2px solid #d4af37;
+            padding: 10px 18px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .hero-google-btn:hover {
+            background: #f0f0f0;
+            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .banner-blue {
+            background: linear-gradient(90deg, #1a5fa0 0%, #2a7fb8 100%);
+            color: white;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(26, 95, 160, 0.25);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .banner-blue strong {
+            color: #d4af37;
+        }
+
+        .auth-section {
+            background: white;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            max-width: 350px;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .auth-section h3 {
+            color: #1a3a5c;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .google-login-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            color: #1f2937;
+            border: 2px solid #d4af37;
+            padding: 10px 18px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .google-login-btn:hover {
+            background: #f0f0f0;
+            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .avatar-section {
+            background: white;
+            padding: 30px 20px;
+            margin: 30px 0;
+            border-radius: 6px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .avatar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .avatar-wrapper {
+            text-align: center;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #1a3a5c 0%, #2a5a7c 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin: 0 auto 15px;
+            box-shadow: 0 3px 12px rgba(26, 58, 92, 0.3);
+            border: 3px solid #d4af37;
+            color: white;
+            font-weight: bold;
+        }
+
+        .avatar-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1a3a5c;
+            margin-bottom: 4px;
+        }
+
+        .avatar-role {
+            font-size: 11px;
+            color: #666666;
+            margin-bottom: 15px;
+        }
+
+        .nav-button {
+            background: linear-gradient(90deg, #1a3a5c 0%, #2a5a7c 100%);
+            color: white;
+            border: 2px solid #d4af37;
+            padding: 10px 16px;
+            border-radius: 5px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .nav-button:hover {
+            background: linear-gradient(90deg, #2a5a7c 0%, #1a3a5c 100%);
+            box-shadow: 0 4px 12px rgba(26, 58, 92, 0.3);
+            transform: translateY(-2px);
+            border-color: #e4c961;
+        }
+
+        .info-section {
+            flex: 1;
+        }
+
+        .info-section h3 {
+            color: #1a3a5c;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .info-description {
+            color: #666666;
+            line-height: 1.6;
+            margin-bottom: 18px;
+            font-size: 12px;
+        }
+
+        .subsections {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+            margin-top: 18px;
+        }
+
+        .subsection {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 3px solid #d4af37;
+        }
+
+        .subsection h4 {
+            color: #1a3a5c;
+            font-size: 13px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .subsection p {
+            color: #666666;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .nav-buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sub-button {
+            background: #1a3a5c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            text-decoration: none;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .sub-button:hover {
+            background: #2a5a7c;
+            box-shadow: 0 2px 6px rgba(26, 58, 92, 0.3);
+        }
+
+        .footer-section {
+            background: #1a3a5c;
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .footer-section p {
+            margin: 6px 0;
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .avatar-container {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-section h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header / Navigation -->
+    <header>
+        <div class="navbar" style="flex-direction: row; align-items: center; gap: 20px; padding: 20px; justify-content: space-between;">
+            <div style="text-align: left; flex: 1;">
+                <h2 style="font-size: 24px; margin: 0 0 8px 0; font-weight: bold;">A1 Analytics - Sistema Educativo Integral</h2>
+                <p style="font-size: 13px; margin: 0; color: #e0e0e0;">Plataforma especializada en análisis estadístico y seguimiento personalizado del desempeño estudiantil con fines educativos</p>
+            </div>
+            <!-- Perfil del usuario (se muestra solo si hay sesión aprobada) -->
+            <div id="userProfile" style="flex-shrink: 0; align-items: center; gap: 12px; background: white; padding: 8px 16px; border-radius: 5px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <img id="userAvatar" style="width: 32px; height: 32px; border-radius: 50%;" alt="Avatar">
+                <div style="display: flex; flex-direction: column; text-align: left;">
+                    <span id="userNameDisplay" style="font-weight: bold; font-size: 12px; color: #1a3a5c;"></span>
+                    <span id="userEmailDisplay" style="font-size: 10px; color: #666;"></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section - Eliminada -->
+
+
+    <!-- Sección de Avatar con Navegación -->
+    <div class="avatar-section">
+        <div class="avatar-container">
+            <div class="info-section" style="grid-column: 1 / -1;">
+                <h3>Centro de Información y Análisis</h3>
+                <p class="info-description">
+                    A1 Analytics es un sistema de gestión y análisis educativo para instituciones académicas. Integra herramientas estadísticas avanzadas, visualización de datos en tiempo real y análisis predictivos. Permite identificar patrones, fortalezas, áreas de mejora y tendencias académicas de cada estudiante.
+                </p>
+
+                <div class="subsections">
+                    <div class="subsection">
+                        <h4>Análisis Estadístico</h4>
+                        <p>Visualiza datos académicos mediante gráficos interactivos, métricas de desempeño, distribuciones de calificaciones y análisis comparativos entre períodos académicos.</p>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Seguimiento Personalizado</h4>
+                        <p>Monitorea el progreso individual de cada estudiante con indicadores personalizados, metas académicas, alertas de desempeño y recomendaciones adaptadas.</p>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Calendario Académico</h4>
+                        <p>Organiza eventos académicos, períodos de evaluación, fechas límite y actividades importantes en un calendario visual e integrado.</p>
+                        <div class="subsection-buttons">
+                            <a href="calendar.html" class="sub-button">Ver Calendario</a>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Análisis Predictivo Neural</h4>
+                        <p>Utiliza modelos de inteligencia artificial para predecir tendencias futuras e identificar estudiantes en riesgo.</p>
+                        <div class="subsection-buttons">
+                            <a href="neural.html" class="sub-button">Ir a Predicciones</a>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Ciclos Educativos</h4>
+                        <p>Administra ciclos académicos, compara períodos, analiza evoluciones y mantén histórico completo de desempeño académico.</p>
+                        <div class="subsection-buttons">
+                            <a href="cycle.html" class="sub-button">Gestionar Ciclos</a>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Ubicaciones y Sedes</h4>
+                        <p>Organiza y administra diferentes sedes, salones y espacios educativos con seguimiento integral de estudiantes.</p>
+                        <div class="subsection-buttons">
+                            <a href="locations.html" class="sub-button">Ver Ubicaciones</a>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Edición General</h4>
+                        <p>Crea, edita y modifica perfiles de estudiantes con sus datos personales, académicos y estadísticas detalladas.</p>
+                        <div class="subsection-buttons">
+                            <a href="base.html" class="sub-button">Editar Perfiles</a>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Base de Datos</h4>
+                        <p>Consulta y visualiza todos los perfiles de estudiantes con funciones de búsqueda avanzada para filtrar y analizar información.</p>
+                        <div class="subsection-buttons">
+                            <a href="database.html" class="sub-button">Ver Base de Datos</a>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Biblioteca</h4>
+                        <p>Accede al catálogo digital de recursos, libros y guías disponibles para docentes y estudiantes.</p>
+                        <div class="subsection-buttons">
+                            <a href="biblioteca.html" class="sub-button">Ir a Biblioteca</a>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <h4>Biblioteca de Administradores</h4>
+                        <p>Biblioteca exclusiva para administradores. Visualiza y comparte recursos con otros administradores del sistema.</p>
+                        <div class="subsection-buttons">
+                            <a href="biblioteca-admin.html" class="sub-button">Biblioteca Admin</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #e8f1f8; padding: 15px; border-radius: 4px; margin-top: 20px;">
+                    <p style="color: #1a3a5c; font-size: 12px; line-height: 1.6; margin-bottom: 10px;">
+                        <strong>Fines Educativos:</strong> Este sistema está desarrollado con objetivos pedagógicos claros: mejorar la calidad de la educación, facilitar la equidad en el acceso a información relevante, y potenciar las capacidades de docentes para intervenir de manera oportuna.
+                    </p>
+                    <p style="color: #1a3a5c; font-size: 12px; line-height: 1.6;">
+                        <strong>Seguridad:</strong> Todos los datos están encriptados, las conexiones son seguras (HTTPS), y cumplimos con normativas de protección de datos.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-section">
+        <p><strong>A1 Analytics</strong> - Sistema Integral de Análisis Educativo</p>
+        <p>© 2026 - Plataforma para el Seguimiento Personalizado de Desempeño Estudiantil</p>
+        <p style="font-size: 12px;">Desarrollado con fines educativos | <a href="#">Políticas de Privacidad</a> | <a href="#">Términos de Servicio</a></p>
+    </div>
+
+    <script>
+        // Verificar sesión al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            const userEmail = localStorage.getItem('userEmail');
+            const userName = localStorage.getItem('userName');
+            const userApproved = localStorage.getItem('userApproved');
+            const userRole = localStorage.getItem('userRole');
+
+            if (userRole === 'admin' && userApproved === 'true') {
+                // Es admin y está aprobado - mostrar contenido y perfil
+                showUserProfile(userName, userEmail);
+                console.log('Admin autorizado');
+            } else {
+                // No es admin o no está aprobado - redirigir a index.html
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Mostrar perfil del usuario
+        function showUserProfile(userName, userEmail) {
+            const userProfile = document.getElementById('userProfile');
+            
+            if (userProfile) {
+                document.getElementById('userNameDisplay').textContent = userName || 'Admin';
+                document.getElementById('userEmailDisplay').textContent = userEmail;
+                
+                // Generar avatar
+                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || userEmail)}&background=random`;
+                document.getElementById('userAvatar').src = avatarUrl;
+            }
+        }
+    </script>
+</body>
+</html>

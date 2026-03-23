@@ -10,51 +10,32 @@ let pdfParseFunc = null;
 
 try {
 	const pdfParseModule = require('pdf-parse');
-	console.log('pdf-parse module initial type:', typeof pdfParseModule);
-	console.log('pdf-parse module keys:', Object.keys(pdfParseModule));
-	console.log('pdf-parse module value:', pdfParseModule);
 	if (typeof pdfParseModule === 'function') {
+		// Exporta directamente como función
 		pdfParseFunc = pdfParseModule;
 	} else if (pdfParseModule && typeof pdfParseModule.default === 'function') {
+		// Exporta como default
 		pdfParseFunc = pdfParseModule.default;
-		console.log('pdf-parse using default export');
 	} else if (pdfParseModule && pdfParseModule.PDFParse) {
-		pdfParseFunc = pdfParseModule.PDFParse;
-		console.log('pdf-parse using PDFParse class');
+		// Exporta como clase — hay que instanciarla correctamente
+		const PDFParseClass = pdfParseModule.PDFParse;
+		pdfParseFunc = async function(buffer) {
+			const instance = new PDFParseClass();
+			return await instance.pdf(buffer);
+		};
+		console.log('pdf-parse: usando PDFParse como clase');
 	} else {
-		console.warn('pdf-parse loaded but not a function:', typeof pdfParseModule, 'default=', typeof (pdfParseModule && pdfParseModule.default));
+		console.warn('pdf-parse: formato desconocido');
 	}
 } catch (err) {
-	console.error('Error requiring pdf-parse:', err);
+	console.error('Error cargando pdf-parse:', err);
 }
 
 const { pipeline } = require('@xenova/transformers');
 
 const app = express();
-// CORS dinámico: funciona en local y en producción (Render, etc.)
-app.use(cors({
-	origin: function(origin, callback) {
-		// Sin origin (Postman, mismo servidor) → permitir
-		if (!origin) return callback(null, true);
-		// Desarrollo local → permitir
-		if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return callback(null, true);
-		// Dominio de producción configurado en variable de entorno → permitir
-		const ALLOWED = process.env.FRONTEND_URL || null;
-		if (ALLOWED && origin === ALLOWED) return callback(null, true);
-		// Mismo dominio (frontend y backend en el mismo Render service) → permitir
-		callback(null, true);
-	},
-	credentials: true
-}));
+app.use(cors({ origin: 'http://localhost:5500' }));
 app.use(express.json());
-
-// Cabeceras de seguridad básicas (sin dependencias extra)
-app.use((req, res, next) => {
-	res.setHeader('X-Content-Type-Options', 'nosniff');
-	res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-	res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-	next();
-});
 
 // Función para limpiar texto
 function cleanText(text) {
@@ -114,11 +95,7 @@ if (SUPABASE_URL && SUPABASE_KEY) {
 }
 
 // Multer
-// Multer: solo memoria (sin guardar en disco nunca), límite 10MB
-const upload = multer({
-	storage: multer.memoryStorage(),
-	limits: { fileSize: 10 * 1024 * 1024 } // 10 MB máximo
-});
+const upload = multer();
 
 // Mongo
 let dbClient;
@@ -1055,7 +1032,7 @@ app.post('/api/publications-admin/search', async (req, res) => {
 	}
 });
 
-// POST /api/upload-pdf - Subir y procesar PDF (solo memoria, sin guardar en disco)
+// POST /api/upload-pdf - Subir y procesar PDF
 app.post('/api/upload-pdf', upload.single('pdfFile'), async (req, res) => {
 	try {
 		if (!req.file) {
@@ -1106,10 +1083,7 @@ app.post('/api/upload-pdf', upload.single('pdfFile'), async (req, res) => {
 		}
 		await col.insertMany(chunkDocs);
 
-		// Limpiar texto de memoria después de procesar (buena práctica)
-		text = null;
-
-		res.json({ success: true, message: `PDF procesado en ${chunks.length} fragmentos correctamente.` });
+		res.json({ success: true, message: `PDF processed into ${chunks.length} chunks with embeddings. Previous data cleared.` });
 	} catch (err) {
 		console.error('Error processing PDF:', err);
 		res.status(500).json({ error: `Error processing PDF: ${err.message}` });

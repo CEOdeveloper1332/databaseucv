@@ -3,197 +3,285 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A1 Analytics - Sistema de Análisis Educativo Personalizado</title>
+    <title>A1 Analytics - Panel de Administración</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/index.min.js"></script>
     <style>
-        /* Estilos específicos para el index */
         body {
             background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            margin: 0;
+            padding: 0;
         }
 
-        .hero-section {
-            background: linear-gradient(135deg, #1a3a5c 0%, #0f2847 100%);
-            color: white;
-            padding: 40px 20px;
-            text-align: center;
-            box-shadow: 0 3px 12px rgba(26, 58, 92, 0.3);
-            margin-bottom: 30px;
-        }
-
-        .hero-section h1 {
-            font-size: 28px;
-            margin-bottom: 15px;
-            font-weight: bold;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .hero-section p {
-            font-size: 14px;
-            max-width: 900px;
-            margin: 0 auto 20px;
-            line-height: 1.6;
-            color: #e0e0e0;
-        }
-
-        .hero-google-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: white;
-            color: #1f2937;
-            border: 2px solid #d4af37;
-            padding: 10px 18px;
-            border-radius: 5px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .hero-google-btn:hover {
-            background: #f0f0f0;
-            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .banner-blue {
-            background: linear-gradient(90deg, #1a5fa0 0%, #2a7fb8 100%);
-            color: white;
-            padding: 15px 20px;
-            margin: 15px 0;
-            border-radius: 4px;
-            box-shadow: 0 2px 6px rgba(26, 95, 160, 0.25);
-            font-size: 12px;
-            line-height: 1.6;
-        }
-
-        .banner-blue strong {
-            color: #d4af37;
-        }
-
-        .auth-section {
-            background: white;
-            padding: 20px;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            max-width: 350px;
-            margin: 20px auto;
-            text-align: center;
-        }
-
-        .auth-section h3 {
-            color: #1a3a5c;
-            margin-bottom: 15px;
-            font-size: 16px;
-        }
-
-        .google-login-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: white;
-            color: #1f2937;
-            border: 2px solid #d4af37;
-            padding: 10px 18px;
-            border-radius: 5px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .google-login-btn:hover {
-            background: #f0f0f0;
-            box-shadow: 0 3px 10px rgba(212, 175, 55, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .google-icon {
-            width: 20px;
-            height: 20px;
-        }
-
-        /* avatar-section es el wrapper del layout sidebar+contenido */
+        /* =============================================
+           SIDEBAR — igual al index.html, adaptado admin
+           ============================================= */
         .avatar-section {
-            display: flex !important;
-            align-items: flex-start !important;
-            background: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            min-height: calc(100vh - 58px);
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
         }
 
-        .avatar-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: block;
+        .sidebar {
+            position: relative;
+            width: 16px;
+            min-width: 16px;
+            height: calc(100vh - 80px);
+            max-height: calc(100vh - 80px);
+            background: transparent;
+            box-shadow: none;
+            transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+            color: white;
+            overflow: hidden;
+            border-right: 4px solid #d4af37;
+            margin-right: 0;
+            flex-shrink: 0;
         }
 
-        .avatar-wrapper {
+        .sidebar:hover {
+            width: 280px;
+            min-width: 280px;
+            overflow: visible;
+            background: linear-gradient(180deg, #1a3a5c 0%, #0f2847 100%);
+            box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+            max-height: calc(100vh - 80px);
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                position: absolute;
+                top: 0;
+                left: -250px;
+                height: 100%;
+                box-shadow: 3px 0 15px rgba(0,0,0,0.3);
+                transition: left 0.3s cubic-bezier(0.4,0,0.2,1);
+                z-index: 50;
+            }
+            .sidebar:hover { left: 0; }
+        }
+
+        .sidebar-header {
             text-align: center;
+            padding: 20px;
+            border-bottom: 2px solid #d4af37;
+            flex-shrink: 0;
+            background: linear-gradient(180deg, #0f2847 0%, #1a3a5c 100%);
+            opacity: 0;
+            transition: opacity 0.3s 0.1s ease;
+        }
+        .sidebar:hover .sidebar-header { opacity: 1; }
+
+        .sidebar-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 3px solid #d4af37;
+            display: block;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.3s 0.15s ease;
+        }
+        .sidebar:hover .sidebar-avatar { opacity: 1; }
+
+        .sidebar-name {
+            font-size: 15px;
+            font-weight: bold;
+            color: #d4af37;
+            margin-bottom: 4px;
+            word-break: break-word;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+        .sidebar:hover .sidebar-name { opacity: 1; }
+
+        .sidebar-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #d4af37 0%, #e4c961 100%);
+            color: #0f2847;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+        .sidebar:hover .sidebar-badge { opacity: 1; }
+
+        .sidebar-email {
+            font-size: 11px;
+            color: #e0e0e0;
+            word-break: break-all;
+            line-height: 1.4;
+            margin-top: 4px;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+        .sidebar:hover .sidebar-email { opacity: 1; }
+
+        /* Menú layout */
+        .sidebar-menu-layout {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            padding: 0;
         }
 
-        .avatar {
-            width: 120px;
-            height: 120px;
-            background: linear-gradient(135deg, #1a3a5c 0%, #2a5a7c 100%);
-            border-radius: 50%;
+        .sidebar-menu-header {
+            flex-shrink: 0;
+            padding: 12px 20px;
+            border-bottom: 2px solid rgba(212,175,55,0.3);
+            background: linear-gradient(180deg,rgba(15,40,71,0.5) 0%,rgba(26,58,92,0.3) 100%);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+        .sidebar:hover .sidebar-menu-header { opacity: 1; }
+
+        .sidebar-menu-body {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 10px 0;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+        .sidebar:hover .sidebar-menu-body { opacity: 1; }
+
+        .sidebar-menu-body::-webkit-scrollbar { width: 6px; }
+        .sidebar-menu-body::-webkit-scrollbar-track { background: rgba(212,175,55,0.05); }
+        .sidebar-menu-body::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; }
+        .sidebar-menu-body::-webkit-scrollbar-thumb:hover { background: #e4c961; }
+
+        .sidebar-menu-footer {
+            flex-shrink: 0;
+            padding: 15px 20px;
+            border-top: 2px solid rgba(212,175,55,0.3);
+            background: linear-gradient(180deg,rgba(26,58,92,0.3) 0%,rgba(15,40,71,0.5) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .sidebar-menu {
+            margin: 8px 0;
+            padding: 0 15px;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
+        }
+        .sidebar:hover .sidebar-menu { opacity: 1; }
+
+        .sidebar-menu-title {
+            font-size: 10px;
+            font-weight: bold;
+            color: #d4af37;
+            text-transform: uppercase;
+            margin: 14px 0 6px 0;
+            letter-spacing: 1px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(212,175,55,0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar-menu-title::before {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 14px;
+            background: linear-gradient(180deg, #d4af37 0%, #e4c961 100%);
+            border-radius: 2px;
+        }
+
+        .sidebar-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 12px;
+            margin: 3px 0;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #e0e0e0;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            position: relative;
+        }
+        .sidebar-menu-item:hover {
+            background: rgba(212,175,55,0.15);
+            color: #d4af37;
+            border-left-color: #d4af37;
+            transform: translateX(4px);
+        }
+
+        .sidebar-menu-icon {
+            font-size: 15px;
+            min-width: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
-            margin: 0 auto 15px;
-            box-shadow: 0 3px 12px rgba(26, 58, 92, 0.3);
-            border: 3px solid #d4af37;
-            color: white;
-            font-weight: bold;
+            flex-shrink: 0;
         }
+        .sidebar-menu-icon svg { color: #d4af37; }
 
-        .avatar-name {
-            font-size: 16px;
-            font-weight: bold;
-            color: #1a3a5c;
-            margin-bottom: 4px;
-        }
-
-        .avatar-role {
+        .sidebar-user-info {
+            background: rgba(212,175,55,0.12);
+            padding: 10px 14px;
+            margin: 8px 15px;
+            border-radius: 4px;
             font-size: 11px;
-            color: #666666;
-            margin-bottom: 15px;
+            color: #e0e0e0;
+            border-left: 3px solid #d4af37;
+            opacity: 0;
+            transition: opacity 0.3s 0.2s ease;
         }
+        .sidebar:hover .sidebar-user-info { opacity: 1; }
+        .sidebar-user-info-label { color: #d4af37; font-weight: bold; font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 3px; }
+        .sidebar-user-info-value { word-break: break-all; line-height: 1.4; color: #fff; font-size: 11px; }
 
-        .nav-button {
-            background: linear-gradient(90deg, #1a3a5c 0%, #2a5a7c 100%);
-            color: white;
-            border: 2px solid #d4af37;
-            padding: 10px 16px;
-            border-radius: 5px;
-            text-decoration: none;
-            text-align: center;
+        .logout-btn {
+            background: linear-gradient(135deg, #d4af37 0%, #e4c961 100%);
+            color: #0f2847;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 11px;
             font-weight: bold;
-            font-size: 13px;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: inline-block;
+            width: 90%;
+            max-width: 200px;
+            opacity: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(212,175,55,0.3);
         }
-
-        .nav-button:hover {
-            background: linear-gradient(90deg, #2a5a7c 0%, #1a3a5c 100%);
-            box-shadow: 0 4px 12px rgba(26, 58, 92, 0.3);
+        .sidebar:hover .logout-btn { opacity: 1; }
+        .logout-btn:hover {
+            background: linear-gradient(135deg, #e4c961 0%, #f0d960 100%);
+            box-shadow: 0 4px 12px rgba(212,175,55,0.5);
             transform: translateY(-2px);
-            border-color: #e4c961;
         }
 
-        .info-section {
+        /* =============================================
+           CONTENIDO PRINCIPAL
+           ============================================= */
+        .admin-content {
             flex: 1;
+            padding: 20px;
+            min-width: 0;
         }
 
         .info-section h3 {
@@ -203,7 +291,7 @@
         }
 
         .info-description {
-            color: #666666;
+            color: #666;
             line-height: 1.6;
             margin-bottom: 18px;
             font-size: 12px;
@@ -231,16 +319,12 @@
         }
 
         .subsection p {
-            color: #666666;
+            color: #666;
             font-size: 12px;
             line-height: 1.5;
         }
 
-        .nav-buttons-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .subsection-buttons { margin-top: 8px; }
 
         .sub-button {
             background: #1a3a5c;
@@ -253,11 +337,11 @@
             cursor: pointer;
             transition: all 0.2s ease;
             display: inline-block;
+            margin-top: 6px;
         }
-
         .sub-button:hover {
             background: #2a5a7c;
-            box-shadow: 0 2px 6px rgba(26, 58, 92, 0.3);
+            box-shadow: 0 2px 6px rgba(26,58,92,0.3);
         }
 
         .footer-section {
@@ -267,24 +351,13 @@
             text-align: center;
             margin-top: 30px;
         }
-
-        .footer-section p {
-            margin: 6px 0;
-            font-size: 12px;
-        }
-
-        @media (max-width: 768px) {
-            .avatar-container {
-                grid-template-columns: 1fr;
-            }
-
-            .hero-section h1 {
-                font-size: 22px;
-            }
-        }
+        .footer-section p { margin: 6px 0; font-size: 12px; }
+        .footer-section a { color: #d4af37; text-decoration: none; }
+        .footer-section a:hover { color: #e4c961; text-decoration: underline; }
     </style>
 </head>
 <body>
+
     <!-- Header -->
     <header style="position:relative;z-index:1001;background:linear-gradient(180deg,#0f2847 0%,#1a3a5c 100%);box-shadow:0 2px 8px rgba(0,0,0,0.2);">
         <div class="navbar" style="flex-direction:row;align-items:center;gap:20px;padding:16px 20px;justify-content:space-between;">
@@ -295,78 +368,36 @@
         </div>
     </header>
 
-    <!-- Layout principal con sidebar admin -->
+    <!-- Layout principal -->
     <div class="avatar-section">
-        <!-- Sidebar Admin (dorado) -->
-        <div class="admin-sidebar" id="adminSidebar">
-            <div class="admin-sidebar-header">
-                <img id="adminSidebarAvatar" class="admin-sidebar-avatar" alt="Avatar Admin">
-                <div class="admin-sidebar-name" id="adminSidebarName"></div>
-                <span class="admin-sidebar-badge">⚙ Administrador</span>
-            </div>
-            <div class="admin-sidebar-menu">
-                <div class="admin-menu-section">
-                    <div class="admin-menu-title">Navegación</div>
-                    <a href="index.html" class="admin-menu-item">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-                        Inicio
-                    </a>
-                    <a href="calendar.html" class="admin-menu-item">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        Calendario
-                    </a>
-                    <a href="locations.html" class="admin-menu-item">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                        Ubicaciones
-                    </a>
+
+        <!-- SIDEBAR (mismo del index.html) -->
+        <div id="sidebar" class="sidebar">
+            <!-- Contenido de sesión admin -->
+            <div id="sidebarSessionContent" style="display:flex;flex-direction:column;height:100%;overflow:hidden;gap:0;">
+                <div class="sidebar-header">
+                    <img id="sidebarAvatar" class="sidebar-avatar" alt="Avatar Admin">
+                    <div class="sidebar-name" id="sidebarName"></div>
+                    <span class="sidebar-badge">⚙ Administrador</span>
+                    <div class="sidebar-email" id="sidebarEmail"></div>
                 </div>
-                <div class="admin-menu-section">
-                    <div class="admin-menu-title">Gestión</div>
-                    <a href="base.html" class="admin-menu-item">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-                        Editar Perfiles
-                    </a>
-                    <a href="database.html" class="admin-menu-item">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-                        Base de Datos
-                    </a>
-                    <a href="cycle.html" class="admin-menu-item">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-                        Ciclos Educativos
-                    </a>
+                <div class="sidebar-menu-layout">
+                    <div class="sidebar-menu-header">
+                        <span style="font-weight:bold;color:#d4af37;">Menú de Administración</span>
+                    </div>
+                    <div class="sidebar-menu-body">
+                        <div id="sidebarMenuContainer"></div>
+                    </div>
+                    <div class="sidebar-menu-footer">
+                        <button class="logout-btn" onclick="handleAdminLogout()">Cerrar Sesión</button>
+                    </div>
                 </div>
-                <div class="admin-menu-section">
-                    <div class="admin-menu-title">Biblioteca</div>
-                    <a href="biblioteca.html" class="admin-menu-item">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-                        Biblioteca General
-                    </a>
-                    <a href="biblioteca-admin.html" class="admin-menu-item">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                        Biblioteca Admin
-                    </a>
-                    <a href="pdf.html" class="admin-menu-item">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        Herramientas PDF
-                    </a>
-                </div>
-                <div class="admin-menu-section">
-                    <div class="admin-menu-title">IA</div>
-                    <a href="neural.html" class="admin-menu-item">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        Predicciones IA
-                    </a>
-                </div>
-            </div>
-            <div class="admin-sidebar-footer">
-                <button class="admin-logout-btn" onclick="handleAdminLogout()">Cerrar Sesión</button>
             </div>
         </div>
 
         <!-- Contenido principal -->
         <div class="admin-content">
-        <div class="avatar-container">
-            <div class="info-section" style="grid-column: 1 / -1;">
+            <div class="info-section">
                 <h3>Centro de Información y Análisis</h3>
                 <p class="info-description">
                     A1 Analytics es un sistema de gestión y análisis educativo para instituciones académicas. Integra herramientas estadísticas avanzadas, visualización de datos en tiempo real y análisis predictivos. Permite identificar patrones, fortalezas, áreas de mejora y tendencias académicas de cada estudiante.
@@ -450,52 +481,184 @@
                     <div class="subsection">
                         <h4>Subir y Buscar en PDF</h4>
                         <p>Sube un archivo PDF para extraer su contenido y realizar búsquedas de texto. Herramienta educativa para análisis de documentos.</p>
-                        <a href="pdf.html" class="sub-button">Herramientas PDF</a>
+                        <div class="subsection-buttons">
+                            <a href="pdf.html" class="sub-button">Herramientas PDF</a>
+                        </div>
                     </div>
                 </div>
 
-                <div style="background: #e8f1f8; padding: 15px; border-radius: 4px; margin-top: 20px;">
-                    <p style="color: #1a3a5c; font-size: 12px; line-height: 1.6; margin-bottom: 10px;">
+                <div style="background:#e8f1f8;padding:15px;border-radius:4px;margin-top:20px;">
+                    <p style="color:#1a3a5c;font-size:12px;line-height:1.6;margin-bottom:10px;">
                         <strong>Fines Educativos:</strong> Este sistema está desarrollado con objetivos pedagógicos claros: mejorar la calidad de la educación, facilitar la equidad en el acceso a información relevante, y potenciar las capacidades de docentes para intervenir de manera oportuna.
                     </p>
-                    <p style="color: #1a3a5c; font-size: 12px; line-height: 1.6;">
+                    <p style="color:#1a3a5c;font-size:12px;line-height:1.6;">
                         <strong>Seguridad:</strong> Todos los datos están encriptados, las conexiones son seguras (HTTPS), y cumplimos con normativas de protección de datos.
                     </p>
                 </div>
             </div>
         </div>
-    </div>
 
-        </div>
-    </div><!-- /admin-content -->
+    </div><!-- /avatar-section -->
 
     <!-- Footer -->
     <div class="footer-section">
         <p><strong>A1 Analytics</strong> - Sistema Integral de Análisis Educativo</p>
         <p>© 2026 - Plataforma para el Seguimiento Personalizado de Desempeño Estudiantil</p>
-        <p style="font-size: 12px;">Desarrollado con fines educativos | <a href="#">Políticas de Privacidad</a> | <a href="#">Términos de Servicio</a></p>
+        <p style="font-size:12px;">Desarrollado con fines educativos | <a href="#">Políticas de Privacidad</a> | <a href="#">Términos de Servicio</a></p>
     </div>
 
     <script>
-        // Verificar sesión admin al cargar
-        document.addEventListener('DOMContentLoaded', function() {
-            const userEmail   = localStorage.getItem('userEmail');
-            const userName    = localStorage.getItem('userName');
+        // =============================================
+        // Poblar menú admin en sidebar
+        // =============================================
+        function buildAdminMenu(userName, userEmail) {
+            const menuContainer = document.getElementById('sidebarMenuContainer');
+            if (!menuContainer) return;
+
+            menuContainer.innerHTML = `
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-info-label">Correo:</div>
+                    <div class="sidebar-user-info-value">${userEmail}</div>
+                </div>
+
+                <div class="sidebar-menu">
+                    <div class="sidebar-menu-title">Navegación</div>
+                    <a href="index.html" class="sidebar-menu-item">
+                        <span class="sidebar-menu-icon">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                        </span>
+                        <span>Inicio</span>
+                    </a>
+                    <a href="calendar.html" class="sidebar-menu-item">
+                        <span class="sidebar-menu-icon">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                        </span>
+                        <span>Calendario</span>
+                    </a>
+                    <a href="locations.html" class="sidebar-menu-item">
+                        <span class="sidebar-menu-icon">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                        </span>
+                        <span>Ubicaciones</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-menu">
+                    <div class="sidebar-menu-title">Gestión</div>
+                    <a href="base.html" class="sidebar-menu-item">
+                        <span class="sidebar-menu-icon">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                            </svg>
+                        </span>
+                        <span>Editar Perfiles</span>
+                    </a>
+                    <a href="database.html" class="sidebar-menu-item">
+                        <span class="sidebar-menu-icon">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                            </svg>
+                        </span>
+                        <span>Base de Datos</span>
+                    </a>
+                    <a href="cycle.html" class="sidebar-menu-item">
+                        <span class="sidebar-menu-icon">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+                            </svg>
+                        </span>
+                        <span>Ciclos Educativos</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-menu">
+                    <div class="sidebar-menu-title">Biblioteca</div>
+                    <a href="biblioteca.html" class="sidebar-menu-item">
+                        <span class="sidebar-menu-icon">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                            </svg>
+                        </span>
+                        <span>Biblioteca General</span>
+                    </a>
+                    <a href="biblioteca-admin.html" class="sidebar-menu-item">
+                        <span class="sidebar-menu-icon">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            </svg>
+                        </span>
+                        <span>Biblioteca Admin</span>
+                    </a>
+                    <a href="pdf.html" class="sidebar-menu-item">
+                        <span class="sidebar-menu-icon">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                        </span>
+                        <span>Herramientas PDF</span>
+                    </a>
+                </div>
+
+                <div class="sidebar-menu">
+                    <div class="sidebar-menu-title">IA</div>
+                    <a href="neural.html" class="sidebar-menu-item">
+                        <span class="sidebar-menu-icon">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="8" x2="12" y2="12"/>
+                                <line x1="12" y1="16" x2="12.01" y2="16"/>
+                            </svg>
+                        </span>
+                        <span>Predicciones IA</span>
+                    </a>
+                </div>
+            `;
+        }
+
+        // =============================================
+        // Inicialización
+        // =============================================
+        document.addEventListener('DOMContentLoaded', function () {
+            const userEmail    = localStorage.getItem('userEmail');
+            const userName     = localStorage.getItem('userName');
             const userApproved = localStorage.getItem('userApproved');
-            const userRole    = localStorage.getItem('userRole');
+            const userRole     = localStorage.getItem('userRole');
 
             if (userRole === 'admin' && userApproved === 'true') {
                 // Rellenar sidebar
-                const nameEl   = document.getElementById('adminSidebarName');
-                const avatarEl = document.getElementById('adminSidebarAvatar');
-                if (nameEl)   nameEl.textContent = userName || 'Admin';
+                const nameEl   = document.getElementById('sidebarName');
+                const emailEl  = document.getElementById('sidebarEmail');
+                const avatarEl = document.getElementById('sidebarAvatar');
+
+                if (nameEl)   nameEl.textContent  = userName || 'Admin';
+                if (emailEl)  emailEl.textContent = userEmail || '';
                 if (avatarEl) avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || userEmail)}&background=1a3a5c&color=d4af37`;
-                console.log('Admin autorizado ✓');
+
+                buildAdminMenu(userName, userEmail);
             } else {
                 window.location.href = 'index.html';
             }
         });
 
+        // Logout
         function handleAdminLogout() {
             localStorage.removeItem('userEmail');
             localStorage.removeItem('userName');
@@ -503,99 +666,6 @@
             localStorage.removeItem('userRole');
             localStorage.removeItem('id_token');
             window.location.href = 'index.html';
-        }
-
-        // Mostrar perfil del usuario (compatibilidad)
-        function showUserProfile(userName, userEmail) {}
-
-        // Función para resaltar texto
-        function highlightText(text, query) {
-            if (!query) return text;
-            const regex = new RegExp(`(${query})`, 'gi');
-            return text.replace(regex, '<mark>$1</mark>');
-        }
-
-        // Función para subir PDF
-        async function uploadPDF() {
-            const fileInput = document.getElementById('pdfFile');
-            const file = fileInput.files[0];
-            if (!file) {
-                alert('Selecciona un archivo PDF primero.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('pdfFile', file);
-
-            try {
-                const response = await fetch('/api/upload-pdf', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    alert('PDF subido y procesado exitosamente.');
-                    // Mostrar el PDF en el viewer
-                    const pdfUrl = URL.createObjectURL(file);
-                    document.getElementById('pdfFrame').src = pdfUrl;
-                    document.getElementById('pdfViewer').style.display = 'block';
-                } else {
-                    alert('Error: ' + result.error);
-                }
-            } catch (error) {
-                console.error('Error uploading PDF:', error);
-                alert('Error al subir el PDF.');
-            }
-        }
-
-        // Función para buscar en PDF
-        async function searchPDF() {
-            const query = document.getElementById('searchQuery').value;
-            if (!query) {
-                alert('Ingresa un término de búsqueda.');
-                return;
-            }
-
-            const searchType = document.querySelector('input[name="searchType"]:checked').value;
-            const endpoint = searchType === 'semantic' ? '/api/search-semantic' : '/api/search-pdf';
-
-            try {
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query })
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    const resultsDiv = document.getElementById('searchResults');
-                    if (result.results && result.results.length > 0) {
-                        const query = document.getElementById('searchQuery').value.toLowerCase();
-                        resultsDiv.innerHTML = result.results.map(r => {
-                            if (searchType === 'semantic') {
-                                const ctx = r.context;
-                                let html = `<p><strong>${r.filename}</strong>: `;
-                                if (ctx.previous) html += `<em>...${highlightText(ctx.previous, query)} </em>`;
-                                html += `<strong>${highlightText(ctx.current, query)}</strong>`;
-                                if (ctx.next) html += ` <em>${highlightText(ctx.next, query)}...</em>`;
-                                html += `</p>`;
-                                return html;
-                            } else {
-                                return `<p><strong>${r.filename}</strong>: ${highlightText(r.content, query)}</p>`;
-                            }
-                        }).join('');
-                        // Opcional: guardar en sessionStorage
-                        sessionStorage.setItem('searchResults', JSON.stringify(result.results));
-                    } else {
-                        resultsDiv.innerHTML = '<p>No se encontraron resultados.</p>';
-                        sessionStorage.removeItem('searchResults');
-                    }
-                } else {
-                    alert('Error: ' + result.error);
-                }
-            } catch (error) {
-                console.error('Error searching PDF:', error);
-                alert('Error al buscar en el PDF.');
-            }
         }
     </script>
 </body>

@@ -8,55 +8,53 @@ const { createClient } = require('@supabase/supabase-js');
 const { MongoClient, ObjectId } = require('mongodb');
 let pdfParseFunc = null;
 
-// pdf-parse v1.1.1 exporta directamente como función
 try {
-	pdfParseFunc = require('pdf-parse');
-	if (typeof pdfParseFunc !== 'function') {
-		console.warn('pdf-parse no es una función, intentando .default...');
-		pdfParseFunc = pdfParseFunc.default || null;
+	const pdfParseModule = require('pdf-parse');
+	console.log('pdf-parse module initial type:', typeof pdfParseModule);
+	console.log('pdf-parse module keys:', Object.keys(pdfParseModule));
+	console.log('pdf-parse module value:', pdfParseModule);
+	if (typeof pdfParseModule === 'function') {
+		pdfParseFunc = pdfParseModule;
+	} else if (pdfParseModule && typeof pdfParseModule.default === 'function') {
+		pdfParseFunc = pdfParseModule.default;
+		console.log('pdf-parse using default export');
+	} else if (pdfParseModule && pdfParseModule.PDFParse) {
+		pdfParseFunc = pdfParseModule.PDFParse;
+		console.log('pdf-parse using PDFParse class');
+	} else {
+		console.warn('pdf-parse loaded but not a function:', typeof pdfParseModule, 'default=', typeof (pdfParseModule && pdfParseModule.default));
 	}
-	if (pdfParseFunc) console.log('pdf-parse cargado correctamente ✓');
-	else console.error('pdf-parse no pudo cargarse');
 } catch (err) {
-	console.error('Error cargando pdf-parse:', err.message);
+	console.error('Error requiring pdf-parse:', err);
 }
 
 const { pipeline } = require('@xenova/transformers');
 
 const app = express();
-app.use(cors({ origin: 'http://localhost:5500' }));
+app.use(cors({
+	origin: function(origin, callback) {
+		if (!origin) return callback(null, true);
+		if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return callback(null, true);
+		callback(null, true);
+	},
+	credentials: true
+}));
 app.use(express.json());
 
-// Función para limpiar texto preservando estructura de líneas
+// Función para limpiar texto
 function cleanText(text) {
-    return text
-        .replace(/\r\n/g, '\n')
-        .replace(/\r/g, '\n')
-        .replace(/[ \t]+/g, ' ')        // espacios múltiples → uno
-        .replace(/\n{3,}/g, '\n\n')    // más de 2 saltos → máximo 2
-        .trim();
+    return text.replace(/\s+/g, ' ').trim();
 }
 
-// Divide texto en chunks de ~300 palabras respetando líneas
+// Función para dividir texto en chunks de ~300 palabras
 function splitIntoChunks(text, maxWords = 300) {
-	const lines = text.split('\n').filter(l => l.trim());
+	const words = text.split(/\s+/);
 	const chunks = [];
-	let current = [];
-	let wordCount = 0;
-
-	for (const line of lines) {
-		const lineWords = line.trim().split(/\s+/).length;
-		if (wordCount + lineWords > maxWords && current.length > 0) {
-			chunks.push(current.join('\n'));
-			current = [line.trim()];
-			wordCount = lineWords;
-		} else {
-			current.push(line.trim());
-			wordCount += lineWords;
-		}
+	for (let i = 0; i < words.length; i += maxWords) {
+		const chunk = words.slice(i, i + maxWords).join(' ');
+		if (chunk.trim()) chunks.push(chunk);
 	}
-	if (current.length > 0) chunks.push(current.join('\n'));
-	return chunks.filter(c => c.trim());
+	return chunks;
 }
 
 // Función para generar embedding
@@ -101,7 +99,10 @@ if (SUPABASE_URL && SUPABASE_KEY) {
 }
 
 // Multer
-const upload = multer();
+const upload = multer({
+	storage: multer.memoryStorage(),
+	limits: { fileSize: 10 * 1024 * 1024 }
+});
 
 // Mongo
 let dbClient;
@@ -1073,23 +1074,68 @@ app.post('/api/upload-pdf', upload.single('pdfFile'), async (req, res) => {
 		// Generar embeddings y guardar chunks
 		const pdfId = new ObjectId();
 		const chunkDocs = [];
-		for (let i = 0; i < chunks.length; i++) {
-			const chunk = chunks[i].trim();
-			if (chunk) {
-				const embedding = await generateEmbedding(chunk);
-				chunkDocs.push({
-					pdfId: pdfId,
-					filename: file.originalname,
-					chunkIndex: i,
-					content: chunk,
-					embedding: embedding,
-					uploadedAt: new Date()
+
+		const buildChunks = async (chunkList, isOcr = false) => {
+			for (let i = 0; i < chunkList.length; i++) {
+				const chunk = chunkList[i].trim();
+				if (chunk) {
+					const embedding = await generateEmbedding(chunk);
+					chunkDocs.push({
+						pdfId, filename: file.originalname,
+						chunkIndex: chunkDocs.length,
+						content: chunk, embedding,
+						uploadedAt: new Date(), ocr: isOcr
+					});
+				}
+			}
+		};
+
+		await buildChunks(chunks, false);
+
+		// Si no hay texto, intentar OCR con tesseract.js
+		if (chunkDocs.length === 0) {
+			let Tesseract = null;
+			try { Tesseract = require('tesseract.js'); } catch(e) {}
+
+			if (!Tesseract) {
+				return res.status(400).json({
+					error: 'Este PDF es una imagen escaneada y no contiene texto extraible. Instala tesseract.js para habilitar OCR.'
 				});
 			}
-		}
-		await col.insertMany(chunkDocs);
 
-		res.json({ success: true, message: `PDF processed into ${chunks.length} chunks with embeddings. Previous data cleared.` });
+			console.log('PDF sin texto, iniciando OCR con tesseract.js...');
+			try {
+				const { data: { text: ocrText } } = await Tesseract.recognize(
+					file.buffer, 'spa+eng',
+					{ logger: m => { if (m.status === 'recognizing text') process.stdout.write('\rOCR: ' + Math.round(m.progress*100) + '%'); } }
+				);
+				console.log('\nOCR completado.');
+
+				if (!ocrText || !ocrText.trim()) {
+					return res.status(400).json({ error: 'OCR no pudo extraer texto legible del PDF.' });
+				}
+
+				const ocrChunks = splitIntoChunks(cleanText(ocrText), 300);
+				await buildChunks(ocrChunks, true);
+
+				if (chunkDocs.length === 0) {
+					return res.status(400).json({ error: 'OCR completado pero no se encontró texto legible.' });
+				}
+
+				await col.insertMany(chunkDocs);
+				text = null;
+				return res.json({
+					success: true, ocr: true,
+					message: `PDF escaneado procesado con OCR en ${chunkDocs.length} fragmentos. Puede tardar más de lo normal.`
+				});
+			} catch (ocrErr) {
+				return res.status(500).json({ error: 'Error en OCR: ' + ocrErr.message });
+			}
+		}
+
+		await col.insertMany(chunkDocs);
+		text = null;
+		res.json({ success: true, message: `PDF procesado en ${chunkDocs.length} fragmentos correctamente.` });
 	} catch (err) {
 		console.error('Error processing PDF:', err);
 		res.status(500).json({ error: `Error processing PDF: ${err.message}` });

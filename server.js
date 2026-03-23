@@ -8,29 +8,50 @@ const { createClient } = require('@supabase/supabase-js');
 const { MongoClient, ObjectId } = require('mongodb');
 let pdfParseFunc = null;
 
+// pdf-parse v1.1.1 — exporta directamente como función
 try {
-	const pdfParseModule = require('pdf-parse');
-	console.log('pdf-parse module initial type:', typeof pdfParseModule);
-	console.log('pdf-parse module keys:', Object.keys(pdfParseModule));
-	console.log('pdf-parse module value:', pdfParseModule);
-	if (typeof pdfParseModule === 'function') {
-		pdfParseFunc = pdfParseModule;
-	} else if (pdfParseModule && typeof pdfParseModule.default === 'function') {
-		pdfParseFunc = pdfParseModule.default;
-		console.log('pdf-parse using default export');
-	} else if (pdfParseModule && pdfParseModule.PDFParse) {
-		pdfParseFunc = pdfParseModule.PDFParse;
-		console.log('pdf-parse using PDFParse class');
-	} else {
-		console.warn('pdf-parse loaded but not a function:', typeof pdfParseModule, 'default=', typeof (pdfParseModule && pdfParseModule.default));
+	pdfParseFunc = require('pdf-parse');
+	if (typeof pdfParseFunc !== 'function') {
+		pdfParseFunc = pdfParseFunc.default || null;
 	}
+	if (pdfParseFunc) console.log('pdf-parse cargado correctamente ✓');
+	else console.error('pdf-parse no pudo cargarse');
 } catch (err) {
-	console.error('Error requiring pdf-parse:', err);
+	console.error('Error cargando pdf-parse:', err.message);
 }
 
 const { pipeline } = require('@xenova/transformers');
+const { OAuth2Client } = require('google-auth-library');
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '903625348841-j9ed7i8hb3me77lvhp7gai175c4rr68i.apps.googleusercontent.com';
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+
+// Verificar id_token de Google — nunca confiar en email del cliente
+async function verifyGoogleToken(idToken) {
+	try {
+		const ticket = await googleClient.verifyIdToken({ idToken, audience: GOOGLE_CLIENT_ID });
+		const payload = ticket.getPayload();
+		return { email: payload.email, name: payload.name };
+	} catch (err) {
+		console.error('Token de Google inválido:', err.message);
+		return null;
+	}
+}
+
+// Obtener rol real desde MongoDB — nunca del cliente
+async function getUserRole(email) {
+	if (!email) return null;
+	try {
+		const col = dbClient.db(DB_NAME).collection('users');
+		const user = await col.findOne({ email: String(email).toLowerCase() });
+		return user ? (user.role || 'user') : null;
+	} catch (err) {
+		console.error('getUserRole error:', err);
+		return null;
+	}
+}
 
 const app = express();
+// CORS dinámico
 app.use(cors({
 	origin: function(origin, callback) {
 		if (!origin) return callback(null, true);
@@ -40,6 +61,36 @@ app.use(cors({
 	credentials: true
 }));
 app.use(express.json());
+
+// ── MIDDLEWARE DE AUTENTICACIÓN ──
+// Extrae y verifica el id_token de Google del header Authorization
+// Uso: Authorization: Bearer <id_token>
+async function requireAuth(req, res, next) {
+	const authHeader = req.headers['authorization'] || '';
+	const id_token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+	if (!id_token) {
+		return res.status(401).json({ error: 'Token de autenticación requerido' });
+	}
+
+	const googleUser = await verifyGoogleToken(id_token);
+	if (!googleUser) {
+		return res.status(401).json({ error: 'Token inválido o expirado. Vuelve a iniciar sesión.' });
+	}
+
+	// Adjuntar email verificado al request — nunca del cliente
+	req.verifiedEmail = googleUser.email.toLowerCase();
+	req.verifiedName  = googleUser.name;
+	next();
+}
+
+// Cabeceras de seguridad básicas
+app.use((req, res, next) => {
+	res.setHeader('X-Content-Type-Options', 'nosniff');
+	res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+	res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+	next();
+});
 
 // Función para limpiar texto
 function cleanText(text) {
@@ -565,58 +616,70 @@ app.post('/api/overpass', express.text({ type: '*/*' }), async (req, res) => {
 
 // ---------- User approval endpoints (MongoDB users collection) ----------
 
-// POST /request-approval
-// body: { email, name }
+// POST /request-approval — verifica id_token de Google en el backend
 app.post('/request-approval', async (req, res) => {
 	try {
-		const body = req.body || {};
-		let { email, name } = body;
+		const { id_token } = req.body || {};
+		if (!id_token) return res.status(400).json({ error: 'id_token requerido' });
 
-		if (!email || typeof email !== 'string') return res.status(400).json({ error: 'No email' });
-		email = String(email).trim().toLowerCase();
+		// Verificar con Google — nunca confiar en email del cliente
+		const googleUser = await verifyGoogleToken(id_token);
+		if (!googleUser) return res.status(401).json({ error: 'Token de Google inválido o expirado' });
 
-		// basic email validation
-		if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Invalid email' });
+		const email = googleUser.email.toLowerCase();
+		const name  = googleUser.name || email.split('@')[0];
 
-		if (name && typeof name === 'string') {
-			name = String(name).trim().slice(0, 120);
-		} else {
-			name = email.split('@')[0];
-		}
-
-		// Upsert user into MongoDB 'users' collection with defaults (approved=false, role='user')
 		const col = dbClient.db(DB_NAME).collection('users');
-		
-		const upsertResult = await col.updateOne(
+		await col.updateOne(
 			{ email },
 			{ $set: { email, name, updatedAt: new Date() }, $setOnInsert: { role: 'user', approved: false, createdAt: new Date() } },
 			{ upsert: true }
 		);
 
-		console.info('Approval requested for user (stored in MongoDB):', email);
-		res.json({ success: true });
+		console.info('Usuario registrado/actualizado:', email);
+		res.json({ success: true, email, name });
 	} catch (err) {
 		console.error('request-approval error', err);
 		res.status(500).json({ error: 'server error' });
 	}
 });
 
-// GET /status?email=...  -> returns { approved, role }
+// GET /status?email=... — lookup rápido para sesiones ya verificadas
 app.get('/status', async (req, res) => {
 	try {
 		const { email } = req.query;
 		if (!email) return res.status(400).json({ error: 'No email' });
-
 		const col = dbClient.db(DB_NAME).collection('users');
 		const user = await col.findOne({ email: String(email).toLowerCase() });
-
-		if (!user) {
-			return res.json({ approved: false, role: 'user' });
-		}
-
+		if (!user) return res.json({ approved: false, role: 'user' });
 		res.json({ approved: user.approved || false, role: user.role || 'user' });
 	} catch (err) {
 		console.error('status error', err);
+		res.status(500).json({ error: 'server error' });
+	}
+});
+
+// POST /verify-token — verifica id_token de Google y devuelve rol real desde MongoDB
+app.post('/verify-token', async (req, res) => {
+	try {
+		const { id_token } = req.body || {};
+		if (!id_token) return res.status(400).json({ error: 'id_token requerido' });
+
+		const googleUser = await verifyGoogleToken(id_token);
+		if (!googleUser) return res.status(401).json({ error: 'Token inválido' });
+
+		const email = googleUser.email.toLowerCase();
+		const col = dbClient.db(DB_NAME).collection('users');
+		const user = await col.findOne({ email });
+
+		res.json({
+			email,
+			name: googleUser.name,
+			approved: user ? (user.approved || false) : false,
+			role: user ? (user.role || 'user') : 'user'
+		});
+	} catch (err) {
+		console.error('verify-token error', err);
 		res.status(500).json({ error: 'server error' });
 	}
 });
@@ -660,9 +723,10 @@ app.get('/api/publications-admin', async (req, res) => {
 });
 
 // POST /api/publications - Crear nueva publicación en BIBLIOTECA NORMAL
-app.post('/api/publications', async (req, res) => {
+app.post('/api/publications', requireAuth, async (req, res) => {
 	try {
-		const { title, subtitle, keywords, content, author, role, coverUrl } = req.body;
+		const author = req.verifiedEmail; // email verificado por Google
+		const { title, subtitle, keywords, content, role, coverUrl } = req.body;
 
 		// Validaciones
 		if (!title || !title.trim()) {
@@ -677,9 +741,10 @@ app.post('/api/publications', async (req, res) => {
 			return res.status(400).json({ error: 'Usuario no autenticado' });
 		}
 
-		// Solo usuarios y administradores pueden publicar
-		if (role !== 'user' && role !== 'admin') {
-			return res.status(403).json({ error: 'Rol no autorizado para publicar' });
+		// Verificar rol REAL desde MongoDB — ignorar 'role' del cliente
+		const realRole = await getUserRole(author);
+		if (!realRole || (realRole !== 'user' && realRole !== 'admin')) {
+			return res.status(403).json({ error: 'No tienes permiso para publicar' });
 		}
 
 		const col = dbClient.db(DB_NAME).collection('publications');
@@ -709,9 +774,10 @@ app.post('/api/publications', async (req, res) => {
 });
 
 // POST /api/publications-admin - Crear nueva publicación en BIBLIOTECA ADMIN (independiente)
-app.post('/api/publications-admin', async (req, res) => {
+app.post('/api/publications-admin', requireAuth, async (req, res) => {
 	try {
-		const { title, subtitle, keywords, content, author, role, coverUrl } = req.body;
+		const author = req.verifiedEmail;
+		const { title, subtitle, keywords, content, role, coverUrl } = req.body;
 
 		// Validaciones
 		if (!title || !title.trim()) {
@@ -752,9 +818,10 @@ app.post('/api/publications-admin', async (req, res) => {
 });
 
 // PUT /api/publications/:id - Editar publicación (SOLO AUTOR)
-app.put('/api/publications/:id', async (req, res) => {
+app.put('/api/publications/:id', requireAuth, async (req, res) => {
 	try {
-		const { userEmail, title, subtitle, keywords, content, coverUrl } = req.body || {};
+		const userEmail = req.verifiedEmail;
+		const { title, subtitle, keywords, content, coverUrl } = req.body || {};
 		const publicationId = req.params.id;
 
 		if (!userEmail) {
@@ -813,38 +880,22 @@ app.put('/api/publications/:id', async (req, res) => {
 });
 
 // DELETE /api/publications/:id - Eliminar publicación
-app.delete('/api/publications/:id', async (req, res) => {
+app.delete('/api/publications/:id', requireAuth, async (req, res) => {
 	try {
-		const { userEmail, userRole } = req.body || {};
+		const userEmail = req.verifiedEmail; // email verificado por Google, no del cliente
 		const publicationId = req.params.id;
+		if (!publicationId || publicationId.length !== 24) return res.status(400).json({ error: 'ID inválido' });
 
-		if (!userEmail) {
-			return res.status(401).json({ error: 'Usuario no autenticado' });
-		}
-
-		// Validar que el ID es un ObjectId válido
-		if (!publicationId || publicationId.length !== 24) {
-			return res.status(400).json({ error: 'ID de publicación inválido' });
-		}
-
+		const realRole = await getUserRole(userEmail);
 		const col = dbClient.db(DB_NAME).collection('publications');
 		const publication = await col.findOne({ _id: new ObjectId(publicationId) });
+		if (!publication) return res.status(404).json({ error: 'Publicación no encontrada' });
 
-		if (!publication) {
-			return res.status(404).json({ error: 'Publicación no encontrada' });
-		}
-
-		// Los admins pueden eliminar cualquier publicación
-		// Los usuarios solo pueden eliminar las suyas
-		const isAdmin = userRole === 'admin';
-		const isAuthor = publication.author === userEmail;
-
-		if (!isAdmin && !isAuthor) {
+		if (realRole !== 'admin' && publication.author !== userEmail) {
 			return res.status(403).json({ error: 'No tienes permiso para eliminar esta publicación' });
 		}
 
 		await col.deleteOne({ _id: new ObjectId(publicationId) });
-
 		res.json({ success: true, message: 'Publicación eliminada correctamente' });
 	} catch (err) {
 		console.error('Error eliminando publicación:', err);
@@ -853,9 +904,10 @@ app.delete('/api/publications/:id', async (req, res) => {
 });
 
 // PUT /api/publications-admin/:id - Editar publicación en BIBLIOTECA ADMIN
-app.put('/api/publications-admin/:id', async (req, res) => {
+app.put('/api/publications-admin/:id', requireAuth, async (req, res) => {
 	try {
-		const { userEmail, title, subtitle, keywords, content, coverUrl } = req.body || {};
+		const userEmail = req.verifiedEmail;
+		const { title, subtitle, keywords, content, coverUrl } = req.body || {};
 		const publicationId = req.params.id;
 
 		if (!userEmail) {
@@ -913,35 +965,22 @@ app.put('/api/publications-admin/:id', async (req, res) => {
 });
 
 // DELETE /api/publications-admin/:id - Eliminar publicación en BIBLIOTECA ADMIN
-app.delete('/api/publications-admin/:id', async (req, res) => {
+app.delete('/api/publications-admin/:id', requireAuth, async (req, res) => {
 	try {
-		const { userEmail, userRole } = req.body || {};
+		const userEmail = req.verifiedEmail;
 		const publicationId = req.params.id;
+		if (!publicationId || publicationId.length !== 24) return res.status(400).json({ error: 'ID inválido' });
 
-		if (!userEmail) {
-			return res.status(401).json({ error: 'Usuario no autenticado' });
-		}
-
-		if (!publicationId || publicationId.length !== 24) {
-			return res.status(400).json({ error: 'ID de publicación inválido' });
-		}
-
+		const realRole = await getUserRole(userEmail);
 		const col = dbClient.db(DB_NAME).collection('publicationsadmin');
 		const publication = await col.findOne({ _id: new ObjectId(publicationId) });
+		if (!publication) return res.status(404).json({ error: 'Publicación no encontrada' });
 
-		if (!publication) {
-			return res.status(404).json({ error: 'Publicación no encontrada' });
-		}
-
-		const isAdmin = userRole === 'admin';
-		const isAuthor = publication.author === userEmail;
-
-		if (!isAdmin && !isAuthor) {
+		if (realRole !== 'admin' && publication.author !== userEmail) {
 			return res.status(403).json({ error: 'No tienes permiso para eliminar esta publicación' });
 		}
 
 		await col.deleteOne({ _id: new ObjectId(publicationId) });
-
 		res.json({ success: true, message: 'Publicación eliminada correctamente' });
 	} catch (err) {
 		console.error('Error eliminando publicación admin:', err);
@@ -1092,50 +1131,36 @@ app.post('/api/upload-pdf', upload.single('pdfFile'), async (req, res) => {
 
 		await buildChunks(chunks, false);
 
-		// Si no hay texto, intentar OCR con tesseract.js
 		if (chunkDocs.length === 0) {
 			let Tesseract = null;
 			try { Tesseract = require('tesseract.js'); } catch(e) {}
-
 			if (!Tesseract) {
 				return res.status(400).json({
-					error: 'Este PDF es una imagen escaneada y no contiene texto extraible. Instala tesseract.js para habilitar OCR.'
+					error: 'Este PDF es una imagen escaneada y no contiene texto extraible. Solo funcionan PDFs con texto real.',
+					scanned: true
 				});
 			}
-
-			console.log('PDF sin texto, iniciando OCR con tesseract.js...');
+			console.log('PDF sin texto, iniciando OCR...');
 			try {
 				const { data: { text: ocrText } } = await Tesseract.recognize(
 					file.buffer, 'spa+eng',
 					{ logger: m => { if (m.status === 'recognizing text') process.stdout.write('\rOCR: ' + Math.round(m.progress*100) + '%'); } }
 				);
 				console.log('\nOCR completado.');
-
-				if (!ocrText || !ocrText.trim()) {
-					return res.status(400).json({ error: 'OCR no pudo extraer texto legible del PDF.' });
-				}
-
-				const ocrChunks = splitIntoChunks(cleanText(ocrText), 300);
-				await buildChunks(ocrChunks, true);
-
-				if (chunkDocs.length === 0) {
-					return res.status(400).json({ error: 'OCR completado pero no se encontró texto legible.' });
-				}
-
+				if (!ocrText || !ocrText.trim()) return res.status(400).json({ error: 'OCR no pudo extraer texto.' });
+				await buildChunks(splitIntoChunks(cleanText(ocrText), 300), true);
+				if (chunkDocs.length === 0) return res.status(400).json({ error: 'OCR sin texto legible.' });
 				await col.insertMany(chunkDocs);
 				text = null;
-				return res.json({
-					success: true, ocr: true,
-					message: `PDF escaneado procesado con OCR en ${chunkDocs.length} fragmentos. Puede tardar más de lo normal.`
-				});
+				return res.json({ success: true, ocr: true, message: `PDF escaneado procesado con OCR en ${chunkDocs.length} fragmentos.` });
 			} catch (ocrErr) {
 				return res.status(500).json({ error: 'Error en OCR: ' + ocrErr.message });
 			}
 		}
 
 		await col.insertMany(chunkDocs);
-		text = null;
-		res.json({ success: true, message: `PDF procesado en ${chunkDocs.length} fragmentos correctamente.` });
+
+		res.json({ success: true, message: `PDF processed into ${chunks.length} chunks with embeddings. Previous data cleared.` });
 	} catch (err) {
 		console.error('Error processing PDF:', err);
 		res.status(500).json({ error: `Error processing PDF: ${err.message}` });

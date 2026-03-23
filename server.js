@@ -8,27 +8,17 @@ const { createClient } = require('@supabase/supabase-js');
 const { MongoClient, ObjectId } = require('mongodb');
 let pdfParseFunc = null;
 
+// pdf-parse v1.1.1 exporta directamente como función
 try {
-	const pdfParseModule = require('pdf-parse');
-	if (typeof pdfParseModule === 'function') {
-		// Exporta directamente como función
-		pdfParseFunc = pdfParseModule;
-	} else if (pdfParseModule && typeof pdfParseModule.default === 'function') {
-		// Exporta como default
-		pdfParseFunc = pdfParseModule.default;
-	} else if (pdfParseModule && pdfParseModule.PDFParse) {
-		// Exporta como clase — hay que instanciarla correctamente
-		const PDFParseClass = pdfParseModule.PDFParse;
-		pdfParseFunc = async function(buffer) {
-			const instance = new PDFParseClass();
-			return await instance.pdf(buffer);
-		};
-		console.log('pdf-parse: usando PDFParse como clase');
-	} else {
-		console.warn('pdf-parse: formato desconocido');
+	pdfParseFunc = require('pdf-parse');
+	if (typeof pdfParseFunc !== 'function') {
+		console.warn('pdf-parse no es una función, intentando .default...');
+		pdfParseFunc = pdfParseFunc.default || null;
 	}
+	if (pdfParseFunc) console.log('pdf-parse cargado correctamente ✓');
+	else console.error('pdf-parse no pudo cargarse');
 } catch (err) {
-	console.error('Error cargando pdf-parse:', err);
+	console.error('Error cargando pdf-parse:', err.message);
 }
 
 const { pipeline } = require('@xenova/transformers');

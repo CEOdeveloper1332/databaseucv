@@ -1427,45 +1427,58 @@
 
          // Email sending moved to server; frontend will request approval via POST /request-approval
 
-         // Callback de autenticación
-         function handleCredentialResponse(response) {
-             try {
-                 const token = response.credential;
-                 const payload = JSON.parse(atob(token.split('.')[1]));
-                 const userEmail = payload.email;
-                 const userName = payload.name || userEmail.split('@')[0];
-                localStorage.setItem('userEmail', userEmail);
-                localStorage.setItem('userName', userName);
+        // Callback de autenticación — el id_token se verifica en el BACKEND
+        async function handleCredentialResponse(response) {
+            try {
+                const id_token = response.credential;
 
-                // Notify backend to create user (if needed) and send approval email from server
-                fetch('/request-approval', {
+                // 1. Registrar/actualizar usuario en backend (backend verifica el token con Google)
+                const regResp = await fetch('/request-approval', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: userEmail, name: userName })
-                }).then(() => {
-                    // Después de registrar, obtener status actualizado desde backend y guardar en localStorage
-                    return fetch('/status?email=' + encodeURIComponent(userEmail));
-                }).then(resp => {
-                    if (resp.ok) return resp.json();
-                    throw new Error('status fetch failed');
-                }).then(data => {
-                    // Guardar approved y role en localStorage
-                    localStorage.setItem('userApproved', String(data.approved || false));
-                    localStorage.setItem('userRole', String(data.role || 'user'));
-                    // show UI while awaiting approval; server owns approval logic
-                    showUserProfile(userName, userEmail);
-                }).catch(err => {
-                    console.error('request-approval or status error', err);
-                    // Guardar valores por defecto si hay error
-                    localStorage.setItem('userApproved', 'false');
-                    localStorage.setItem('userRole', 'user');
-                    showUserProfile(userName, userEmail);
+                    body: JSON.stringify({ id_token })
                 });
-             } catch (err) {
-                 console.error('Token parsing error:', err);
-                 showToast('Error al procesar la autenticación. Intenta nuevamente.', 5000);
-             }
-         }
+
+                if (!regResp.ok) {
+                    showToast('Error al verificar tu cuenta con Google. Intenta nuevamente.', 5000);
+                    return;
+                }
+
+                // 2. Verificar token y obtener rol real desde backend
+                const verifyResp = await fetch('/verify-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_token })
+                });
+
+                if (!verifyResp.ok) {
+                    showToast('Error al verificar identidad. Intenta nuevamente.', 5000);
+                    return;
+                }
+
+                const data = await verifyResp.json();
+
+                // 3. Guardar en localStorage solo lo que el backend confirmó
+                localStorage.setItem('userEmail',    data.email);
+                localStorage.setItem('userName',     data.name);
+                localStorage.setItem('userApproved', String(data.approved || false));
+                localStorage.setItem('userRole',     String(data.role || 'user'));
+                // Guardar token para futuras verificaciones
+                localStorage.setItem('id_token', id_token);
+
+                // 4. Redirigir si es admin
+                if (data.approved && data.role === 'admin') {
+                    window.location.href = 'admin.html';
+                    return;
+                }
+
+                showUserProfile(data.name, data.email);
+
+            } catch (err) {
+                console.error('Error en autenticación:', err);
+                showToast('Error al procesar la autenticación. Intenta nuevamente.', 5000);
+            }
+        }
 
         // The frontend never grants roles or approval via URL. Approval and role checks
         // are performed by querying the server's /status endpoint.
@@ -1560,4 +1573,3 @@
      </script>
 </body>
 </html>
-

@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title>Calendar</title>
+	<title>Calendario - A1 Analytics</title>
 	<link rel="stylesheet" href="styles.css">
 	<link rel="stylesheet" href="calendar.css">
 </head>
@@ -11,39 +11,54 @@
 	<header>
 		<nav class="navbar">
 			<div class="nav-texts">
-				<a href="index.html" class="nav-text-btn">Inicio</a>
-				<span style="color:rgba(26,58,92,0.7);margin-left:8px">Calendario</span>
+				<a href="index.html" class="nav-text-btn">← Inicio</a>
+				<span>Calendario</span>
 			</div>
 		</nav>
 	</header>
 
 	<main class="calendar-page">
+
+		<!-- HEADER -->
 		<div class="calendar-header">
-			<button id="prevMonth" class="btn">&lt;</button>
-			<div>
+			<div class="calendar-header-left">
+				<div class="nav-arrows">
+					<button id="prevMonth" class="btn-nav" title="Mes anterior">‹</button>
+					<button id="nextMonth" class="btn-nav" title="Mes siguiente">›</button>
+				</div>
 				<h2 id="monthLabel"></h2>
 				<div id="todayLabel" class="today-label"></div>
 			</div>
-			<button id="nextMonth" class="btn">&gt;</button>
+			<button class="btn-today" onclick="goToToday()">Hoy</button>
 		</div>
 
+		<!-- GRID -->
 		<div class="calendar-container">
 			<div class="weekdays">
-				<div>Dom</div><div>Lun</div><div>Mar</div><div>Mie</div><div>Jue</div><div>Vie</div><div>Sab</div>
+				<div>Dom</div><div>Lun</div><div>Mar</div>
+				<div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
 			</div>
 			<div id="daysGrid" class="days-grid"></div>
 		</div>
 
+		<!-- PANEL LATERAL -->
 		<aside class="day-panel">
-			<h3 id="selectedDayLabel">Seleccione un día</h3>
-			<div id="eventsList" class="events-list">
-				<p class="muted">No hay eventos seleccionados.</p>
+			<div class="day-panel-header">
+				<h3 id="selectedDayLabel">Selecciona un día</h3>
+				<div class="day-sub" id="selectedDaySub"></div>
 			</div>
-			<button id="addEventBtn" class="btn btn-primary" disabled>Agregar evento</button>
+			<div id="eventsList" class="events-list">
+				<p class="muted">Haz clic en un día para ver sus eventos.</p>
+			</div>
+			<div class="panel-footer">
+				<button id="addEventBtn" class="btn-add" disabled>
+					＋ Agregar evento
+				</button>
+			</div>
 		</aside>
 	</main>
 
-	<!-- Modal simple -->
+	<!-- MODAL -->
 	<div id="eventModal" class="modal hidden">
 		<div class="modal-content">
 			<h3 id="modalTitle">Nuevo evento</h3>
@@ -51,23 +66,25 @@
 				<input type="hidden" name="id">
 				<div class="form-group">
 					<label>Título</label>
-					<input type="text" name="title" required>
+					<input type="text" name="title" placeholder="Nombre del evento" required>
 				</div>
-				<div class="form-group">
-					<label>Fecha</label>
-					<input type="date" name="date" required>
-				</div>
-				<div class="form-group">
-					<label>Hora</label>
-					<input type="time" name="time">
+				<div class="form-row">
+					<div class="form-group">
+						<label>Fecha</label>
+						<input type="date" name="date" required>
+					</div>
+					<div class="form-group">
+						<label>Hora</label>
+						<input type="time" name="time">
+					</div>
 				</div>
 				<div class="form-group">
 					<label>Descripción</label>
-					<textarea name="desc" rows="3"></textarea>
+					<textarea name="desc" placeholder="Descripción opcional..." rows="3"></textarea>
 				</div>
 				<div class="form-actions">
-					<button type="submit" class="btn btn-primary">Guardar</button>
 					<button type="button" id="cancelBtn" class="btn">Cancelar</button>
+					<button type="submit" class="btn btn-primary">Guardar evento</button>
 				</div>
 			</form>
 		</div>

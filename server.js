@@ -27,20 +27,36 @@ const app = express();
 app.use(cors({ origin: 'http://localhost:5500' }));
 app.use(express.json());
 
-// Función para limpiar texto
+// Función para limpiar texto preservando estructura de líneas
 function cleanText(text) {
-    return text.replace(/\s+/g, ' ').trim();
+    return text
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .replace(/[ \t]+/g, ' ')        // espacios múltiples → uno
+        .replace(/\n{3,}/g, '\n\n')    // más de 2 saltos → máximo 2
+        .trim();
 }
 
-// Función para dividir texto en chunks de ~300 palabras
+// Divide texto en chunks de ~300 palabras respetando líneas
 function splitIntoChunks(text, maxWords = 300) {
-	const words = text.split(/\s+/);
+	const lines = text.split('\n').filter(l => l.trim());
 	const chunks = [];
-	for (let i = 0; i < words.length; i += maxWords) {
-		const chunk = words.slice(i, i + maxWords).join(' ');
-		if (chunk.trim()) chunks.push(chunk);
+	let current = [];
+	let wordCount = 0;
+
+	for (const line of lines) {
+		const lineWords = line.trim().split(/\s+/).length;
+		if (wordCount + lineWords > maxWords && current.length > 0) {
+			chunks.push(current.join('\n'));
+			current = [line.trim()];
+			wordCount = lineWords;
+		} else {
+			current.push(line.trim());
+			wordCount += lineWords;
+		}
 	}
-	return chunks;
+	if (current.length > 0) chunks.push(current.join('\n'));
+	return chunks.filter(c => c.trim());
 }
 
 // Función para generar embedding

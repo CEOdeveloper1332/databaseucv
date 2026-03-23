@@ -215,7 +215,6 @@
     <nav class="navbar">
         <div class="nav-buttons">
             <a href="index.html" class="nav-btn" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Inicio</a>
-            <a href="admin.html" class="nav-btn" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Admin</a>
             <label for="pdfFileInput" class="nav-btn" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;">📄 Abrir PDF</label>
             <input type="file" id="pdfFileInput" accept=".pdf" style="display:none">
         </div>
@@ -538,9 +537,18 @@ function renderResults(query, results) {
                 ${ctx.next ? `<div class="rc-ctx">↓ ${highlight(escHtml(ctx.next), query)}</div>` : ''}
             `;
         } else {
+            // Partir el contenido en segmentos legibles de ~120 caracteres
+            const segments = splitContent(r.content);
+            const matchIdx = segments.findIndex(s => s.toLowerCase().includes(query.toLowerCase()));
+            const prev = matchIdx > 0 ? segments[matchIdx - 1] : null;
+            const curr = matchIdx >= 0 ? segments[matchIdx] : segments[0];
+            const next = matchIdx >= 0 && matchIdx < segments.length - 1 ? segments[matchIdx + 1] : null;
+
             card.innerHTML = `
                 <div class="rc-hdr">📄 ${escHtml(r.filename)}</div>
-                <div class="rc-main">${highlight(escHtml(r.content), query)}</div>
+                ${prev ? `<div class="rc-ctx">↑ ${escHtml(prev)}</div>` : ''}
+                <div class="rc-main">→ ${highlight(escHtml(curr), query)}</div>
+                ${next ? `<div class="rc-ctx">↓ ${escHtml(next)}</div>` : ''}
             `;
         }
 
@@ -585,6 +593,26 @@ function showTyping() {
     c.scrollTop = c.scrollHeight;
 }
 function hideTyping() { const el = document.getElementById('typingMsg'); if (el) el.remove(); }
+
+// Divide texto corrido en segmentos legibles por nombre/número
+function splitContent(text) {
+    if (!text) return [''];
+    // Intentar dividir por patrones comunes en PDFs de listas (INGRESO, números, etc.)
+    const segments = [];
+    // Dividir cada ~100 caracteres en un límite de palabra
+    const words = text.split(/\s+/);
+    let current = '';
+    for (const word of words) {
+        if ((current + ' ' + word).length > 120 && current.length > 0) {
+            segments.push(current.trim());
+            current = word;
+        } else {
+            current = current ? current + ' ' + word : word;
+        }
+    }
+    if (current.trim()) segments.push(current.trim());
+    return segments.length > 0 ? segments : [text];
+}
 
 function escHtml(s) {
     return String(s || '')

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Ciclo - Grupos</title>
+	<link rel="stylesheet" href="styles.css">
+	<link rel="stylesheet" href="cycle.css">
+</head>
+<body>
+	<header>
+		<nav class="navbar">
+			<div class="nav-texts">
+				<a href="index.html" class="nav-text-btn" style="font-weight:600;color:#fffdfd;text-decoration:none;padding:8px 12px;border-radius:6px;transition:all .1s ease;display:inline-block;">
+					Inicio
+				</a>
+				<span style="color:rgba(26,58,92,0.7);margin-left:8px">Ciclo - Grupos</span>
+			</div>
+		</nav>
+	</header>
+
+	<main class="cycle-page">
+		<!-- Panel izquierdo: Gestión de grupos -->
+		<aside class="groups-panel">
+			<h2>Grupos</h2>
+			
+			<div class="create-group">
+				<input type="text" id="groupNameInput" placeholder="Nombre del grupo" maxlength="50">
+				<button id="createGroupBtn" class="btn btn-primary">Crear grupo</button>
+			</div>
+
+			<div id="groupsList" class="groups-list">
+				<p class="muted">No hay grupos creados.</p>
+			</div>
+		</aside>
+
+		<!-- Panel derecho: Detalles del grupo y participación -->
+		<section class="group-detail">
+			<div id="emptyState" class="empty-state">
+				<p>Seleccione un grupo para ver detalles.</p>
+			</div>
+
+			<div id="groupContent" class="group-content hidden">
+				<div class="group-header">
+					<h3 id="groupTitle"></h3>
+					<button id="deleteGroupBtn" class="btn btn-danger">Eliminar grupo</button>
+				</div>
+
+				<!-- Agregar perfiles al grupo -->
+				<div class="add-profiles">
+					<label>Agregar perfiles:</label>
+					<div class="profiles-selector">
+						<select id="profilesSelect">
+							<option value="">-- Seleccione un perfil --</option>
+						</select>
+						<button id="addProfileBtn" class="btn btn-primary">Agregar</button>
+					</div>
+
+					<!-- Pool visual de perfiles (mini-tarjetas) -->
+					<div id="cycleProfilesPool" class="cycle-profiles-pool"></div>
+				</div>
+
+				<!-- Participantes con barras de participación -->
+				<div class="participants-section">
+					<h4>Participantes</h4>
+					<div id="participantsList" class="participants-list"></div>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<!-- Modal para editar opciones socio-psicológicas -->
+	<div id="psychoModal" class="modal hidden">
+		<div class="modal-content">
+			<h3 id="psychoModalTitle">Opciones socio-psicológicas</h3>
+			<form id="psychoForm">
+				<input type="hidden" name="participantId">
+				<div class="form-group">
+					<label>Liderazgo (%)</label>
+					<input type="number" name="leadership" min="0" max="100" value="50">
+				</div>
+				<div class="form-group">
+					<label>Comunicación (%)</label>
+					<input type="number" name="communication" min="0" max="100" value="50">
+				</div>
+				<div class="form-group">
+					<label>Empatía (%)</label>
+					<input type="number" name="empathy" min="0" max="100" value="50">
+				</div>
+				<div class="form-group">
+					<label>Creatividad (%)</label>
+					<input type="number" name="creativity" min="0" max="100" value="50">
+				</div>
+				<div class="form-group">
+					<label>Compromiso (%)</label>
+					<input type="number" name="commitment" min="0" max="100" value="50">
+				</div>
+				<div class="form-actions">
+					<button type="submit" class="btn btn-primary">Guardar</button>
+					<button type="button" id="cancelPsychoBtn" class="btn">Cancelar</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<script src="main.js"></script>
+</body>
+</html>

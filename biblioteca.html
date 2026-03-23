@@ -1,0 +1,2514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca Digital - A1 Analytics</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .biblioteca-container {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            grid-template-columns: 70px 1fr;
+            min-height: 100vh;
+            background: #fafafa;
+        }
+
+        .biblioteca-header {
+            grid-column: 2;
+            padding: 12px 40px;
+            margin-bottom: 0;
+            background: #fff;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 30px;
+            margin-bottom: 6px;
+        }
+
+        .header-title h1 {
+            color: #222;
+            font-size: 20px;
+            margin: 0 0 2px 0;
+            font-weight: 500;
+        }
+
+        .header-title p {
+            color: #888;
+            font-size: 11px;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 6px;
+        }
+
+        .search-box input {
+            min-width: 250px;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 0;
+            font-size: 11px;
+            background: #fff;
+            color: #222;
+            height: 32px;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #222;
+            box-shadow: none;
+        }
+
+        .search-box button {
+            padding: 6px 14px;
+            background: #222;
+            color: #fff;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            font-weight: 400;
+            font-size: 11px;
+            transition: none;
+            height: 32px;
+        }
+
+        .search-box button:hover {
+            background: #444;
+        }
+
+        .header-advanced {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        /* CONTROLES PRINCIPALES - OCULTOS */
+        .biblioteca-controls {
+            display: none;
+        }
+
+        .search-basic {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 0;
+            align-items: center;
+        }
+
+        .search-basic input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 0;
+            font-size: 13px;
+            font-family: Arial, sans-serif;
+            background: #fff;
+            color: #222;
+        }
+
+        .search-basic input:focus {
+            outline: none;
+            border-color: #222;
+            box-shadow: none;
+        }
+
+        .search-basic {
+            padding: 8px 16px;
+            background: #222;
+            color: #fff;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            font-weight: 400;
+            font-size: 12px;
+            transition: none;
+        }
+
+        .search-basic:hover {
+            background: #444;
+        }
+
+        .search-advanced-toggle {
+            color: #666;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 6px 10px;
+            border-radius: 0;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 400;
+            transition: none;
+            white-space: nowrap;
+        }
+
+        .search-advanced-toggle:hover {
+            background: #eee;
+            color: #222;
+        }
+
+        .search-advanced {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 0;
+            padding: 0;
+            width: 420px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 999;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-advanced.show {
+            display: block;
+        }
+
+        .search-advanced-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #ddd;
+            background: #f9f9f9;
+            flex-shrink: 0;
+        }
+
+        .search-advanced-header h3 {
+            margin: 0;
+            color: #222;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .search-advanced-fields {
+            display: grid;
+            gap: 12px;
+            padding: 20px;
+        }
+
+        .search-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-field label {
+            font-weight: 500;
+            color: #222;
+            font-size: 11px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .search-field input {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 0;
+            font-size: 12px;
+            background: #fff;
+            color: #222;
+        }
+
+        .search-field input:focus {
+            outline: none;
+            border-color: #222;
+            box-shadow: none;
+        }
+
+        /* Botón de búsqueda avanzada dentro del modal */
+        .search-advanced .search-basic {
+            background: #222;
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 6px;
+        }
+
+        .search-advanced .search-basic:hover {
+            background: #444;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-publish {
+            padding: 6px 12px;
+            background: #222;
+            color: #fff;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 11px;
+            transition: none;
+            height: 32px;
+        }
+
+        .btn-publish:hover {
+            background: #444;
+        }
+
+        .btn-home {
+            padding: 6px 12px;
+            background: #f5f5f5;
+            color: #222;
+            border: 1px solid #ddd;
+            border-radius: 0;
+            cursor: pointer;
+            font-weight: 400;
+            font-size: 11px;
+            transition: none;
+            height: 32px;
+        }
+
+        .btn-home:hover {
+            background: #fff;
+        }
+
+        /* MODAL PUBLICADOR */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: block;
+        }
+
+        .modal-content {
+            background: #fff;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 0;
+            max-width: 700px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid #ddd;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 12px;
+        }
+
+        .modal-header h2 {
+            color: #222;
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #888;
+            transition: color 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: #222;
+        }
+
+        /* EDITOR */
+        .editor-wrapper {
+            margin-bottom: 16px;
+        }
+
+        .editor-wrapper label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 400;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .editor-toolbar {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            background: #f5f5f5;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 0;
+        }
+
+        .editor-toolbar button {
+            padding: 6px 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 0;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 400;
+            color: #666;
+            transition: none;
+        }
+
+        .editor-toolbar button:hover {
+            background: #f0f0f0;
+            color: #222;
+        }
+
+        .editor-content {
+            min-height: 300px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 0;
+            font-size: 12px;
+            line-height: 1.5;
+            overflow-y: auto;
+            max-height: 500px;
+            background: #fff;
+            color: #222;
+            font-family: Arial, sans-serif;
+        }
+
+        .editor-content:focus {
+            outline: none;
+            border-color: #222;
+            box-shadow: none;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #666;
+            font-weight: 400;
+            margin-bottom: 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            background: #fff;
+            color: #222;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #222;
+            box-shadow: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            padding: 8px 16px;
+            background: #f5f5f5;
+            color: #222;
+            border: 1px solid #ddd;
+            border-radius: 0;
+            cursor: pointer;
+            font-weight: 400;
+            font-size: 12px;
+            transition: none;
+        }
+
+        .btn-cancel:hover {
+            background: #eee;
+        }
+
+        .btn-submit {
+            padding: 8px 16px;
+            background: #222;
+            color: #fff;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            font-weight: 400;
+            font-size: 12px;
+            transition: none;
+        }
+
+        .btn-submit:hover {
+            background: #444;
+        }
+
+        /* MENÚ ALFABÉTICO */
+        .alphabet-menu {
+            grid-row: 1 / -1;
+            grid-column: 1;
+            background: linear-gradient(180deg, #fff 0%, #f9f9f9 100%);
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            box-shadow: none;
+            border-right: 2px solid #ddd;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        .alphabet-menu-header {
+            background: linear-gradient(180deg, #f0f0f0 0%, #e8e8e8 100%);
+            color: #666;
+            padding: 14px 10px;
+            font-weight: 500;
+            border: none;
+            border-radius: 0;
+            font-size: 10px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            flex-shrink: 0;
+            border-bottom: 1px solid #ddd;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .alphabet-menu-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex: 1;
+            padding: 0;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .alphabet-menu-items::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .alphabet-menu-items::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .alphabet-menu-items::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 2px;
+            background-clip: padding-box;
+        }
+
+        .alphabet-menu-items::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        .alphabet-menu-item {
+            padding: 10px 10px;
+            border: none;
+            cursor: pointer;
+            color: #888;
+            font-weight: 400;
+            font-size: 12px;
+            transition: all 0.15s ease;
+            text-align: center;
+            background: none;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #f0f0f0;
+            border-left: 3px solid transparent;
+        }
+
+        .alphabet-menu-item:hover {
+            background: #f5f5f5;
+            color: #222;
+            border-left-color: #ddd;
+        }
+
+        .alphabet-menu-item.active {
+            background: #fff;
+            color: #222;
+            border: none;
+            border-left: 3px solid #222;
+            padding-left: 7px;
+            font-weight: 600;
+            box-shadow: inset -1px 0 0 #ddd;
+        }
+
+        /* CONTENIDO DE LIBROS */
+        .books-content {
+            grid-column: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            padding: 20px 40px;
+            background: #fafafa;
+        }
+
+        .books-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 0;
+        }
+
+        .book-item {
+            flex: none;
+        }
+
+        /* LISTADO DE PUBLICACIONES */
+        .publications-section {
+            display: none;
+        }
+
+        .publications-header {
+            display: none;
+        }
+
+        .sort-info {
+            display: none;
+        }
+
+        /* GRUPO ALFABÉTICO */
+        .alphabet-group {
+            margin-bottom: 30px;
+        }
+
+        .alphabet-letter {
+            background: linear-gradient(90deg, var(--primary) 0%, #0f2847 100%);
+            color: var(--white);
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .publications-grid {
+            display: none;
+        }
+
+        /* TARJETA DE PUBLICACIÓN */
+        .publication-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 0;
+            overflow: hidden;
+            transition: none;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-shadow: none;
+        }
+
+        .publication-card:hover {
+            border-color: #999;
+        }
+
+        /* CARÁTULA */
+        .publication-cover {
+            width: 100%;
+            height: 260px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            overflow: hidden;
+        }
+
+        .publication-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .publication-cover svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .publication-header {
+            background: var(--white);
+            padding: 16px;
+            border-bottom: none;
+        }
+
+        .publication-title {
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            word-break: break-word;
+            line-height: 1.4;
+            max-height: 2.8em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .publication-subtitle {
+            color: var(--muted);
+            font-size: 12px;
+            margin: 0 0 8px 0;
+            word-break: break-word;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .publication-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #999;
+        }
+
+        .publication-date {
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .publication-body {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            max-height: 200px;
+            color: var(--text);
+            line-height: 1.5;
+            font-size: 12px;
+            background: var(--white);
+            display: none;
+        }
+
+        .publication-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .publication-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .publication-body::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .publication-footer {
+            display: flex;
+            gap: 8px;
+            padding: 12px;
+            border-top: 1px solid #f0f0f0;
+            background: var(--white);
+        }
+
+        .publication-footer button {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-delete {
+            background: #f5f5f5;
+            color: var(--danger);
+        }
+
+        .btn-delete:hover {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        /* MENSAJE VACÍO */
+        .empty-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted);
+        }
+
+        .empty-message p {
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        /* RESPONSIVO */
+        @media (max-width: 1400px) {
+            .books-display {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .books-display {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 20px;
+            }
+            
+            .header-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .biblioteca-container {
+                grid-template-columns: 1fr;
+            }
+
+            .biblioteca-header,
+            .books-content {
+                grid-column: 1;
+            }
+
+            .alphabet-menu {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                height: 60px;
+                grid-row: auto;
+                grid-column: 1;
+                display: flex;
+                flex-direction: row;
+                border-right: none;
+                border-top: 1px solid #ddd;
+                z-index: 101;
+            }
+
+            .alphabet-menu-header {
+                display: none;
+            }
+
+            .alphabet-menu-items {
+                flex-direction: row;
+                overflow-x: auto;
+                overflow-y: hidden;
+                width: 100%;
+                padding: 0;
+                gap: 0;
+            }
+
+            .alphabet-menu-items::-webkit-scrollbar {
+                height: 3px;
+            }
+
+            .alphabet-menu-item {
+                padding: 8px 8px;
+                font-size: 11px;
+                border: 1px solid #eee;
+                margin: 0 2px;
+                border-radius: 0;
+                white-space: nowrap;
+            }
+
+            .books-content {
+                padding: 20px;
+                padding-bottom: 80px;
+            }
+
+            .books-display {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 16px;
+            }
+
+            .publication-cover {
+                height: 180px;
+            }
+
+            .publication-header {
+                padding: 10px;
+            }
+
+            .publication-title {
+                font-size: 12px;
+            }
+
+            .publication-footer button {
+                font-size: 9px;
+                padding: 5px;
+            }
+
+            .biblioteca-header {
+                padding: 16px 20px;
+            }
+
+            .header-top {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .header-title h1 {
+                font-size: 20px;
+            }
+
+            .header-controls {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .search-box {
+                width: 100%;
+            }
+
+            .search-box input {
+                min-width: 100%;
+            }
+
+            .action-buttons {
+                width: 100%;
+            }
+
+            .action-buttons .btn-publish,
+            .action-buttons .btn-home {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .books-display {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 12px;
+            }
+
+            .publication-cover {
+                height: 150px;
+            }
+
+            .publication-title {
+                font-size: 11px;
+            }
+
+            .publication-subtitle {
+                font-size: 10px;
+            }
+
+            .publication-footer button {
+                font-size: 9px;
+                padding: 4px;
+            }
+
+            .header-title h1 {
+                font-size: 18px;
+            }
+
+            .header-title p {
+                font-size: 11px;
+            }
+        }
+
+        /* FORMATO DE TEXTO EN PUBLICACIONES */
+        strong {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        em {
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        h3 {
+            color: #0f2847;
+            margin-top: 12px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        u {
+            text-decoration: underline;
+            color: var(--text);
+        }
+
+        /* LOADING */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* NOTIFICACIONES */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 14px 18px;
+            background: var(--primary);
+            color: var(--white);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .notification.error {
+            background: var(--danger);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        .user-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #888;
+            font-weight: 400;
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 12px 16px;
+            border-radius: 0;
+            z-index: 999;
+            max-width: 300px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .user-status.show {
+            display: block;
+        }
+
+        .user-status strong {
+            color: #222;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .user-status span {
+            display: block;
+            font-size: 11px;
+            color: #888;
+        }
+
+        .user-status.error {
+            border-color: #c41e3a;
+            background: #fef5f5;
+        }
+
+        .user-status.error strong {
+            color: #c41e3a;
+        }
+
+        .user-status.error span {
+            color: #c41e3a;
+        }
+
+        .btn-edit {
+            background: #fff;
+            color: #222;
+            border: 1px solid #ddd;
+        }
+
+        .btn-edit:hover {
+            background: #f5f5f5;
+            border-color: #222;
+        }
+
+        /* MODAL DE VISUALIZACION DE LIBROS - ESTILO HOJA */
+        .book-viewer-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.4) 100%);
+            z-index: 2000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .book-viewer-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .book-viewer-container {
+            background: linear-gradient(180deg, #fff 0%, #fafafa 100%);
+            max-width: 850px;
+            width: 100%;
+            max-height: 90vh;
+            border-radius: 2px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.35), 
+                        0 0 1px rgba(0, 0, 0, 0.1) inset,
+                        0 0 0 1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .book-viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 40px 50px 0 50px;
+            background: transparent;
+            border-bottom: 2px solid #f0f0f0;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .book-viewer-header h2 {
+            margin: 0 0 8px 0;
+            color: #1a1a1a;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.3;
+            max-width: 600px;
+        }
+
+        .book-viewer-subtitle {
+            color: #666;
+            font-size: 13px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-weight: 400;
+        }
+
+        .book-viewer-close {
+            background: none;
+            border: none;
+            font-size: 32px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s ease;
+            margin: -5px -10px 0 0;
+        }
+
+        .book-viewer-close:hover {
+            color: #222;
+        }
+
+        .book-viewer-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px 50px;
+            background: #fff;
+            color: #333;
+            line-height: 1.8;
+            font-size: 15px;
+            font-family: 'Georgia', 'Garamond', serif;
+            text-align: justify;
+            column-count: 1;
+        }
+
+        .book-viewer-content h2 {
+            color: #1a1a1a;
+            margin: 30px 0 15px 0;
+            font-size: 18px;
+            font-weight: 700;
+            font-family: 'Arial', sans-serif;
+            page-break-after: avoid;
+        }
+
+        .book-viewer-content h3 {
+            color: #333;
+            margin: 20px 0 10px 0;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Arial', sans-serif;
+            page-break-after: avoid;
+        }
+
+        .book-viewer-content strong {
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .book-viewer-content em {
+            font-style: italic;
+            color: #555;
+        }
+
+        .book-viewer-content u {
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .book-viewer-content hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 25px 0;
+        }
+
+        .book-viewer-content p {
+            margin: 0 0 12px 0;
+        }
+
+        .book-viewer-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .book-viewer-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .book-viewer-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+
+        .book-viewer-content::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        .book-viewer-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            border-top: 2px solid #f0f0f0;
+            background: linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%);
+            gap: 20px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+            min-height: 70px;
+        }
+
+        .book-viewer-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .book-viewer-meta span {
+            font-size: 12px;
+            color: #777;
+            line-height: 1.4;
+        }
+
+        .book-viewer-meta strong {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .book-viewer-pagination {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .book-viewer-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-download {
+            padding: 10px 16px;
+            background: #222;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-download:hover {
+            background: #444;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-download.pdf {
+            background: linear-gradient(135deg, #c41e3a 0%, #a01728 100%);
+        }
+
+        .btn-download.pdf:hover {
+            background: linear-gradient(135deg, #d92840 0%, #b81e35 100%);
+        }
+
+        .btn-download.word {
+            background: linear-gradient(135deg, #2b579a 0%, #1e3f5a 100%);
+        }
+
+        .btn-download.word:hover {
+            background: linear-gradient(135deg, #3366b8 0%, #285175 100%);
+        }
+
+        .icon-download {
+            width: 14px;
+            height: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .book-viewer-container {
+                width: 95%;
+                max-height: 90vh;
+            }
+
+            .book-viewer-content {
+                padding: 20px 24px;
+                font-size: 13px;
+            }
+
+            .book-viewer-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .book-viewer-actions {
+                flex-direction: column;
+            }
+
+            .btn-download {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="biblioteca-container">
+        <!-- MENÚ ALFABÉTICO (SIDEBAR) -->
+        <div class="alphabet-menu">
+            <div class="alphabet-menu-header">Índice</div>
+            <div class="alphabet-menu-items" id="alphabetMenu">
+                <!-- Se llena con JavaScript -->
+            </div>
+        </div>
+
+        <!-- ENCABEZADO CON CONTROLES -->
+        <div class="biblioteca-header">
+            <div class="header-top">
+                <div class="header-title">
+                    <h1>Biblioteca Digital [LIB]</h1>
+                    <p>Base de datos colaborativa de información y recursos académicos</p>
+                </div>
+                <div class="header-controls">
+                    <!-- BÚSQUEDA -->
+                    <div class="search-box">
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="Buscar por título..."
+                            autofocus
+                        >
+                        <button onclick="performSearch()">Buscar</button>
+                        <button class="search-advanced-toggle" onclick="toggleAdvancedSearch()">
+                            Avanzada
+                        </button>
+                    </div>
+                    <!-- ACCIONES -->
+                    <div class="action-buttons">
+                        <button class="btn-publish" onclick="openPublishModal()">
+                            + Crear
+                        </button>
+                        <button class="btn-home" onclick="irAlInicio()">
+                            Volver
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="header-advanced">
+            </div>
+            <!-- BÚSQUEDA AVANZADA FLOTANTE -->
+            <div class="search-advanced" id="advancedSearch">
+                <div class="search-advanced-header">
+                    <h3>Búsqueda avanzada</h3>
+                    <button class="close-btn" onclick="toggleAdvancedSearch()">×</button>
+                </div>
+                <div class="search-advanced-fields">
+                    <div class="search-field">
+                        <label>Título:</label>
+                        <input type="text" id="advTitle" placeholder="Buscar en títulos">
+                    </div>
+                    <div class="search-field">
+                        <label>Palabras clave:</label>
+                        <input type="text" id="advKeywords" placeholder="Separadas por comas">
+                    </div>
+                    <div class="search-field">
+                        <label>Desde (fecha):</label>
+                        <input type="date" id="advDateFrom">
+                    </div>
+                    <div class="search-field">
+                        <label>Hasta (fecha):</label>
+                        <input type="date" id="advDateTo">
+                    </div>
+                    <button class="search-basic" style="width: 100%;" onclick="performAdvancedSearch()">
+                        Buscar Avanzado
+                    </button>
+                </div>
+            </div>
+            <div class="user-status" id="userStatus">
+                <!-- Se llena con JavaScript -->
+            </div>
+            <!-- LIBROS EN EL HEADER -->
+            <div id="loadingState" class="loading" style="margin: 20px 0;">
+                <div class="spinner"></div>
+                <p>Cargando publicaciones...</p>
+            </div>
+            <div class="books-display" id="booksDisplay">
+                <!-- Se llena con JavaScript -->
+            </div>
+        </div>
+
+        <!-- CONTENIDO DE LIBROS (OCULTO) -->
+        <div class="books-content" style="display: none;">
+        </div>
+
+        <!-- PUBLICACIONES (OCULTO) -->
+        <div class="publications-section">
+            <div class="publications-header">
+                <h2>Publicaciones</h2>
+                <div class="sort-info">Ordenado alfabéticamente por título</div>
+            </div>
+
+            <div id="publicationsContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Cargando publicaciones...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE VISUALIZACIÓN DE LIBROS -->
+    <div class="book-viewer-modal" id="bookViewerModal">
+        <div class="book-viewer-container">
+            <div class="book-viewer-header">
+                <div>
+                    <h2 id="bookTitle">Título del Libro</h2>
+                    <div class="book-viewer-subtitle" id="bookSubtitle"></div>
+                </div>
+                <button class="book-viewer-close" onclick="closeBookViewer()">✕</button>
+            </div>
+            <div class="book-viewer-content" id="bookContent">
+                <!-- Contenido del libro se inserta aquí -->
+            </div>
+            <div class="book-viewer-footer">
+                <div class="book-viewer-meta">
+                    <span>Por <strong id="bookAuthor"></strong></span>
+                    <span id="bookDate"></span>
+                </div>
+                <div class="book-viewer-pagination" id="bookPages">
+                    Página 1 de 0
+                </div>
+                <div class="book-viewer-actions">
+                    <button class="btn-download pdf" onclick="downloadBookPDF()">
+                        <svg class="icon-download" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-8-6zm4 18H6V4h6v4h6v12z"/>
+                        </svg>
+                        PDF
+                    </button>
+                    <button class="btn-download word" onclick="downloadBookWord()">
+                        <svg class="icon-download" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M4 4h16v2H4V4zm0 5h16v2H4V9zm0 7h16v2H4v-2z"/>
+                        </svg>
+                        WORD
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PUBLICADOR -->
+    <div class="modal" id="publishModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Publicar Información</h2>
+                <button class="close-btn" onclick="closePublishModal()">&times;</button>
+            </div>
+
+            <div class="form-group">
+                <label>Título *</label>
+                <input type="text" id="pubTitle" placeholder="Título principal de la publicación" required>
+            </div>
+
+            <div class="form-group">
+                <label>Subtítulo:</label>
+                <input type="text" id="pubSubtitle" placeholder="Subtítulo opcional">
+            </div>
+
+            <div class="form-group">
+                <label>Palabras clave (separadas por comas):</label>
+                <input type="text" id="pubKeywords" placeholder="ej: educación, análisis, estadística">
+            </div>
+
+            <div class="form-group">
+                <label>Carátula (Imagen):</label>
+                <input type="file" id="pubCover" accept="image/*" placeholder="Selecciona una imagen para la carátula">
+                <small style="color: var(--muted); display: block; margin-top: 5px;">Puedes subir una imagen para usar como carátula. Si no seleccionas ninguna, se generará una carátula automática.</small>
+                <div id="coverPreview" style="margin-top: 10px;"></div>
+            </div>
+
+            <div class="editor-wrapper">
+                <label>Contenido:</label>
+                <div class="editor-toolbar">
+                    <button onclick="formatText('bold')" title="Negrita">B</button>
+                    <button onclick="formatText('italic')" title="Itálica">I</button>
+                    <button onclick="formatText('underline')" title="Subrayado">U</button>
+                    <button onclick="formatText('h2')" title="Título H2">H2</button>
+                    <button onclick="formatText('h3')" title="Encabezado H3">H3</button>
+                    <button onclick="insertSpecial('linebreak')" title="Salto de línea">¶</button>
+                    <button onclick="insertSpecial('hr')" title="Separador">—</button>
+                    <button onclick="clearEditor()" title="Limpiar">[X]</button>
+                </div>
+                <div 
+                    class="editor-content" 
+                    id="editorContent" 
+                    contenteditable="true"
+                    placeholder="Escribe aquí el contenido..."
+                ></div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closePublishModal()">Cancelar</button>
+                <button class="btn-submit" onclick="publishContent()">Publicar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR PUBLICACIÓN -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Publicación</h2>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+
+            <div class="form-group">
+                <label>Título *</label>
+                <input type="text" id="editTitle" placeholder="Título principal de la publicación" required>
+            </div>
+
+            <div class="form-group">
+                <label>Subtítulo:</label>
+                <input type="text" id="editSubtitle" placeholder="Subtítulo opcional">
+            </div>
+
+            <div class="form-group">
+                <label>Palabras clave (separadas por comas):</label>
+                <input type="text" id="editKeywords" placeholder="ej: educación, análisis, estadística">
+            </div>
+
+            <div class="form-group">
+                <label>Carátula (Imagen):</label>
+                <input type="file" id="editCover" accept="image/*" placeholder="Selecciona una imagen para la carátula">
+                <small style="color: var(--muted); display: block; margin-top: 5px;">Cambia la carátula si lo deseas. Déjalo vacío para mantener la carátula actual.</small>
+                <div id="editCoverPreview" style="margin-top: 10px;"></div>
+            </div>
+
+            <div class="editor-wrapper">
+                <label>Contenido:</label>
+                <div class="editor-toolbar">
+                    <button onclick="formatText('bold', 'editContent')" title="Negrita">B</button>
+                    <button onclick="formatText('italic', 'editContent')" title="Itálica">I</button>
+                    <button onclick="formatText('underline', 'editContent')" title="Subrayado">U</button>
+                    <button onclick="formatText('h2', 'editContent')" title="Título H2">H2</button>
+                    <button onclick="formatText('h3', 'editContent')" title="Encabezado H3">H3</button>
+                    <button onclick="insertSpecial('linebreak', 'editContent')" title="Salto de línea">¶</button>
+                    <button onclick="insertSpecial('hr', 'editContent')" title="Separador">—</button>
+                    <button onclick="clearEditor('editContent')" title="Limpiar">[X]</button>
+                </div>
+                <div 
+                    class="editor-content" 
+                    id="editContent" 
+                    contenteditable="true"
+                    placeholder="Escribe aquí el contenido..."
+                ></div>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
+                <button class="btn-submit" onclick="saveEditPublication()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ESTADO GLOBAL
+        let currentUser = null;
+        let currentUserRole = null;
+        let allPublications = [];
+        let filteredPublications = [];
+
+        // INICIALIZACIÓN
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkUserStatus();
+            await loadPublications();
+
+            // Event listeners para previsualización de carátulas
+            document.getElementById('pubCover').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('coverPreview');
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        preview.innerHTML = `<img src="${event.target.result}" style="max-width: 150px; max-height: 200px; border-radius: 4px;" alt="Vista previa" />`;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.innerHTML = '';
+                }
+            });
+
+            document.getElementById('editCover').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('editCoverPreview');
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        preview.innerHTML = `<img src="${event.target.result}" style="max-width: 150px; max-height: 200px; border-radius: 4px; border: 2px solid var(--accent);" alt="Vista previa" />`;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // Si se borra el archivo, mostrar la carátula actual
+                    const currentPublication = allPublications.find(p => p._id === currentEditingId) || {};
+                    if (currentPublication.coverUrl) {
+                        preview.innerHTML = `<img src="${currentPublication.coverUrl}" style="max-width: 150px; max-height: 200px; border-radius: 4px;" alt="Carátula actual" />`;
+                    } else {
+                        preview.innerHTML = '';
+                    }
+                }
+            });
+        });
+
+        // VERIFICAR ESTADO DEL USUARIO
+        async function checkUserStatus() {
+            try {
+                const userEmail = localStorage.getItem('userEmail');
+                const userName = localStorage.getItem('userName');
+                const userRole = localStorage.getItem('userRole');
+                
+                if (!userEmail) {
+                    updateUserStatus('No autenticado', false);
+                    return;
+                }
+
+                // Obtener status actualizado del servidor
+                const response = await fetch('/status?email=' + encodeURIComponent(userEmail));
+                if (!response.ok) {
+                    updateUserStatus('Error', false);
+                    return;
+                }
+
+                const data = await response.json();
+                currentUser = userEmail;
+                currentUserRole = data.role || 'user';
+                
+                // Guardar en localStorage
+                localStorage.setItem('userRole', currentUserRole);
+                localStorage.setItem('userApproved', String(data.approved || false));
+                
+                updateUserStatus(currentUser, true);
+            } catch (error) {
+                console.error('Error verificando usuario:', error);
+                updateUserStatus('Error', false);
+            }
+        }
+
+        function updateUserStatus(user, isAuth) {
+            const status = document.getElementById('userStatus');
+            if (isAuth) {
+                const roleText = currentUserRole === 'admin' ? 'Administrador' : 'Usuario';
+                status.innerHTML = `<strong>${roleText}</strong><span>Conectado como ${user}</span>`;
+                status.classList.remove('error');
+                status.classList.add('show');
+            } else {
+                status.innerHTML = `<strong>Autenticación requerida</strong><span>Debes autenticarte primero para crear publicaciones</span>`;
+                status.classList.add('error', 'show');
+            }
+        }
+
+        // CARGAR PUBLICACIONES - BIBLIOTECA NORMAL (admin y user)
+        async function loadPublications() {
+            try {
+                const loading = document.getElementById('loadingState');
+                loading.style.display = 'block';
+
+                const response = await fetch('/api/publications');
+                if (!response.ok) throw new Error('Error cargando publicaciones');
+                
+                allPublications = await response.json();
+                filteredPublications = [...allPublications];
+                renderPublications();
+            } catch (error) {
+                console.error('Error:', error);
+                const display = document.getElementById('booksDisplay');
+                display.innerHTML = `
+                    <div class="empty-message" style="width: 100%;">
+                        <p>[ERROR] Error cargando publicaciones</p>
+                        <p>Verifica tu conexión e intenta recargar la página</p>
+                    </div>
+                `;
+                document.getElementById('loadingState').style.display = 'none';
+            }
+        }
+
+        // RENDERIZAR PUBLICACIONES AGRUPADAS ALFABÉTICAMENTE
+        function renderPublications() {
+            const display = document.getElementById('booksDisplay');
+            const loading = document.getElementById('loadingState');
+            
+            if (filteredPublications.length === 0) {
+                display.innerHTML = `
+                    <div class="empty-message" style="width: 100%; grid-column: 1 / -1;">
+                        <p>[VACIO] No hay publicaciones disponibles</p>
+                        <p>Sé el primero en publicar información</p>
+                    </div>
+                `;
+                loading.style.display = 'none';
+                return;
+            }
+
+            loading.style.display = 'none';
+            
+            // Crear tarjetas de libros sin agrupar en contenedor
+            display.innerHTML = filteredPublications
+                .map(pub => `<div class="book-item">${createPublicationCard(pub)}</div>`)
+                .join('');
+
+            // Regenerar menú alfabético
+            renderAlphabetMenu();
+        }
+
+        // RENDERIZAR MENÚ ALFABÉTICO
+        function renderAlphabetMenu() {
+            const menuContainer = document.getElementById('alphabetMenu');
+            
+            // Obtener letras únicas de publicaciones actuales
+            const letters = new Set();
+            filteredPublications.forEach(pub => {
+                const letter = (pub.title[0] || '').toUpperCase();
+                if (letter) letters.add(letter);
+            });
+
+            // Crear botones para cada letra
+            const sortedLetters = Array.from(letters).sort();
+            
+            if (sortedLetters.length === 0) {
+                menuContainer.innerHTML = '<div class="empty-message" style="padding: 20px 10px; font-size: 12px;">Sin resultados</div>';
+                return;
+            }
+
+            // Botón "Todos" al inicio
+            let html = `<button class="alphabet-menu-item active" onclick="showAllBooks()">Todos</button>`;
+            
+            // Agregar botones para cada letra
+            html += sortedLetters
+                .map(letter => `
+                    <button class="alphabet-menu-item" onclick="filterByLetter('${letter}')">
+                        ${letter}
+                    </button>
+                `)
+                .join('');
+
+            menuContainer.innerHTML = html;
+        }
+
+        // FILTRAR LIBROS POR LETRA
+        function filterByLetter(letter) {
+            // Actualizar clase activa en el menú
+            document.querySelectorAll('.alphabet-menu-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.textContent.trim() === letter) {
+                    item.classList.add('active');
+                }
+            });
+
+            // Filtrar publicaciones que empiezan con la letra seleccionada
+            filteredPublications = allPublications.filter(pub => 
+                (pub.title[0] || '').toUpperCase() === letter
+            );
+            
+            // Renderizar solo los libros de esa letra
+            const display = document.getElementById('booksDisplay');
+            display.innerHTML = filteredPublications
+                .map(pub => `<div class="book-item">${createPublicationCard(pub)}</div>`)
+                .join('');
+        }
+
+        // MOSTRAR TODOS LOS LIBROS
+        function showAllBooks() {
+            document.querySelectorAll('.alphabet-menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            filteredPublications = [...allPublications];
+            renderPublications();
+        }
+
+        // CREAR TARJETA DE PUBLICACIÓN
+        function createPublicationCard(pub) {
+            const isAuthor = currentUser === pub.author;
+            const pubDate = new Date(pub.publishedAt);
+            const dateStr = pubDate.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+            
+            // Generar carátula
+            let coverHTML = '';
+            if (pub.coverUrl) {
+                coverHTML = `<img src="${pub.coverUrl}" alt="Carátula" onerror="this.parentElement.innerHTML = generateDefaultCover()" />`;
+            } else {
+                coverHTML = generateDefaultCover();
+            }
+
+            return `
+                <div class="publication-card">
+                    <div class="publication-cover" onclick="openBookViewer('${pub._id}')" style="cursor: pointer;">
+                        ${coverHTML}
+                    </div>
+                    
+                    <div class="publication-header">
+                        <h3 class="publication-title">${escapeHtml(pub.title)}</h3>
+                        ${pub.subtitle ? `<p class="publication-subtitle">${escapeHtml(pub.subtitle)}</p>` : ''}
+                        <div class="publication-meta">
+                            <span>${dateStr}</span>
+                            <span style="font-size: 9px; color: var(--muted);">${escapeHtml(pub.author)}</span>
+                        </div>
+                    </div>
+
+                    <div class="publication-footer">
+                        ${isAuthor ? `
+                            <button class="btn-edit" onclick="openEditModal('${pub._id}')">
+                                Editar
+                            </button>
+                            <button class="btn-delete" onclick="deletePublication('${pub._id}')">
+                                Eliminar
+                            </button>
+                        ` : (currentUserRole === 'admin' ? `
+                            <button class="btn-delete" onclick="deletePublication('${pub._id}')">
+                                Eliminar
+                            </button>
+                        ` : '')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // GENERAR CARÁTULA PREDETERMINADA CON FORMAS MATEMÁTICAS
+        function generateDefaultCover() {
+            const colors = [
+                { bg: '#667eea', shape: '#764ba2' },
+                { bg: '#f093fb', shape: '#f5576c' },
+                { bg: '#4facfe', shape: '#00f2fe' },
+                { bg: '#43e97b', shape: '#38f9d7' },
+                { bg: '#fa709a', shape: '#fee140' },
+                { bg: '#30cfd0', shape: '#330867' }
+            ];
+            
+            const colorSet = colors[Math.floor(Math.random() * colors.length)];
+            
+            const svg = `
+                <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:${colorSet.bg};stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:${colorSet.shape};stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    
+                    <rect width="400" height="500" fill="url(#grad)"/>
+                    
+                    <!-- Círculo cabeza -->
+                    <circle cx="200" cy="120" r="50" fill="rgba(255,255,255,0.3)"/>
+                    
+                    <!-- Rectángulos cuerpo -->
+                    <rect x="170" y="180" width="60" height="80" fill="rgba(255,255,255,0.4)" rx="8"/>
+                    
+                    <!-- Brazos (círculos conectados) -->
+                    <circle cx="120" cy="210" r="18" fill="rgba(255,255,255,0.35)"/>
+                    <circle cx="280" cy="210" r="18" fill="rgba(255,255,255,0.35)"/>
+                    <line x1="130" y1="210" x2="170" y2="210" stroke="rgba(255,255,255,0.35)" stroke-width="16" stroke-linecap="round"/>
+                    <line x1="230" y1="210" x2="270" y2="210" stroke="rgba(255,255,255,0.35)" stroke-width="16" stroke-linecap="round"/>
+                    
+                    <!-- Piernas (líneas) -->
+                    <line x1="185" y1="260" x2="185" y2="340" stroke="rgba(255,255,255,0.4)" stroke-width="14" stroke-linecap="round"/>
+                    <line x1="215" y1="260" x2="215" y2="340" stroke="rgba(255,255,255,0.4)" stroke-width="14" stroke-linecap="round"/>
+                    
+                    <!-- Triángulos decorativos -->
+                    <polygon points="50,100 80,50 110,100" fill="rgba(255,255,255,0.15)"/>
+                    <polygon points="320,350 350,400 290,400" fill="rgba(255,255,255,0.15)"/>
+                    
+                    <!-- Cuadrados decorativos -->
+                    <rect x="30" y="400" width="40" height="40" fill="rgba(255,255,255,0.2)" transform="rotate(45 50 420)"/>
+                    <rect x="330" y="80" width="50" height="50" fill="rgba(255,255,255,0.15)" transform="rotate(30 355 105)"/>
+                </svg>
+            `;
+            return svg;
+        }
+
+        // MODAL PUBLICADOR
+        function openPublishModal() {
+            if (!currentUser) {
+                showNotification('Debes autenticarte primero', 'error');
+                return;
+            }
+            document.getElementById('publishModal').classList.add('show');
+            document.getElementById('editorContent').focus();
+        }
+
+        function closePublishModal() {
+            document.getElementById('publishModal').classList.remove('show');
+            document.getElementById('pubTitle').value = '';
+            document.getElementById('pubSubtitle').value = '';
+            document.getElementById('pubKeywords').value = '';
+            document.getElementById('pubCover').value = '';
+            document.getElementById('coverPreview').innerHTML = '';
+            document.getElementById('editorContent').innerHTML = '';
+        }
+
+        // EDITAR PUBLICACIÓN
+        let currentEditingId = null;
+
+        async function openEditModal(pubId) {
+            const pub = allPublications.find(p => p._id === pubId);
+            if (!pub) {
+                showNotification('Publicación no encontrada', 'error');
+                return;
+            }
+
+            if (currentUser !== pub.author) {
+                showNotification('Solo puedes editar tus propias publicaciones', 'error');
+                return;
+            }
+
+            currentEditingId = pubId;
+            document.getElementById('editTitle').value = pub.title;
+            document.getElementById('editSubtitle').value = pub.subtitle || '';
+            document.getElementById('editKeywords').value = (pub.keywords || []).join(', ');
+            document.getElementById('editContent').innerHTML = pub.content;
+            
+            // Mostrar vista previa de carátula actual si existe
+            if (pub.coverUrl) {
+                document.getElementById('editCoverPreview').innerHTML = `<img src="${pub.coverUrl}" style="max-width: 150px; max-height: 200px; border-radius: 4px;" alt="Carátula actual" />`;
+            }
+            
+            document.getElementById('editModal').classList.add('show');
+            document.getElementById('editContent').focus();
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+            currentEditingId = null;
+            document.getElementById('editTitle').value = '';
+            document.getElementById('editSubtitle').value = '';
+            document.getElementById('editKeywords').value = '';
+            document.getElementById('editCover').value = '';
+            document.getElementById('editCoverPreview').innerHTML = '';
+            document.getElementById('editContent').innerHTML = '';
+        }
+
+        async function saveEditPublication() {
+            if (!currentEditingId) return;
+
+            const title = document.getElementById('editTitle').value.trim();
+            const subtitle = document.getElementById('editSubtitle').value.trim();
+            const keywords = document.getElementById('editKeywords').value
+                .split(',')
+                .map(k => k.trim())
+                .filter(k => k);
+            const content = document.getElementById('editContent').innerHTML;
+            const coverFile = document.getElementById('editCover').files[0];
+
+            if (!title) {
+                showNotification('El título es requerido', 'error');
+                return;
+            }
+
+            if (!content.trim()) {
+                showNotification('El contenido no puede estar vacío', 'error');
+                return;
+            }
+
+            try {
+                let coverUrl = allPublications.find(p => p._id === currentEditingId)?.coverUrl || null;
+
+                // Si hay un archivo de carátula nuevo, subirlo
+                if (coverFile) {
+                    const formData = new FormData();
+                    formData.append('coverFile', coverFile);
+                    
+                    const uploadResponse = await fetch('/api/upload-cover', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!uploadResponse.ok) {
+                        const errorData = await uploadResponse.json().catch(() => ({}));
+                        const errorMsg = errorData.error || `Error al subir la carátula (${uploadResponse.status})`;
+                        throw new Error(errorMsg);
+                    }
+
+                    const uploadData = await uploadResponse.json();
+                    coverUrl = uploadData.url;
+                }
+
+                const response = await fetch(`/api/publications/${currentEditingId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        subtitle,
+                        keywords,
+                        content,
+                        coverUrl: coverUrl,
+                        userEmail: currentUser
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error editando');
+                }
+
+                showNotification('[OK] Publicación actualizada', 'success');
+                closeEditModal();
+                await loadPublications();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification(`Error editando: ${error.message}`, 'error');
+            }
+        }
+
+        // BÚSQUEDA
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            if (!query.trim()) {
+                showAllBooks();
+                return;
+            }
+            filteredPublications = allPublications.filter(pub => 
+                pub.title.toLowerCase().includes(query) ||
+                (pub.subtitle && pub.subtitle.toLowerCase().includes(query)) ||
+                (pub.keywords && pub.keywords.some(k => k.includes(query)))
+            );
+            renderPublications();
+        }
+
+        function toggleAdvancedSearch() {
+            const advanced = document.getElementById('advancedSearch');
+            advanced.classList.toggle('show');
+        }
+
+        function performAdvancedSearch() {
+            const title = document.getElementById('advTitle').value.toLowerCase().trim();
+            const keywordsInput = document.getElementById('advKeywords').value.toLowerCase().trim();
+            const keywords = keywordsInput ? keywordsInput.split(',').map(k => k.trim()).filter(k => k) : [];
+            const dateFrom = document.getElementById('advDateFrom').value ? new Date(document.getElementById('advDateFrom').value) : null;
+            const dateTo = document.getElementById('advDateTo').value ? new Date(document.getElementById('advDateTo').value) : null;
+
+            // Validación: al menos un campo debe estar completo
+            if (!title && keywords.length === 0 && !dateFrom && !dateTo) {
+                showNotification('Completa al menos un campo de búsqueda', 'error');
+                return;
+            }
+
+            // Validación: validar fechas
+            if (dateFrom && dateTo && dateFrom > dateTo) {
+                showNotification('La fecha inicial debe ser menor que la final', 'error');
+                return;
+            }
+
+            filteredPublications = allPublications.filter(pub => {
+                // Filtrar por título
+                if (title && !pub.title.toLowerCase().includes(title)) return false;
+
+                // Filtrar por palabras clave
+                if (keywords.length > 0) {
+                    const pubKeywords = pub.keywords || [];
+                    const matchesKeyword = keywords.some(k => pubKeywords.some(pk => pk.toLowerCase().includes(k)));
+                    if (!matchesKeyword) return false;
+                }
+
+                // Filtrar por fecha
+                const pubDate = new Date(pub.publishedAt);
+                if (dateFrom && pubDate < dateFrom) return false;
+                if (dateTo) {
+                    const nextDay = new Date(dateTo);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    if (pubDate >= nextDay) return false;
+                }
+
+                return true;
+            });
+
+            if (filteredPublications.length === 0) {
+                showNotification('No se encontraron publicaciones con esos criterios', 'error');
+            }
+
+            renderPublications();
+        }
+
+        // EDITOR DE FORMATO
+        function formatText(format, editorId = 'editorContent') {
+            const editor = document.getElementById(editorId);
+            editor.focus();
+            
+            switch(format) {
+                case 'bold':
+                    document.execCommand('bold', false, null);
+                    break;
+                case 'italic':
+                    document.execCommand('italic', false, null);
+                    break;
+                case 'underline':
+                    document.execCommand('underline', false, null);
+                    break;
+                case 'h2':
+                    document.execCommand('formatBlock', false, 'h2');
+                    break;
+                case 'h3':
+                    document.execCommand('formatBlock', false, 'h3');
+                    break;
+            }
+        }
+
+        function insertSpecial(type, editorId = 'editorContent') {
+            const editor = document.getElementById(editorId);
+            if (type === 'linebreak') {
+                document.execCommand('insertHTML', false, '<br>');
+            } else if (type === 'hr') {
+                document.execCommand('insertHTML', false, '<hr style="margin: 15px 0; border: none; border-top: 1px solid var(--border);">');
+            }
+            editor.focus();
+        }
+
+        function clearEditor(editorId = 'editorContent') {
+            if (confirm('¿Limpiar completamente el contenido?')) {
+                document.getElementById(editorId).innerHTML = '';
+            }
+        }
+
+        // PUBLICAR CONTENIDO
+        async function publishContent() {
+            const title = document.getElementById('pubTitle').value.trim();
+            const subtitle = document.getElementById('pubSubtitle').value.trim();
+            const keywords = document.getElementById('pubKeywords').value
+                .split(',')
+                .map(k => k.trim())
+                .filter(k => k);
+            const content = document.getElementById('editorContent').innerHTML;
+            const coverFile = document.getElementById('pubCover').files[0];
+
+            if (!title) {
+                showNotification('El título es requerido', 'error');
+                return;
+            }
+
+            if (!content.trim()) {
+                showNotification('El contenido no puede estar vacío', 'error');
+                return;
+            }
+
+            if (!currentUser) {
+                showNotification('Debes autenticarte para publicar', 'error');
+                return;
+            }
+
+            try {
+                let coverUrl = null;
+
+                // Si hay archivo de carátula, subirlo
+                if (coverFile) {
+                    const formData = new FormData();
+                    formData.append('coverFile', coverFile);
+                    
+                    const uploadResponse = await fetch('/api/upload-cover', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!uploadResponse.ok) {
+                        const errorData = await uploadResponse.json().catch(() => ({}));
+                        const errorMsg = errorData.error || `Error al subir la carátula (${uploadResponse.status})`;
+                        throw new Error(errorMsg);
+                    }
+
+                    const uploadData = await uploadResponse.json();
+                    coverUrl = uploadData.url;
+                }
+
+                const response = await fetch('/api/publications', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        subtitle,
+                        keywords,
+                        content,
+                        author: currentUser,
+                        role: currentUserRole,
+                        coverUrl: coverUrl
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error publicando');
+                }
+
+                showNotification('[OK] Publicación creada', 'success');
+                closePublishModal();
+                await loadPublications();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification(`Error publicando: ${error.message}`, 'error');
+            }
+        }
+
+        // ELIMINAR PUBLICACIÓN
+        async function deletePublication(pubId) {
+            if (!confirm('¿Estás seguro de que deseas eliminar esta publicación?')) return;
+
+            try {
+                const response = await fetch(`/api/publications/${pubId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userEmail: currentUser, 
+                        userRole: currentUserRole 
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error eliminando');
+                }
+
+                showNotification('[OK] Publicación eliminada', 'success');
+                await loadPublications();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error eliminando. No tienes permiso.', 'error');
+            }
+        }
+
+        // UTILIDADES
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function sanitizeHTML(html) {
+            if (!html) return '';
+            
+            // Crear un contenedor temporal
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            
+            // Tags permitidos
+            const allowedTags = ['strong', 'em', 'u', 'h2', 'h3', 'p', 'br', 'hr', 'span', 'div'];
+            
+            // Función recursiva para limpiar nodos
+            const walk = (node) => {
+                for (let i = node.childNodes.length - 1; i >= 0; i--) {
+                    const child = node.childNodes[i];
+                    if (child.nodeType === 1) { // Element
+                        const tagName = child.tagName.toLowerCase();
+                        if (!allowedTags.includes(tagName)) {
+                            // Reemplazar elemento por su contenido de texto
+                            while (child.firstChild) {
+                                node.insertBefore(child.firstChild, child);
+                            }
+                            node.removeChild(child);
+                        } else {
+                            walk(child);
+                        }
+                    }
+                }
+            };
+            walk(temp);
+            return temp.innerHTML;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notif = document.createElement('div');
+            notif.className = `notification ${type}`;
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        function irAlInicio() {
+            window.location.href = 'index.html';
+        }
+
+        // VISUALIZACIÓN DE LIBROS
+        let currentViewingBook = null;
+
+        function openBookViewer(pubId) {
+            const book = allPublications.find(p => p._id === pubId);
+            if (!book) {
+                showNotification('Libro no encontrado', 'error');
+                return;
+            }
+
+            currentViewingBook = book;
+            
+            // Llenar información del libro
+            document.getElementById('bookTitle').textContent = escapeHtml(book.title);
+            
+            if (book.subtitle) {
+                document.getElementById('bookSubtitle').textContent = escapeHtml(book.subtitle);
+            } else {
+                document.getElementById('bookSubtitle').textContent = '';
+            }
+            
+            document.getElementById('bookAuthor').textContent = escapeHtml(book.author);
+            
+            const pubDate = new Date(book.publishedAt);
+            const dateStr = pubDate.toLocaleDateString('es-ES', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            document.getElementById('bookDate').textContent = dateStr;
+            
+            // Mostrar contenido
+            document.getElementById('bookContent').innerHTML = sanitizeHTML(book.content);
+            
+            // Calcular número de páginas (aproximadamente 2000 caracteres por página)
+            const contentLength = book.content.length;
+            const charsPerPage = 2000;
+            const totalPages = Math.max(1, Math.ceil(contentLength / charsPerPage));
+            document.getElementById('bookPages').textContent = `Página 1 de ${totalPages}`;
+            
+            // Abrir modal
+            document.getElementById('bookViewerModal').classList.add('show');
+            
+            // Actualizar paginación mientras se desplaza
+            const contentDiv = document.getElementById('bookContent');
+            contentDiv.addEventListener('scroll', () => {
+                updatePageNumber(contentDiv, totalPages);
+            }, { once: false });
+        }
+
+        function updatePageNumber(contentDiv, totalPages) {
+            const scrollPercentage = contentDiv.scrollTop / (contentDiv.scrollHeight - contentDiv.clientHeight) || 0;
+            const currentPage = Math.max(1, Math.ceil(scrollPercentage * totalPages) + 1);
+            document.getElementById('bookPages').textContent = `Página ${Math.min(currentPage, totalPages)} de ${totalPages}`;
+        }
+
+        function closeBookViewer() {
+            document.getElementById('bookViewerModal').classList.remove('show');
+            currentViewingBook = null;
+        }
+
+        // Cerrar modal al presionar Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeBookViewer();
+            }
+        });
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('bookViewerModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'bookViewerModal') {
+                closeBookViewer();
+            }
+        });
+
+        // DESCARGAR EN PDF
+        async function downloadBookPDF() {
+            if (!currentViewingBook) return;
+
+            try {
+                showNotification('Generando PDF...', 'success');
+                
+                // Crear elemento temporal para generar HTML limpio
+                const element = document.createElement('div');
+                element.style.padding = '40px';
+                element.style.fontFamily = 'Arial, sans-serif';
+                element.style.lineHeight = '1.8';
+                element.innerHTML = `
+                    <h1 style="color: #222; margin-bottom: 10px;">${escapeHtml(currentViewingBook.title)}</h1>
+                    ${currentViewingBook.subtitle ? `<h2 style="color: #888; font-size: 16px; margin-bottom: 20px;">${escapeHtml(currentViewingBook.subtitle)}</h2>` : ''}
+                    <div style="color: #999; font-size: 12px; margin-bottom: 30px; border-bottom: 1px solid #ddd; padding-bottom: 20px;">
+                        Por: ${escapeHtml(currentViewingBook.author)}<br>
+                        Fecha: ${new Date(currentViewingBook.publishedAt).toLocaleDateString('es-ES')}
+                    </div>
+                    <div style="color: #333; font-size: 14px; line-height: 1.8;">
+                        ${currentViewingBook.content}
+                    </div>
+                `;
+
+                // Usar html2pdf si está disponible, sino usar una alternativa simple
+                const opt = {
+                    margin: 10,
+                    filename: `${sanitizeFilename(currentViewingBook.title)}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+                };
+
+                // Intentar usar html2pdf si está disponible
+                if (typeof html2pdf !== 'undefined') {
+                    html2pdf().set(opt).from(element).save();
+                } else {
+                    // Fallback: usar print para PDF
+                    const printWindow = window.open('', '', 'width=800,height=600');
+                    printWindow.document.write('<html><head><title>' + escapeHtml(currentViewingBook.title) + '</title>');
+                    printWindow.document.write('<style>body { font-family: Arial; padding: 40px; line-height: 1.8; } h1 { color: #222; } h2 { color: #888; } .meta { color: #999; font-size: 12px; border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 30px; }</style>');
+                    printWindow.document.write('</head><body>');
+                    printWindow.document.write('<h1>' + escapeHtml(currentViewingBook.title) + '</h1>');
+                    if (currentViewingBook.subtitle) {
+                        printWindow.document.write('<h2>' + escapeHtml(currentViewingBook.subtitle) + '</h2>');
+                    }
+                    printWindow.document.write('<div class="meta">Por: ' + escapeHtml(currentViewingBook.author) + '<br>Fecha: ' + new Date(currentViewingBook.publishedAt).toLocaleDateString('es-ES') + '</div>');
+                    printWindow.document.write(currentViewingBook.content);
+                    printWindow.document.write('</body></html>');
+                    printWindow.document.close();
+                    setTimeout(() => {
+                        printWindow.print();
+                        showNotification('[OK] Abre el diálogo de impresión para guardar como PDF', 'success');
+                    }, 250);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error generando PDF: ' + error.message, 'error');
+            }
+        }
+
+        // DESCARGAR EN WORD
+        async function downloadBookWord() {
+            if (!currentViewingBook) return;
+
+            try {
+                showNotification('Generando documento Word...', 'success');
+
+                const docContent = `
+                    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>${escapeHtml(currentViewingBook.title)}</title>
+                        <style>
+                            body { font-family: 'Calibri', sans-serif; margin: 1in; line-height: 1.5; }
+                            h1 { color: #222; margin-bottom: 10px; }
+                            h2 { color: #666; font-size: 16px; margin-bottom: 20px; }
+                            .meta { color: #999; font-size: 12px; border-bottom: 1px solid #ddd; padding-bottom: 20px; margin-bottom: 30px; }
+                            p { margin-bottom: 12px; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>${escapeHtml(currentViewingBook.title)}</h1>
+                        ${currentViewingBook.subtitle ? `<h2>${escapeHtml(currentViewingBook.subtitle)}</h2>` : ''}
+                        <div class="meta">Por: ${escapeHtml(currentViewingBook.author)}<br>Fecha: ${new Date(currentViewingBook.publishedAt).toLocaleDateString('es-ES')}</div>
+                        <div>${currentViewingBook.content}</div>
+                    </body>
+                    </html>
+                `;
+
+                const blob = new Blob([docContent], { type: 'application/msword' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${sanitizeFilename(currentViewingBook.title)}.doc`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+
+                showNotification('[OK] Documento descargado', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error generando documento: ' + error.message, 'error');
+            }
+        }
+
+        // Limpiar nombre de archivo
+        function sanitizeFilename(filename) {
+            return filename.replace(/[^a-z0-9]/gi, '_').slice(0, 100);
+        }
+    </script>
+</body>
+</html>
+ 

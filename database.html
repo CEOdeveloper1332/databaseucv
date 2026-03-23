@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Base de Datos - A1 Analytics</title>
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<header>
+		<nav class="navbar">
+			<div class="nav-buttons">
+				<a href="index.html" class="nav-btn" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Inicio</a>
+			</div>
+		</nav>
+	</header>
+
+	<div class="container">
+		<!-- Panel completo: Visualización de datos -->
+		<section class="data-panel" style="grid-column: 1 / -1; padding: 20px;">
+			<div style="margin-bottom: 20px;">
+				<h2 style="color: var(--primary); margin-bottom: 15px;">Base de Datos de Perfiles</h2>
+				<div class="search-bar">
+					<input type="text" id="searchInput" placeholder="Buscar por nombre, DNI, email...">
+					<button type="button" id="searchBtn">Buscar</button>
+				</div>
+			</div>
+
+			<div class="profiles-container" id="profilesList">
+				<div class="empty-state">
+					<p>No hay perfiles registrados.</p>
+					<p style="font-size: 11px;">Los datos aparecerán aquí cuando se agreguen nuevos perfiles.</p>
+				</div>
+			</div>
+		</section>
+	</div>
+
+	<script src="main.js"></script>
+	<script>
+		// Cargar y mostrar los perfiles al iniciar la página
+		document.addEventListener('DOMContentLoaded', function() {
+			const profiles = JSON.parse(localStorage.getItem('profiles')) || [];
+			displayProfiles(profiles);
+
+			// Función de búsqueda
+			document.getElementById('searchBtn').addEventListener('click', searchProfiles);
+			document.getElementById('searchInput').addEventListener('keypress', function(e) {
+				if (e.key === 'Enter') searchProfiles();
+			});
+		});
+
+		function displayProfiles(profiles) {
+			const profilesList = document.getElementById('profilesList');
+			
+			if (profiles.length === 0) {
+				profilesList.innerHTML = `
+					<div class="empty-state">
+						<p>No hay perfiles registrados.</p>
+						<p style="font-size: 11px;">Los datos aparecerán aquí cuando se agreguen nuevos perfiles.</p>
+					</div>
+				`;
+				return;
+			}
+
+			profilesList.innerHTML = profiles.map((profile, index) => `
+				<div class="profile-card" style="border: 1px solid var(--border); padding: 15px; margin-bottom: 15px; border-radius: 6px; background: #fafafa;">
+					<div style="display: grid; grid-template-columns: 80px 1fr; gap: 15px; align-items: start;">
+						<div style="text-align: center;">
+							${profile.photo ? `<img src="${profile.photo}" alt="Foto" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">` : `<div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">${(profile.firstName?.charAt(0) || 'P').toUpperCase()}</div>`}
+						</div>
+						<div>
+							<h3 style="color: var(--primary); margin-bottom: 8px; font-size: 16px;">${profile.firstName} ${profile.lastName}</h3>
+							<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; color: #666;">
+								<p><strong>DNI:</strong> ${profile.dni || 'N/A'}</p>
+								<p><strong>Email:</strong> ${profile.email || 'N/A'}</p>
+								<p><strong>Teléfono:</strong> ${profile.phone || 'N/A'}</p>
+								<p><strong>Ubicación:</strong> ${profile.location || profile.locality || 'N/A'}</p>
+								<p><strong>Padres:</strong> ${profile.parents || 'N/A'}</p>
+								<p><strong>Hermanos:</strong> ${profile.siblings || 'N/A'}</p>
+							</div>
+							
+							<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #ddd;">
+								<p style="font-weight: bold; color: var(--primary); margin-bottom: 8px; font-size: 12px;">Estadísticas</p>
+								<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; font-size: 11px;">
+									<div style="background: white; padding: 8px; border-radius: 4px; text-align: center; border: 1px solid #ddd;">
+										<div style="font-weight: bold; color: var(--primary);">${profile.skill || 50}%</div>
+										<div>Habilidad</div>
+									</div>
+									<div style="background: white; padding: 8px; border-radius: 4px; text-align: center; border: 1px solid #ddd;">
+										<div style="font-weight: bold; color: var(--primary);">${profile.intelligence || 50}%</div>
+										<div>Inteligencia</div>
+									</div>
+									<div style="background: white; padding: 8px; border-radius: 4px; text-align: center; border: 1px solid #ddd;">
+										<div style="font-weight: bold; color: var(--primary);">${profile.performance || 50}%</div>
+										<div>Desempeño</div>
+									</div>
+									<div style="background: white; padding: 8px; border-radius: 4px; text-align: center; border: 1px solid #ddd;">
+										<div style="font-weight: bold; color: var(--primary);">${profile.jobs || 50}%</div>
+										<div>Trabajos</div>
+									</div>
+									<div style="background: white; padding: 8px; border-radius: 4px; text-align: center; border: 1px solid #ddd;">
+										<div style="font-weight: bold; color: var(--primary);">${profile.occupation || 50}%</div>
+										<div>Ocupación</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			`).join('');
+		}
+
+		function searchProfiles() {
+			const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+			const profiles = JSON.parse(localStorage.getItem('profiles')) || [];
+			
+			const filtered = profiles.filter(profile => {
+				const fullName = `${profile.firstName} ${profile.lastName}`.toLowerCase();
+				const email = (profile.email || '').toLowerCase();
+				const dni = (profile.dni || '').toLowerCase();
+				const location = (profile.location || '').toLowerCase();
+				
+				return fullName.includes(searchTerm) || 
+					   email.includes(searchTerm) || 
+					   dni.includes(searchTerm) ||
+					   location.includes(searchTerm);
+			});
+
+			if (filtered.length === 0) {
+				document.getElementById('profilesList').innerHTML = `
+					<div class="empty-state">
+						<p>No se encontraron resultados para "${searchTerm}".</p>
+						<p style="font-size: 11px;">Intenta con otro término de búsqueda.</p>
+					</div>
+				`;
+			} else {
+				displayProfiles(filtered);
+			}
+		}
+	</script>
+</body>
+</html>

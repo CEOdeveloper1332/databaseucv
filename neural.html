@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Neural networks</title>
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<header>
+		<nav class="navbar">
+			<div class="nav-texts">
+				<a href="index.html" class="nav-text-btn">Inicio</a>
+				<span style="color:rgba(255,255,255,0.6);margin-left:8px">Redes Neuronales</span>
+			</div>
+		</nav>
+	</header>
+
+	<main style="max-width:1400px;margin:20px auto;padding:0 16px;">
+		<!-- Panel de control de redes -->
+		<section class="form-panel" style="grid-column:1/-1;margin-bottom:20px;">
+			<h2>Panel de Redes Neuronales</h2>
+			<div class="neural-toolbar">
+				<input id="networkName" placeholder="Nombre de la red" style="padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-family:Arial">
+				<button id="createNetworkBtn" class="btn btn-primary">Crear nueva red</button>
+				<select id="networksSelect" style="padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-family:Arial">
+					<option value="">-- Seleccionar red existente --</option>
+				</select>
+			</div>
+		</section>
+
+		<!-- Contenedor de dos paneles: Perfiles disponibles y Red actual -->
+		<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+			<!-- Panel 1: Perfiles disponibles -->
+			<section class="form-panel">
+				<h3 style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--primary)">Perfiles disponibles</h3>
+				<div id="profilesPool" style="border:1px dashed var(--border);padding:12px;border-radius:6px;min-height:250px;max-height:500px;overflow-y:auto;background:rgba(245,245,245,0.5);display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start">
+				</div>
+			</section>
+
+			<!-- Panel 2: Red actual (vista de nodos) -->
+			<section class="form-panel">
+				<h3 style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--primary)">Red actual</h3>
+				<div class="neural-canvas" id="neuralCanvas" style="position:relative;border:1px solid var(--border);border-radius:6px;background:#fafafa;min-height:250px;overflow:auto;display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start;padding:12px">
+					<div id="nodesContainer" style="position:relative;display:flex;flex-wrap:wrap;gap:12px;width:100%;align-content:flex-start">
+					</div>
+				</div>
+			</section>
+		</div>
+	</main>
+
+	<!-- modal editar stats -->
+	<div id="neuralModal" class="neural-modal" aria-hidden="true">
+		<div class="modal-box">
+			<h3 id="modalTitle" style="margin-bottom:12px;color:var(--primary);font-weight:bold">Editar estadísticas</h3>
+			<form id="nodeStatsForm">
+				<div style="margin-bottom:12px">
+					<label style="display:block;font-size:12px;font-weight:bold;margin-bottom:4px">Amistad (%)</label>
+					<input type="number" name="amistad" min="0" max="100" value="50" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-family:Arial">
+				</div>
+				<div style="margin-bottom:12px">
+					<label style="display:block;font-size:12px;font-weight:bold;margin-bottom:4px">Odio (%)</label>
+					<input type="number" name="odio" min="0" max="100" value="0" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-family:Arial">
+				</div>
+				<div style="margin-bottom:16px">
+					<label style="display:block;font-size:12px;font-weight:bold;margin-bottom:4px">Estrés (%)</label>
+					<input type="number" name="estres" min="0" max="100" value="10" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-family:Arial">
+				</div>
+				<div style="display:flex;gap:8px;justify-content:flex-end">
+					<button type="button" id="cancelNodeEdit" class="btn">Cancelar</button>
+					<button type="submit" class="btn btn-primary">Guardar</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<script src="main.js"></script>
+</body>
+</html>

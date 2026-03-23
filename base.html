@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>database panel</title>
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<header>
+		<nav class="navbar">
+			<div class="nav-buttons">
+				<a href="index.html" class="nav-btn" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Inicio</a>
+			</div>
+		</nav>
+	</header>
+
+	<div class="container">
+		<!-- Panel izquierdo: Formulario -->
+		<aside class="form-panel">
+			<h2>Crear / Editar Perfil</h2>
+			<form id="createForm">
+				<div class="form-group">
+					<label>Nombre</label>
+					<input type="text" name="firstName" placeholder="Nombre" required>
+				</div>
+
+				<div class="form-group">
+					<label>Apellido</label>
+					<input type="text" name="lastName" placeholder="Apellido" required>
+				</div>
+
+				<div class="form-group">
+					<label>DNI</label>
+					<input type="text" name="dni" placeholder="Documento de identidad">
+				</div>
+
+				<div class="form-group">
+					<label>Correo</label>
+					<input type="email" name="email" placeholder="correo@ejemplo.com" required>
+				</div>
+
+				<div class="form-group">
+					<label>Teléfono</label>
+					<input type="tel" name="phone" placeholder="Teléfono de contacto">
+				</div>
+
+				<div class="form-group">
+					<label>Ubicación</label>
+					<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+						<input type="text" name="locality" placeholder="Localidad / Caserío / Distrito (ej: Banda de Shilcayo)">
+						<input type="text" name="province" placeholder="Provincia (ej: San Martín)">
+					</div>
+					<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+						<input type="text" name="department" placeholder="Departamento / Región (ej: San Martín)">
+						<input type="text" name="country" placeholder="País (ej: Perú)" value="Perú">
+					</div>
+					<input type="text" name="location" placeholder="O ubicación simple (ej: Tarapoto, Perú)" style="width:100%;margin-top:8px">
+				</div>
+
+				<div class="form-group">
+					<label>Padres</label>
+					<input type="text" name="parents" placeholder="Nombre de padres">
+				</div>
+
+				<div class="form-group">
+					<label>Hermanos</label>
+					<input type="text" name="siblings" placeholder="Cantidad o nombres">
+				</div>
+
+				<div class="form-group">
+					<label>Foto (URL)</label>
+					<input type="text" name="photo" placeholder="https://ejemplo.com/foto.jpg">
+				</div>
+
+				<div class="form-group">
+					<label>O cargar archivo</label>
+					<input type="file" name="photoFile" accept="image/*">
+				</div>
+
+				<div class="form-group">
+					<label style="font-weight: bold; margin-bottom: 8px;">Estadísticas (%)</label>
+					<div class="stats-grid">
+						<div class="stat-input">
+							<label>Habilidad</label>
+							<input type="number" name="skill" min="0" max="100" value="50">
+						</div>
+						<div class="stat-input">
+							<label>Inteligencia</label>
+							<input type="number" name="intelligence" min="0" max="100" value="50">
+						</div>
+						<div class="stat-input">
+							<label>Desempeño</label>
+							<input type="number" name="performance" min="0" max="100" value="50">
+						</div>
+						<div class="stat-input">
+							<label>Trabajos</label>
+							<input type="number" name="jobs" min="0" max="100" value="50">
+						</div>
+						<div class="stat-input">
+							<label>Ocupación</label>
+							<input type="number" name="occupation" min="0" max="100" value="50">
+						</div>
+					</div>
+				</div>
+
+				<div class="form-actions">
+					<button type="submit" class="btn btn-primary" style="flex: 1;">Guardar Perfil</button>
+					<button type="button" class="btn btn-secondary" id="clearBtn">Limpiar</button>
+				</div>
+			</form>
+		</aside>
+
+		<!-- Panel derecho: Visualización de datos -->
+		<section class="data-panel">
+			<div class="search-bar">
+				<input type="text" id="searchInput" placeholder="Buscar por nombre, DNI, email...">
+				<button type="button" id="searchBtn">Buscar</button>
+			</div>
+
+			<div class="profiles-container" id="profilesList">
+				<div class="empty-state">
+					<p>No hay perfiles registrados.</p>
+					<p style="font-size: 11px;">Crea un nuevo perfil.</p>
+				</div>
+			</div>
+		</section>
+	</div>
+
+	<script src="main.js"></script>
+</body>
+</html>

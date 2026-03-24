@@ -1,954 +1,1094 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Ubicaciones — A1 Analytics</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
-:root {
-  --cyan:#00e5ff; --green:#00ff88; --magenta:#ff006e;
-  --amber:#ffaa00; --red:#ff2244;
-  --bg:#060d0f; --panel:rgba(6,18,22,0.95);
-  --border:rgba(0,229,255,0.18); --text:rgba(200,240,255,0.9);
-  --muted:rgba(120,180,200,0.6);
-  --font-mono:'IBM Plex Mono','Courier New',monospace;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--font-mono);color:var(--text);-webkit-font-smoothing:antialiased}
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Ubicaciones — A1 Analytics</title>
+	<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" />
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
-/* ── HEADER ── */
-#header{position:fixed;top:0;left:0;right:0;height:44px;z-index:100;background:rgba(4,10,12,0.96);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:0}
-#header::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan) 0%,var(--green) 40%,var(--magenta) 100%);opacity:.8}
-.header-brand{font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin-right:24px;white-space:nowrap;display:flex;align-items:center;gap:8px}
-.header-brand::before{content:'';display:inline-block;width:7px;height:7px;background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:blink 2s steps(1) infinite}
-@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
-.nav-sep{width:1px;height:20px;background:var(--border);margin:0 16px}
-.nav-link{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:4px 10px;border:1px solid transparent;transition:all .15s;cursor:pointer;background:none}
-.nav-link:hover{color:var(--cyan);border-color:rgba(0,229,255,.3)}
-.nav-link.active{color:var(--cyan);border-color:rgba(0,229,255,.4);background:rgba(0,229,255,.06)}
-.header-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+		:root {
+			--cyan:    #00e5ff;
+			--teal:    #00bcd4;
+			--green:   #00ff88;
+			--magenta: #ff006e;
+			--amber:   #ffaa00;
+			--red:     #ff2244;
+			--bg:      #060d0f;
+			--panel:   rgba(6,18,22,0.92);
+			--border:  rgba(0,229,255,0.18);
+			--text:    rgba(200,240,255,0.9);
+			--muted:   rgba(120,180,200,0.6);
+			--font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+			--font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+		}
 
-/* ── PANEL ── */
-#side-panel{position:fixed;top:44px;left:0;width:220px;max-height:calc(100vh - 80px);z-index:50;background:var(--panel);border-right:1px solid var(--border);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;transition:transform .25s ease}
-#side-panel.collapsed{transform:translateX(-220px)}
-#side-panel::-webkit-scrollbar{width:3px}
-#side-panel::-webkit-scrollbar-thumb{background:rgba(0,229,255,.3)}
-.panel-section{border-bottom:1px solid var(--border);padding-bottom:12px}
-.panel-section:last-child{border-bottom:none;padding-bottom:0}
-.panel-label{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.panel-label::before{content:'';display:inline-block;width:4px;height:4px;background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
-.stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.stat-key{font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
-.stat-val{font-size:11px;font-weight:600;letter-spacing:.04em}
-.v-cyan   {color:var(--cyan);  text-shadow:0 0 8px var(--cyan)}
-.v-green  {color:var(--green); text-shadow:0 0 8px var(--green)}
-.v-magenta{color:var(--magenta);text-shadow:0 0 8px var(--magenta)}
-.v-amber  {color:var(--amber); text-shadow:0 0 8px var(--amber)}
-.mini-bar{height:2px;background:rgba(255,255,255,.08);margin-bottom:8px;overflow:hidden}
-.mini-bar-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));box-shadow:0 0 6px var(--cyan);transition:width .8s ease}
-.profile-entry{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid transparent;cursor:pointer;transition:all .12s;margin-bottom:4px}
-.profile-entry:hover{border-color:rgba(0,229,255,.25);background:rgba(0,229,255,.04)}
-.profile-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.profile-entry-name{font-size:10px;letter-spacing:.04em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.profile-entry-loc{font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+		*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── TOGGLE ── */
-#togglePanel{position:fixed;top:52px;left:220px;z-index:60;width:20px;height:40px;background:rgba(4,14,18,.92);border:1px solid var(--border);border-left:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:10px;transition:all .15s}
-#togglePanel:hover{color:var(--cyan)}
-#side-panel.collapsed~#togglePanel{left:0}
+		html, body {
+			height: 100%;
+			overflow: hidden;
+			background: var(--bg);
+			font-family: var(--font-mono);
+			color: var(--text);
+			-webkit-font-smoothing: antialiased;
+		}
 
-/* ── MAPA ── */
-#map-container{position:fixed;inset:0;top:44px;bottom:36px;left:220px;overflow:hidden;cursor:grab;background:#050c10;transition:left .25s ease;user-select:none}
-#map-container.panel-hidden{left:0}
-#map-container:active{cursor:grabbing}
-#map-container::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:10;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px);opacity:.5}
-#vignette{position:absolute;inset:0;z-index:9;pointer-events:none;background:radial-gradient(ellipse 70% 70% at 50% 50%,transparent 30%,rgba(4,10,12,.5) 100%)}
-#svg-stage{position:absolute;transform-origin:0 0;will-change:transform}
-#peru-svg{display:block;overflow:visible}
+		/* ── MAP FULLSCREEN ── */
+		#map3d {
+			position: fixed;
+			inset: 0;
+			width: 100vw;
+			height: 100vh;
+			z-index: 1;
+			cursor: grab;
+		}
+		#map3d.grabbing { cursor: grabbing; }
 
-/* departamentos */
-.dept{fill:#0d2530;stroke:rgba(0,229,255,.3);stroke-width:.6;cursor:pointer;transition:fill .18s}
-.dept:hover{fill:#152f3a;stroke:rgba(0,229,255,.7)}
-.dept-label{font-family:var(--font-mono);font-size:7px;fill:rgba(0,229,255,.35);pointer-events:none;text-anchor:middle}
+		/* Oscurecer el mapa base para el look dark */
+		.maplibregl-map canvas {
+			filter: brightness(0.35) saturate(0.4) hue-rotate(180deg);
+		}
 
-/* ── ARC CANVAS ── */
-#arc-canvas{position:absolute;inset:0;pointer-events:none;z-index:5}
+		/* ── DARK VIGNETTE OVERLAY ── */
+		#vignette {
+			position: fixed;
+			inset: 0;
+			z-index: 2;
+			pointer-events: none;
+			background: radial-gradient(ellipse 70% 70% at 50% 50%, transparent 30%, rgba(4,10,12,0.65) 100%);
+		}
 
-/* ── MARCADORES ── */
-.mk{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:20}
-.mk-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--cyan);background:rgba(0,229,255,.3);box-shadow:0 0 10px var(--cyan);animation:pulse 2.5s ease-in-out infinite;transition:transform .15s}
-.mk:hover .mk-dot{transform:scale(1.5)}
-.mk-dot::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(0,229,255,.2);animation:ripple 2.5s ease-out infinite}
-.mk.mg .mk-dot{border-color:var(--magenta);background:rgba(255,0,110,.25);box-shadow:0 0 10px var(--magenta);animation:pulse-m 2.5s ease-in-out infinite}
-.mk.mg .mk-dot::after{border-color:rgba(255,0,110,.2)}
-.mk.gn .mk-dot{border-color:var(--green);background:rgba(0,255,136,.2);box-shadow:0 0 10px var(--green);animation:pulse-g 2.5s ease-in-out infinite}
-.mk.gn .mk-dot::after{border-color:rgba(0,255,136,.2)}
-@keyframes pulse  {0%,100%{box-shadow:0 0 8px var(--cyan),0 0 14px rgba(0,229,255,.3)}50%{box-shadow:0 0 14px var(--cyan),0 0 28px rgba(0,229,255,.5)}}
-@keyframes pulse-m{0%,100%{box-shadow:0 0 8px var(--magenta),0 0 14px rgba(255,0,110,.3)}50%{box-shadow:0 0 14px var(--magenta),0 0 28px rgba(255,0,110,.5)}}
-@keyframes pulse-g{0%,100%{box-shadow:0 0 8px var(--green),0 0 14px rgba(0,255,136,.25)}50%{box-shadow:0 0 14px var(--green),0 0 28px rgba(0,255,136,.45)}}
-@keyframes ripple {0%{transform:scale(1);opacity:.6}100%{transform:scale(2.5);opacity:0}}
+		/* ── HEADER ── */
+		#header {
+			position: fixed;
+			top: 0; left: 0; right: 0;
+			height: 44px;
+			z-index: 100;
+			background: rgba(4,10,12,0.94);
+			border-bottom: 1px solid var(--border);
+			display: flex;
+			align-items: center;
+			padding: 0 18px;
+			gap: 0;
+		}
 
-/* ── POPUP ── */
-#popup{position:fixed;z-index:200;background:rgba(4,14,18,.97);border:1px solid rgba(0,229,255,.4);box-shadow:0 0 20px rgba(0,229,255,.2),0 4px 24px rgba(0,0,0,.7);min-width:200px;max-width:280px;display:none;font-family:var(--font-mono)}
-#popup.show{display:block}
-.pu-inner{padding:12px 14px}
-.pu-header{font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--cyan);text-transform:uppercase;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid rgba(0,229,255,.2);display:flex;align-items:center;gap:6px}
-.pu-header::before{content:'';display:inline-block;width:5px;height:5px;background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
-.pu-row{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)}
-.pu-row:last-child{border-bottom:none}
-.pu-av{width:30px;height:30px;border-radius:50%;background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--cyan);flex-shrink:0;overflow:hidden}
-.pu-av img{width:100%;height:100%;object-fit:cover}
-.pu-name{font-size:11px;font-weight:600;color:var(--text);letter-spacing:.04em}
-.pu-loc{font-size:9px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
-#popupClose{position:absolute;top:5px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;font-family:var(--font-mono)}
-#popupClose:hover{color:var(--cyan)}
+		/* Línea de color en la parte superior */
+		#header::before {
+			content: '';
+			position: absolute;
+			top: 0; left: 0; right: 0;
+			height: 2px;
+			background: linear-gradient(90deg, var(--cyan) 0%, var(--green) 40%, var(--magenta) 100%);
+			opacity: 0.8;
+		}
 
-/* ── ZOOM CONTROLS ── */
-#zoom-ctrl{position:fixed;bottom:48px;right:16px;z-index:80;display:flex;flex-direction:column;gap:4px}
-.z-btn{width:28px;height:28px;background:rgba(4,14,18,.92);border:1px solid var(--border);color:var(--muted);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;font-family:var(--font-mono);line-height:1}
-.z-btn:hover{color:var(--cyan);border-color:var(--cyan);background:rgba(0,229,255,.06)}
+		.header-brand {
+			font-family: var(--font-mono);
+			font-size: 11px;
+			font-weight: 600;
+			letter-spacing: 0.22em;
+			text-transform: uppercase;
+			color: var(--cyan);
+			margin-right: 24px;
+			white-space: nowrap;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
 
-/* ── BOTTOM BAR ── */
-#bottom-bar{position:fixed;bottom:0;left:0;right:0;height:36px;z-index:50;background:rgba(4,10,12,.92);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:24px}
-.b-stat{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.08em}
-.b-key{color:var(--muted);text-transform:uppercase}
-.b-val{font-weight:600;font-size:11px}
-.b-sep{width:1px;height:16px;background:var(--border)}
-.b-right{margin-left:auto;font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+		.header-brand::before {
+			content: '';
+			display: inline-block;
+			width: 7px; height: 7px;
+			background: var(--cyan);
+			box-shadow: 0 0 8px var(--cyan);
+			animation: blink 2s steps(1) infinite;
+		}
 
-/* ── CORNERS ── */
-.corner{position:fixed;z-index:10;pointer-events:none;width:24px;height:24px}
-.corner::before,.corner::after{content:'';position:absolute;background:var(--cyan);opacity:.45}
-.ctlx{top:52px;left:8px}.ctlx::before{top:0;left:0;width:2px;height:14px}.ctlx::after{top:0;left:0;width:14px;height:2px}
-.ctrx{top:52px;right:8px}.ctrx::before{top:0;right:0;width:2px;height:14px}.ctrx::after{top:0;right:0;width:14px;height:2px}
-.cblx{bottom:44px;left:8px}.cblx::before{bottom:0;left:0;width:2px;height:14px}.cblx::after{bottom:0;left:0;width:14px;height:2px}
-.cbrx{bottom:44px;right:8px}.cbrx::before{bottom:0;right:0;width:2px;height:14px}.cbrx::after{bottom:0;right:0;width:14px;height:2px}
+		@keyframes blink {
+			0%,49% { opacity: 1; }
+			50%,100% { opacity: 0; }
+		}
 
-/* ── LOADING ── */
-#loading{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .5s}
-#loading.out{opacity:0;pointer-events:none}
-.ld-text{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan)}
-.ld-sub{font-size:9px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
-.ld-bar{width:200px;height:2px;background:rgba(0,229,255,.15);overflow:hidden}
-.ld-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));animation:ld 1.5s ease-in-out infinite}
-@keyframes ld{0%{width:0;margin-left:0}50%{width:100%;margin-left:0}100%{width:0;margin-left:100%}}
+		.nav-sep {
+			width: 1px;
+			height: 20px;
+			background: var(--border);
+			margin: 0 16px;
+		}
 
-/* ── NO-GEO BADGE ── */
-.badge-nf{font-size:9px;letter-spacing:.1em;color:var(--amber);border:1px solid rgba(255,170,0,.3);padding:1px 6px;display:inline-block;margin-top:2px}
-</style>
+		.nav-link {
+			font-family: var(--font-mono);
+			font-size: 10px;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			color: var(--muted);
+			text-decoration: none;
+			padding: 4px 10px;
+			border: 1px solid transparent;
+			transition: all 0.15s;
+			cursor: pointer;
+			background: none;
+		}
+		.nav-link:hover { color: var(--cyan); border-color: rgba(0,229,255,0.3); }
+		.nav-link.active { color: var(--cyan); border-color: rgba(0,229,255,0.4); background: rgba(0,229,255,0.06); }
+
+		.header-right {
+			margin-left: auto;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.sat-btn {
+			font-family: var(--font-mono);
+			font-size: 10px;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+			background: transparent;
+			border: 1px solid rgba(0,229,255,0.3);
+			color: var(--muted);
+			padding: 4px 12px;
+			cursor: pointer;
+			transition: all 0.15s;
+		}
+		.sat-btn:hover, .sat-btn[aria-pressed="true"] {
+			color: var(--cyan);
+			border-color: var(--cyan);
+			background: rgba(0,229,255,0.08);
+			box-shadow: 0 0 10px rgba(0,229,255,0.15);
+		}
+
+		/* ── PANEL IZQUIERDO ── */
+		#side-panel {
+			position: fixed;
+			top: 44px; left: 0;
+			width: 220px;
+			max-height: calc(100vh - 44px);
+			z-index: 50;
+			background: var(--panel);
+			border-right: 1px solid var(--border);
+			padding: 16px;
+			overflow-y: auto;
+			display: flex;
+			flex-direction: column;
+			gap: 14px;
+		}
+
+		#side-panel::-webkit-scrollbar { width: 3px; }
+		#side-panel::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.3); }
+
+		.panel-section {
+			border-bottom: 1px solid var(--border);
+			padding-bottom: 12px;
+		}
+
+		.panel-section:last-child { border-bottom: none; padding-bottom: 0; }
+
+		.panel-label {
+			font-size: 9px;
+			letter-spacing: 0.2em;
+			text-transform: uppercase;
+			color: var(--cyan);
+			margin-bottom: 10px;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.panel-label::before {
+			content: '';
+			display: inline-block;
+			width: 4px; height: 4px;
+			background: var(--cyan);
+			box-shadow: 0 0 6px var(--cyan);
+		}
+
+		/* Stat rows */
+		.stat-row {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 6px;
+		}
+
+		.stat-key {
+			font-size: 9px;
+			letter-spacing: 0.12em;
+			color: var(--muted);
+			text-transform: uppercase;
+		}
+
+		.stat-val {
+			font-size: 11px;
+			font-weight: 600;
+			letter-spacing: 0.04em;
+		}
+
+		.stat-val.cyan  { color: var(--cyan);    text-shadow: 0 0 8px var(--cyan); }
+		.stat-val.green { color: var(--green);   text-shadow: 0 0 8px var(--green); }
+		.stat-val.magenta { color: var(--magenta); text-shadow: 0 0 8px var(--magenta); }
+		.stat-val.amber { color: var(--amber);   text-shadow: 0 0 8px var(--amber); }
+
+		/* Mini bar */
+		.mini-bar {
+			height: 2px;
+			background: rgba(255,255,255,0.08);
+			margin-bottom: 8px;
+			overflow: hidden;
+		}
+
+		.mini-bar-fill {
+			height: 100%;
+			background: linear-gradient(90deg, var(--cyan), var(--green));
+			box-shadow: 0 0 6px var(--cyan);
+			transition: width 0.8s ease;
+		}
+
+		/* Profile list */
+		.profile-entry {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			padding: 6px 8px;
+			border: 1px solid transparent;
+			cursor: pointer;
+			transition: all 0.12s;
+			margin-bottom: 4px;
+		}
+
+		.profile-entry:hover {
+			border-color: rgba(0,229,255,0.25);
+			background: rgba(0,229,255,0.04);
+		}
+
+		.profile-dot {
+			width: 6px; height: 6px;
+			border-radius: 50%;
+			flex-shrink: 0;
+		}
+
+		.profile-entry-name {
+			font-size: 10px;
+			letter-spacing: 0.04em;
+			color: var(--text);
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.profile-entry-loc {
+			font-size: 9px;
+			color: var(--muted);
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			margin-top: 1px;
+		}
+
+		/* ── MARCADORES ── */
+		.marker-custom {
+			width: 14px; height: 14px;
+			border-radius: 50%;
+			border: 2px solid var(--cyan);
+			background: rgba(0,229,255,0.3);
+			box-shadow: 0 0 12px var(--cyan), 0 0 24px rgba(0,229,255,0.4);
+			cursor: pointer;
+			animation: pulse 2.5s ease-in-out infinite;
+			position: relative;
+		}
+
+		.marker-custom::after {
+			content: '';
+			position: absolute;
+			inset: -5px;
+			border-radius: 50%;
+			border: 1px solid rgba(0,229,255,0.25);
+			animation: ripple 2.5s ease-out infinite;
+		}
+
+		@keyframes pulse {
+			0%, 100% { box-shadow: 0 0 8px var(--cyan), 0 0 16px rgba(0,229,255,0.3); }
+			50%       { box-shadow: 0 0 16px var(--cyan), 0 0 32px rgba(0,229,255,0.5); }
+		}
+
+		@keyframes ripple {
+			0%   { transform: scale(1); opacity: 0.6; }
+			100% { transform: scale(2.5); opacity: 0; }
+		}
+
+		.marker-custom.magenta {
+			border-color: var(--magenta);
+			background: rgba(255,0,110,0.25);
+			box-shadow: 0 0 12px var(--magenta), 0 0 24px rgba(255,0,110,0.35);
+		}
+		.marker-custom.magenta::after { border-color: rgba(255,0,110,0.25); }
+		@keyframes pulse-m {
+			0%, 100% { box-shadow: 0 0 8px var(--magenta), 0 0 16px rgba(255,0,110,0.3); }
+			50%       { box-shadow: 0 0 18px var(--magenta), 0 0 36px rgba(255,0,110,0.5); }
+		}
+		.marker-custom.magenta { animation: pulse-m 2.5s ease-in-out infinite; }
+
+		.marker-custom.green {
+			border-color: var(--green);
+			background: rgba(0,255,136,0.2);
+			box-shadow: 0 0 12px var(--green), 0 0 24px rgba(0,255,136,0.3);
+			animation: pulse-g 2.5s ease-in-out infinite;
+		}
+		.marker-custom.green::after { border-color: rgba(0,255,136,0.2); }
+		@keyframes pulse-g {
+			0%, 100% { box-shadow: 0 0 8px var(--green), 0 0 16px rgba(0,255,136,0.25); }
+			50%       { box-shadow: 0 0 18px var(--green), 0 0 36px rgba(0,255,136,0.45); }
+		}
+
+		/* ── POPUP PERSONALIZADO ── */
+		.maplibregl-popup-content {
+			background: rgba(4,14,18,0.97) !important;
+			border: 1px solid rgba(0,229,255,0.4) !important;
+			border-radius: 0 !important;
+			padding: 0 !important;
+			box-shadow: 0 0 20px rgba(0,229,255,0.2), 0 4px 24px rgba(0,0,0,0.6) !important;
+			font-family: var(--font-mono) !important;
+			min-width: 180px;
+		}
+
+		.maplibregl-popup-tip {
+			border-top-color: rgba(0,229,255,0.4) !important;
+		}
+
+		.maplibregl-popup-close-button {
+			color: var(--muted) !important;
+			font-size: 14px !important;
+			padding: 4px 8px !important;
+		}
+
+		.popup-inner {
+			padding: 12px 14px;
+		}
+
+		.popup-header {
+			font-size: 11px;
+			font-weight: 600;
+			letter-spacing: 0.1em;
+			color: var(--cyan);
+			text-transform: uppercase;
+			margin-bottom: 8px;
+			padding-bottom: 8px;
+			border-bottom: 1px solid rgba(0,229,255,0.2);
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.popup-header::before {
+			content: '';
+			display: inline-block;
+			width: 5px; height: 5px;
+			background: var(--cyan);
+			box-shadow: 0 0 6px var(--cyan);
+		}
+
+		.popup-profile {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			padding: 6px 0;
+			border-bottom: 1px solid rgba(255,255,255,0.05);
+		}
+
+		.popup-profile:last-child { border-bottom: none; }
+
+		.popup-avatar {
+			width: 32px; height: 38px;
+			object-fit: cover;
+			border: 1px solid rgba(0,229,255,0.35);
+			filter: grayscale(30%) brightness(0.85);
+			flex-shrink: 0;
+		}
+
+		.popup-avatar-placeholder {
+			width: 32px; height: 38px;
+			background: rgba(0,229,255,0.1);
+			border: 1px solid rgba(0,229,255,0.25);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 13px;
+			font-weight: 600;
+			color: var(--cyan);
+			flex-shrink: 0;
+		}
+
+		.popup-name {
+			font-size: 11px;
+			font-weight: 600;
+			color: var(--text);
+			letter-spacing: 0.04em;
+		}
+
+		.popup-loc {
+			font-size: 9px;
+			color: var(--muted);
+			letter-spacing: 0.08em;
+			text-transform: uppercase;
+			margin-top: 2px;
+		}
+
+		/* ── OVERLAY QUOTA ── */
+		#overpassQuota {
+			position: fixed;
+			bottom: 20px; right: 20px;
+			z-index: 100;
+			background: rgba(4,10,12,0.92);
+			border: 1px solid var(--border);
+			padding: 12px 14px;
+			min-width: 160px;
+		}
+
+		#overpassQuota::before {
+			content: 'OVERPASS API';
+			display: block;
+			font-size: 8px;
+			letter-spacing: 0.2em;
+			color: var(--cyan);
+			margin-bottom: 8px;
+			padding-bottom: 6px;
+			border-bottom: 1px solid var(--border);
+		}
+
+		#overpassQuota div {
+			font-size: 10px;
+			color: var(--muted);
+			letter-spacing: 0.06em;
+			margin-bottom: 3px;
+		}
+
+		#overpassQuota strong { display: none; }
+
+		/* ── CANVAS ARC LAYER ── */
+		#arc-canvas {
+			position: fixed;
+			inset: 0;
+			width: 100vw;
+			height: 100vh;
+			z-index: 3;
+			pointer-events: none;
+		}
+
+		/* ── SCAN LINE EFFECT ── */
+		#scanlines {
+			position: fixed;
+			inset: 0;
+			z-index: 4;
+			pointer-events: none;
+			background: repeating-linear-gradient(
+				0deg,
+				transparent,
+				transparent 3px,
+				rgba(0,0,0,0.04) 3px,
+				rgba(0,0,0,0.04) 4px
+			);
+			opacity: 0.6;
+		}
+
+		/* ── CORNER DECORATIONS ── */
+		.corner {
+			position: fixed;
+			z-index: 10;
+			pointer-events: none;
+			width: 24px; height: 24px;
+		}
+
+		.corner::before, .corner::after {
+			content: '';
+			position: absolute;
+			background: var(--cyan);
+			opacity: 0.6;
+		}
+
+		.corner-tl { top: 52px; left: 8px; }
+		.corner-tl::before { top: 0; left: 0; width: 2px; height: 14px; }
+		.corner-tl::after  { top: 0; left: 0; width: 14px; height: 2px; }
+
+		.corner-tr { top: 52px; right: 8px; }
+		.corner-tr::before { top: 0; right: 0; width: 2px; height: 14px; }
+		.corner-tr::after  { top: 0; right: 0; width: 14px; height: 2px; }
+
+		.corner-bl { bottom: 8px; left: 8px; }
+		.corner-bl::before { bottom: 0; left: 0; width: 2px; height: 14px; }
+		.corner-bl::after  { bottom: 0; left: 0; width: 14px; height: 2px; }
+
+		.corner-br { bottom: 8px; right: 8px; }
+		.corner-br::before { bottom: 0; right: 0; width: 2px; height: 14px; }
+		.corner-br::after  { bottom: 0; right: 0; width: 14px; height: 2px; }
+
+		/* ── BOTTOM BAR ── */
+		#bottom-bar {
+			position: fixed;
+			bottom: 0; left: 0; right: 0;
+			height: 36px;
+			z-index: 50;
+			background: rgba(4,10,12,0.92);
+			border-top: 1px solid var(--border);
+			display: flex;
+			align-items: center;
+			padding: 0 18px;
+			gap: 24px;
+		}
+
+		.bottom-stat {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-size: 10px;
+			letter-spacing: 0.08em;
+		}
+
+		.bottom-stat-key {
+			color: var(--muted);
+			text-transform: uppercase;
+		}
+
+		.bottom-stat-val {
+			font-weight: 600;
+			font-size: 11px;
+		}
+
+		.bottom-stat-val.cyan    { color: var(--cyan);    text-shadow: 0 0 8px var(--cyan); }
+		.bottom-stat-val.green   { color: var(--green);   text-shadow: 0 0 8px var(--green); }
+		.bottom-stat-val.magenta { color: var(--magenta); text-shadow: 0 0 8px var(--magenta); }
+		.bottom-stat-val.amber   { color: var(--amber);   text-shadow: 0 0 8px var(--amber); }
+
+		.bottom-sep {
+			width: 1px; height: 16px;
+			background: var(--border);
+		}
+
+		.bottom-right {
+			margin-left: auto;
+			font-size: 9px;
+			color: var(--muted);
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+		}
+
+		/* ── COORDS DISPLAY ── */
+		#coords {
+			position: fixed;
+			bottom: 44px; right: 20px;
+			z-index: 50;
+			font-size: 9px;
+			letter-spacing: 0.1em;
+			color: var(--muted);
+			text-transform: uppercase;
+		}
+
+		/* ── MAPLIBRE CONTROLS ── */
+		.maplibregl-ctrl-group {
+			background: rgba(4,14,18,0.92) !important;
+			border: 1px solid var(--border) !important;
+			border-radius: 0 !important;
+			box-shadow: none !important;
+		}
+
+		.maplibregl-ctrl-group button {
+			background: transparent !important;
+			color: var(--muted) !important;
+			border-bottom: 1px solid var(--border) !important;
+			width: 28px !important; height: 28px !important;
+			transition: all 0.1s;
+		}
+
+		.maplibregl-ctrl-group button:hover {
+			color: var(--cyan) !important;
+			background: rgba(0,229,255,0.06) !important;
+		}
+
+		.maplibregl-ctrl-group button:last-child { border-bottom: none !important; }
+
+		.maplibregl-ctrl-icon {
+			filter: invert(0.7) sepia(1) hue-rotate(160deg) saturate(2) !important;
+		}
+
+		.maplibregl-ctrl-attrib {
+			display: none !important;
+		}
+
+		/* Toggle panel button */
+		#togglePanel {
+			position: fixed;
+			top: 52px; left: 220px;
+			z-index: 60;
+			width: 20px;
+			height: 40px;
+			background: rgba(4,14,18,0.92);
+			border: 1px solid var(--border);
+			border-left: none;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			color: var(--muted);
+			font-size: 10px;
+			transition: all 0.15s;
+		}
+
+		#togglePanel:hover { color: var(--cyan); }
+
+		#side-panel.collapsed { transform: translateX(-220px); }
+		#side-panel.collapsed + #togglePanel { left: 0; }
+
+		/* Scrollbar global */
+		::-webkit-scrollbar { width: 3px; }
+		::-webkit-scrollbar-track { background: transparent; }
+		::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.3); }
+	</style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loading">
-  <div class="ld-text">A1 Analytics</div>
-  <div class="ld-sub">Cargando mapa de Perú</div>
-  <div class="ld-bar"><div class="ld-fill"></div></div>
-</div>
+<!-- FONDO MAPA -->
+<div id="map3d"></div>
 
-<!-- CORNERS -->
-<div class="corner ctlx"></div><div class="corner ctrx"></div>
-<div class="corner cblx"></div><div class="corner cbrx"></div>
+<!-- VIÑETA -->
+<div id="vignette"></div>
+
+<!-- CANVAS PARA ARCOS ANIMADOS -->
+<canvas id="arc-canvas"></canvas>
+
+<!-- SCANLINES -->
+<div id="scanlines"></div>
+
+<!-- DECORACIONES DE ESQUINA -->
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
 
 <!-- HEADER -->
 <div id="header">
-  <div class="header-brand">A1 ANALYTICS</div>
-  <div class="nav-sep"></div>
-  <a href="index.html" class="nav-link">← Inicio</a>
-  <div class="nav-sep"></div>
-  <span class="nav-link active">Ubicaciones</span>
-  <div class="header-right">
-    <span style="font-size:9px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase">PERÚ · SVG · OFFLINE</span>
-  </div>
+	<div class="header-brand">A1 ANALYTICS</div>
+	<div class="nav-sep"></div>
+	<a href="index.html" class="nav-link">← Inicio</a>
+	<div class="nav-sep"></div>
+	<span class="nav-link active">Ubicaciones</span>
+
+	<div class="header-right">
+		<button id="satToggle" class="sat-btn" aria-pressed="false">Satélite</button>
+	</div>
 </div>
 
-<!-- PANEL -->
+<!-- PANEL IZQUIERDO -->
 <div id="side-panel">
-  <div class="panel-section">
-    <div class="panel-label">Estado del Sistema</div>
-    <div class="stat-row"><span class="stat-key">Perfiles</span><span class="stat-val v-cyan" id="statTotal">0</span></div>
-    <div class="mini-bar"><div class="mini-bar-fill" id="barTotal" style="width:0%"></div></div>
-    <div class="stat-row"><span class="stat-key">Geolocalizados</span><span class="stat-val v-green" id="statGeo">0</span></div>
-    <div class="mini-bar"><div class="mini-bar-fill" id="barGeo" style="width:0%;background:linear-gradient(90deg,var(--green),var(--cyan))"></div></div>
-    <div class="stat-row"><span class="stat-key">Sin ubicación</span><span class="stat-val v-magenta" id="statNoGeo">0</span></div>
-  </div>
-  <div class="panel-section">
-    <div class="panel-label">Registros Activos</div>
-    <div id="profileList"><div style="font-size:10px;color:var(--muted)">Cargando...</div></div>
-  </div>
-  <div class="panel-section">
-    <div class="panel-label">Mapa</div>
-    <div class="stat-row"><span class="stat-key">Región</span><span class="stat-val v-cyan">PERÚ</span></div>
-    <div class="stat-row"><span class="stat-key">Marcadores</span><span class="stat-val v-green" id="markerCount">0</span></div>
-    <div class="stat-row"><span class="stat-key">Localidades DB</span><span class="stat-val v-amber" id="geoDbCount">—</span></div>
-    <div class="stat-row"><span class="stat-key">Zoom</span><span class="stat-val v-cyan" id="zoomVal">1.0x</span></div>
-  </div>
+	<div class="panel-section">
+		<div class="panel-label">Estado del Sistema</div>
+		<div class="stat-row">
+			<span class="stat-key">Perfiles</span>
+			<span class="stat-val cyan" id="statTotal">0</span>
+		</div>
+		<div class="mini-bar"><div class="mini-bar-fill" id="barTotal" style="width:0%"></div></div>
+		<div class="stat-row">
+			<span class="stat-key">Geolocalizados</span>
+			<span class="stat-val green" id="statGeo">0</span>
+		</div>
+		<div class="mini-bar"><div class="mini-bar-fill" id="barGeo" style="width:0%;background:linear-gradient(90deg,var(--green),var(--cyan))"></div></div>
+		<div class="stat-row">
+			<span class="stat-key">Sin ubicación</span>
+			<span class="stat-val magenta" id="statNoGeo">0</span>
+		</div>
+	</div>
+
+	<div class="panel-section">
+		<div class="panel-label">Registros Activos</div>
+		<div id="profileList">
+			<div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;">Sin datos cargados</div>
+		</div>
+	</div>
+
+	<div class="panel-section">
+		<div class="panel-label">Coordenadas</div>
+		<div class="stat-row">
+			<span class="stat-key">LAT</span>
+			<span class="stat-val amber" id="dispLat">—</span>
+		</div>
+		<div class="stat-row">
+			<span class="stat-key">LNG</span>
+			<span class="stat-val amber" id="dispLng">—</span>
+		</div>
+		<div class="stat-row">
+			<span class="stat-key">Zoom</span>
+			<span class="stat-val cyan" id="dispZoom">—</span>
+		</div>
+	</div>
 </div>
 
-<div id="togglePanel">‹</div>
+<!-- TOGGLE PANEL -->
+<div id="togglePanel" title="Ocultar panel">‹</div>
 
-<!-- MAPA -->
-<div id="map-container">
-  <div id="vignette"></div>
-  <canvas id="arc-canvas"></canvas>
-  <div id="svg-stage">
-    <!-- SVG se inyecta por JS -->
-  </div>
+<!-- OVERLAY OVERPASS -->
+<div id="overpassQuota" aria-live="polite">
+	<div id="quotaUsage">Usos: 0 / 10</div>
+	<div id="quotaReset">Reset: --:--</div>
+	<div id="quotaLast">Última: nunca</div>
 </div>
 
-<!-- POPUP -->
-<div id="popup">
-  <button id="popupClose">✕</button>
-  <div class="pu-inner" id="popupContent"></div>
-</div>
-
-<!-- ZOOM -->
-<div id="zoom-ctrl">
-  <button class="z-btn" id="zIn">+</button>
-  <button class="z-btn" id="zOut">−</button>
-  <button class="z-btn" id="zFit" style="font-size:9px;letter-spacing:0">FIT</button>
-</div>
-
-<!-- BOTTOM BAR -->
+<!-- BARRA INFERIOR -->
 <div id="bottom-bar">
-  <div class="b-stat"><span class="b-key">Sistema</span><span class="b-val v-green">ACTIVO</span></div>
-  <div class="b-sep"></div>
-  <div class="b-stat"><span class="b-key">Motor</span><span class="b-val v-cyan">SVG · Sin API</span></div>
-  <div class="b-sep"></div>
-  <div class="b-stat"><span class="b-key">Marcadores</span><span class="b-val v-cyan" id="markerCountBar">0</span></div>
-  <div class="b-sep"></div>
-  <div class="b-stat"><span class="b-key">Geocoder</span><span class="b-val v-green">LOCAL</span></div>
-  <div class="b-right" id="clockDisplay"></div>
+	<div class="bottom-stat">
+		<span class="bottom-stat-key">Sistema</span>
+		<span class="bottom-stat-val green">ACTIVO</span>
+	</div>
+	<div class="bottom-sep"></div>
+	<div class="bottom-stat">
+		<span class="bottom-stat-key">Mapa</span>
+		<span class="bottom-stat-val cyan">OpenStreetMap</span>
+	</div>
+	<div class="bottom-sep"></div>
+	<div class="bottom-stat">
+		<span class="bottom-stat-key">Marcadores</span>
+		<span class="bottom-stat-val cyan" id="markerCount">0</span>
+	</div>
+	<div class="bottom-sep"></div>
+	<div class="bottom-stat">
+		<span class="bottom-stat-key">Modo</span>
+		<span class="bottom-stat-val amber" id="modeLabel">PLANO</span>
+	</div>
+	<div class="bottom-right" id="clockDisplay"></div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-     GEOCODER LOCAL — DATOS INEI
-     Reemplaza el contenido de PERU_GEO con tu JSON generado:
-       node convert_inei.js centros_poblados.csv peru_geo.json
-     Luego embebe el contenido de peru_geo.json aquí.
-     La estructura es: [nombre_lower, lat, lng, tipo, departamento]
-     Ejemplo real de 3 entradas para que funcione de inmediato:
-══════════════════════════════════════════════════════ -->
+<!-- SCRIPTS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+<script src="main.js"></script>
+
 <script>
-// ── DATASET GEOGRÁFICO ──────────────────────────────────────────────────────
-// INSTRUCCIÓN: Reemplaza este array con el contenido de peru_geo.json
-// generado por convert_inei.js (vendrá con ~96,000 entradas del INEI).
-// Por ahora incluye ~200 localidades reales de muestra para que todo funcione.
-const PERU_GEO = [
-  // [nombre, lat, lng, tipo, departamento]
-  // LIMA
-  ["lima",-12.0464,-77.0428,"ciudad","lima"],
-  ["miraflores",-12.1167,-77.0311,"distrito","lima"],
-  ["san isidro",-12.0972,-77.0333,"distrito","lima"],
-  ["barranco",-12.1528,-77.0228,"distrito","lima"],
-  ["callao",-12.0566,-77.1181,"ciudad","lima"],
-  ["san juan de lurigancho",-11.982,-77.005,"distrito","lima"],
-  ["villa el salvador",-12.214,-76.942,"distrito","lima"],
-  ["chorrillos",-12.1667,-77.0167,"distrito","lima"],
-  ["surco",-12.1498,-76.9989,"distrito","lima"],
-  ["san borja",-12.1011,-77.0006,"distrito","lima"],
-  ["la molina",-12.076,-76.945,"distrito","lima"],
-  ["ate",-12.0272,-76.9167,"distrito","lima"],
-  ["comas",-11.9436,-77.0522,"distrito","lima"],
-  ["los olivos",-11.9839,-77.0737,"distrito","lima"],
-  ["puente piedra",-11.868,-77.0759,"distrito","lima"],
-  ["carabayllo",-11.85,-77.0333,"distrito","lima"],
-  ["independencia",-12.0,-77.05,"distrito","lima"],
-  ["lunahuaña",-12.9833,-76.0833,"pueblo","lima"],
-  ["cañete",-13.0758,-76.3642,"ciudad","lima"],
-  ["huaral",-11.4942,-77.2078,"ciudad","lima"],
-  ["barranca",-10.7508,-77.7614,"ciudad","lima"],
-  ["huacho",-11.1069,-77.6053,"ciudad","lima"],
-  ["matucana",-11.845,-76.3986,"pueblo","lima"],
-  ["chaclacayo",-11.9764,-76.7719,"distrito","lima"],
-  ["chosica",-11.9342,-76.6928,"ciudad","lima"],
-  // CUSCO
-  ["cusco",-13.5319,-71.9675,"ciudad","cusco"],
-  ["machu picchu",-13.1631,-72.545,"pueblo","cusco"],
-  ["pisac",-13.4217,-71.845,"pueblo","cusco"],
-  ["ollantaytambo",-13.2592,-72.2636,"pueblo","cusco"],
-  ["urubamba",-13.3022,-72.1131,"ciudad","cusco"],
-  ["calca",-13.3333,-71.9667,"ciudad","cusco"],
-  ["sicuani",-14.2533,-71.235,"ciudad","cusco"],
-  ["quillabamba",-12.855,-72.6928,"ciudad","cusco"],
-  ["espinar",-14.7917,-71.4075,"ciudad","cusco"],
-  ["aguas calientes",-13.1533,-72.5272,"pueblo","cusco"],
-  ["paucartambo",-13.3167,-71.5833,"ciudad","cusco"],
-  ["chinchero",-13.3981,-72.0453,"pueblo","cusco"],
-  ["andahuaylillas",-13.6667,-71.6833,"pueblo","cusco"],
-  ["wanchaq",-13.5239,-71.9744,"distrito","cusco"],
-  // AREQUIPA
-  ["arequipa",-16.409,-71.5375,"ciudad","arequipa"],
-  ["mollendo",-17.0236,-72.0142,"ciudad","arequipa"],
-  ["camaná",-16.6228,-72.7108,"ciudad","arequipa"],
-  ["chivay",-15.6367,-71.5967,"pueblo","arequipa"],
-  ["cabanaconde",-15.6261,-71.9789,"pueblo","arequipa"],
-  ["cotahuasi",-15.2086,-72.8919,"pueblo","arequipa"],
-  ["aplao",-16.0667,-72.5,"pueblo","arequipa"],
-  ["majes",-16.3667,-72.2,"ciudad","arequipa"],
-  ["camana",-16.6228,-72.7108,"ciudad","arequipa"],
-  // PUNO
-  ["puno",-15.8402,-70.0219,"ciudad","puno"],
-  ["juliaca",-15.4978,-70.1331,"ciudad","puno"],
-  ["ilave",-16.0833,-69.65,"ciudad","puno"],
-  ["azángaro",-14.9108,-70.1936,"ciudad","puno"],
-  ["ayaviri",-14.8792,-70.5889,"ciudad","puno"],
-  ["lampa",-15.3625,-70.3697,"ciudad","puno"],
-  ["desaguadero",-16.5653,-69.0439,"pueblo","puno"],
-  ["yunguyo",-16.2333,-69.0833,"ciudad","puno"],
-  ["huancané",-15.2,-69.7667,"ciudad","puno"],
-  ["putina",-14.9167,-69.8667,"ciudad","puno"],
-  ["macusani",-14.0667,-70.4333,"pueblo","puno"],
-  ["moho",-15.7333,-69.4833,"ciudad","puno"],
-  // JUNIN
-  ["huancayo",-12.0651,-75.2049,"ciudad","junin"],
-  ["tarma",-11.4186,-75.6897,"ciudad","junin"],
-  ["la merced",-11.0525,-75.3225,"ciudad","junin"],
-  ["satipo",-11.2558,-74.6381,"ciudad","junin"],
-  ["jauja",-11.7761,-75.4986,"ciudad","junin"],
-  ["concepción",-11.9167,-75.3167,"ciudad","junin"],
-  ["oxapampa",-10.5811,-75.3808,"ciudad","junin"],
-  ["chupaca",-12.0667,-75.2833,"ciudad","junin"],
-  ["junin",-11.1583,-76.0069,"ciudad","junin"],
-  // ANCASH
-  ["huaraz",-9.527,-77.5278,"ciudad","ancash"],
-  ["chimbote",-9.0853,-78.5783,"ciudad","ancash"],
-  ["casma",-9.4736,-78.3067,"ciudad","ancash"],
-  ["huari",-9.3167,-77.1667,"ciudad","ancash"],
-  ["carhuaz",-9.2833,-77.65,"ciudad","ancash"],
-  ["yungay",-9.1406,-77.7531,"ciudad","ancash"],
-  ["caraz",-9.05,-77.8167,"ciudad","ancash"],
-  ["recuay",-9.7219,-77.4572,"ciudad","ancash"],
-  ["pomabamba",-8.8333,-77.45,"ciudad","ancash"],
-  ["nuevo chimbote",-9.1167,-78.5167,"ciudad","ancash"],
-  // LA LIBERTAD
-  ["trujillo",-8.112,-79.0288,"ciudad","la libertad"],
-  ["pacasmayo",-7.4006,-79.5697,"ciudad","la libertad"],
-  ["huamachuco",-7.8167,-78.05,"ciudad","la libertad"],
-  ["chepén",-7.2269,-79.4331,"ciudad","la libertad"],
-  ["otuzco",-7.9,-78.5833,"ciudad","la libertad"],
-  ["virú",-8.4128,-78.7481,"ciudad","la libertad"],
-  ["santiago de chuco",-8.15,-78.1833,"ciudad","la libertad"],
-  ["ascope",-7.7167,-79.1167,"ciudad","la libertad"],
-  ["la esperanza",-8.0667,-79.05,"distrito","la libertad"],
-  ["el porvenir",-8.0833,-79.0,"distrito","la libertad"],
-  // PIURA
-  ["piura",-5.1945,-80.6328,"ciudad","piura"],
-  ["sullana",-4.9028,-80.6856,"ciudad","piura"],
-  ["talara",-4.5775,-81.2722,"ciudad","piura"],
-  ["paita",-5.0894,-81.1128,"ciudad","piura"],
-  ["catacaos",-5.2656,-80.6747,"pueblo","piura"],
-  ["ayabaca",-4.6383,-79.7175,"ciudad","piura"],
-  ["huancabamba",-5.2333,-79.45,"ciudad","piura"],
-  ["chulucanas",-5.105,-80.1636,"ciudad","piura"],
-  ["sechura",-5.5569,-80.8222,"ciudad","piura"],
-  ["castilla",-5.1931,-80.6289,"ciudad","piura"],
-  // LAMBAYEQUE
-  ["chiclayo",-6.7714,-79.8409,"ciudad","lambayeque"],
-  ["lambayeque",-6.7019,-79.9058,"ciudad","lambayeque"],
-  ["ferreñafe",-6.6361,-79.7881,"ciudad","lambayeque"],
-  ["monsefú",-6.8772,-79.8669,"pueblo","lambayeque"],
-  ["motupe",-6.15,-79.7167,"pueblo","lambayeque"],
-  ["olmos",-5.9856,-79.7461,"ciudad","lambayeque"],
-  ["pimentel",-6.8369,-79.9328,"pueblo","lambayeque"],
-  ["pomalca",-6.7667,-79.7667,"pueblo","lambayeque"],
-  // CAJAMARCA
-  ["cajamarca",-7.1637,-78.5001,"ciudad","cajamarca"],
-  ["jaen",-5.7081,-78.8078,"ciudad","cajamarca"],
-  ["jaén",-5.7081,-78.8078,"ciudad","cajamarca"],
-  ["chota",-6.5597,-78.6489,"ciudad","cajamarca"],
-  ["cutervo",-6.3747,-78.8144,"ciudad","cajamarca"],
-  ["bambamarca",-6.6769,-78.5247,"ciudad","cajamarca"],
-  ["celendín",-6.8667,-78.15,"ciudad","cajamarca"],
-  ["san marcos",-7.3333,-78.1667,"ciudad","cajamarca"],
-  ["contumaza",-7.3667,-78.8167,"pueblo","cajamarca"],
-  // LORETO
-  ["iquitos",-3.7491,-73.2538,"ciudad","loreto"],
-  ["yurimaguas",-5.8997,-76.1147,"ciudad","loreto"],
-  ["nauta",-4.505,-73.5736,"ciudad","loreto"],
-  ["requena",-5.05,-73.85,"ciudad","loreto"],
-  ["contamana",-7.3333,-75.0167,"ciudad","loreto"],
-  ["caballococha",-3.9,-70.5167,"pueblo","loreto"],
-  // UCAYALI
-  ["pucallpa",-8.3791,-74.5539,"ciudad","ucayali"],
-  ["atalaya",-10.7333,-73.75,"ciudad","ucayali"],
-  ["aguaytía",-9.0333,-75.5167,"pueblo","ucayali"],
-  ["campo verde",-8.3833,-74.9,"pueblo","ucayali"],
-  // HUANUCO
-  ["huánuco",-9.9306,-76.2422,"ciudad","huanuco"],
-  ["huanuco",-9.9306,-76.2422,"ciudad","huanuco"],
-  ["tingo maria",-9.2939,-75.9981,"ciudad","huanuco"],
-  ["tingo maría",-9.2939,-75.9981,"ciudad","huanuco"],
-  ["ambo",-10.0833,-76.2167,"ciudad","huanuco"],
-  ["llata",-9.55,-76.8333,"pueblo","huanuco"],
-  // SAN MARTIN
-  ["moyobamba",-6.0338,-76.9736,"ciudad","san martin"],
-  ["tarapoto",-6.4853,-76.365,"ciudad","san martin"],
-  ["juanjuí",-7.1833,-76.7167,"ciudad","san martin"],
-  ["juanjui",-7.1833,-76.7167,"ciudad","san martin"],
-  ["rioja",-6.0606,-77.1611,"ciudad","san martin"],
-  ["lamas",-6.4167,-76.5167,"ciudad","san martin"],
-  ["tocache",-8.1833,-76.5167,"ciudad","san martin"],
-  ["bellavista",-7.0583,-76.5833,"ciudad","san martin"],
-  ["saposoa",-6.9333,-76.7667,"ciudad","san martin"],
-  // AMAZONAS
-  ["chachapoyas",-6.23,-77.8692,"ciudad","amazonas"],
-  ["bagua",-5.65,-78.5167,"ciudad","amazonas"],
-  ["luya",-6.1667,-77.95,"ciudad","amazonas"],
-  ["rodriguez de mendoza",-6.3833,-77.4833,"pueblo","amazonas"],
-  ["bagua grande",-5.7667,-78.4333,"ciudad","amazonas"],
-  // MADRE DE DIOS
-  ["puerto maldonado",-12.5931,-69.1891,"ciudad","madre de dios"],
-  ["iberia",-11.4167,-69.5167,"pueblo","madre de dios"],
-  ["iñapari",-10.9667,-69.5833,"pueblo","madre de dios"],
-  ["mazuko",-13.0667,-70.3667,"pueblo","madre de dios"],
-  // AYACUCHO
-  ["ayacucho",-13.1588,-74.2236,"ciudad","ayacucho"],
-  ["huanta",-12.9333,-74.25,"ciudad","ayacucho"],
-  ["san francisco",-12.6,-73.85,"pueblo","ayacucho"],
-  ["puquio",-14.7,-74.1333,"ciudad","ayacucho"],
-  ["coracora",-15.0167,-73.7833,"ciudad","ayacucho"],
-  // APURIMAC
-  ["abancay",-13.6361,-72.8811,"ciudad","apurimac"],
-  ["andahuaylas",-13.6569,-73.3886,"ciudad","apurimac"],
-  ["chincheros",-13.65,-73.7333,"ciudad","apurimac"],
-  // ICA
-  ["ica",-14.0678,-75.7286,"ciudad","ica"],
-  ["pisco",-13.7,-76.2167,"ciudad","ica"],
-  ["chincha",-13.4167,-76.15,"ciudad","ica"],
-  ["nasca",-14.8297,-74.9386,"ciudad","ica"],
-  ["nazca",-14.8297,-74.9386,"ciudad","ica"],
-  ["palpa",-14.5333,-75.1833,"ciudad","ica"],
-  // HUANCAVELICA
-  ["huancavelica",-12.7867,-74.9756,"ciudad","huancavelica"],
-  ["lircay",-13.0167,-74.7167,"ciudad","huancavelica"],
-  // PASCO
-  ["cerro de pasco",-10.6864,-76.2628,"ciudad","pasco"],
-  ["oxapampa",-10.5811,-75.3808,"ciudad","pasco"],
-  ["yanahuanca",-10.4833,-76.5167,"ciudad","pasco"],
-  // TUMBES
-  ["tumbes",-3.5714,-80.4522,"ciudad","tumbes"],
-  ["zarumilla",-3.4992,-80.2694,"ciudad","tumbes"],
-  ["zorritos",-3.6833,-80.6667,"pueblo","tumbes"],
-  // MOQUEGUA
-  ["moquegua",-17.1942,-70.9356,"ciudad","moquegua"],
-  ["ilo",-17.6394,-71.3381,"ciudad","moquegua"],
-  ["omate",-16.6833,-70.9667,"pueblo","moquegua"],
-  // TACNA
-  ["tacna",-18.0139,-70.2531,"ciudad","tacna"],
-  ["tarata",-17.4667,-70.0333,"ciudad","tacna"],
-  ["candarave",-17.2667,-70.25,"pueblo","tacna"],
-];
-// ─────────────────────────────────────────────────────────────────────────────
+(function(){
+	// ── RELOJ ──
+	function updateClock() {
+		const now = new Date();
+		const t = now.toISOString().replace('T',' ').substring(0,19) + ' UTC';
+		document.getElementById('clockDisplay').textContent = t;
+	}
+	updateClock();
+	setInterval(updateClock, 1000);
 
-// ── ÍNDICE DE GEOCODING ────────────────────────────────────────────────────
-// Construido al cargar: hashmap por prefijo de 3 letras → O(1) lookup
-const GEO_IDX = {};
+	// ── TOGGLE PANEL ──
+	const panel = document.getElementById('side-panel');
+	const toggleBtn = document.getElementById('togglePanel');
+	toggleBtn.addEventListener('click', () => {
+		panel.classList.toggle('collapsed');
+		toggleBtn.textContent = panel.classList.contains('collapsed') ? '›' : '‹';
+	});
 
-(function buildIndex() {
-  for (let i = 0; i < PERU_GEO.length; i++) {
-    const [nombre, lat, lng, tipo, depto] = PERU_GEO[i];
-    const entry = { nombre, lat, lng, tipo, depto, i };
-    // índice exacto
-    if (!GEO_IDX[nombre]) GEO_IDX[nombre] = entry;
-    // índice por primeras 3 letras (para match parcial rápido)
-    const p3 = nombre.slice(0, 3);
-    if (!GEO_IDX['__p__' + p3]) GEO_IDX['__p__' + p3] = [];
-    GEO_IDX['__p__' + p3].push(entry);
-  }
+	// ── MAPA ──
+	const map3d = new maplibregl.Map({
+		container: 'map3d',
+		style: 'https://demotiles.maplibre.org/style.json',
+		center: [-75, -9],
+		zoom: 4,
+		pitch: 0,
+		bearing: 0,
+		antialias: true,
+		interactive: true
+	});
+
+	map3d.addControl(new maplibregl.NavigationControl(), 'bottom-left');
+
+	const mapEl = document.getElementById('map3d');
+
+	// Oscurecer el mapa con filtro CSS
+	map3d.on('load', () => {
+		const canvas = mapEl.querySelector('canvas');
+		if (canvas) {
+			canvas.style.filter = 'brightness(0.28) saturate(0.5) hue-rotate(185deg)';
+		}
+	});
+
+	map3d.on('mousedown', () => mapEl.classList.add('grabbing'));
+	map3d.on('mouseup',   () => mapEl.classList.remove('grabbing'));
+	map3d.on('dragend',   () => mapEl.classList.remove('grabbing'));
+
+	// Actualizar coordenadas en tiempo real
+	map3d.on('mousemove', (e) => {
+		document.getElementById('dispLat').textContent = e.lngLat.lat.toFixed(4);
+		document.getElementById('dispLng').textContent = e.lngLat.lng.toFixed(4);
+	});
+
+	map3d.on('zoom', () => {
+		document.getElementById('dispZoom').textContent = map3d.getZoom().toFixed(1);
+	});
+
+	// ── CANVAS ARCOS ──
+	const arcCanvas = document.getElementById('arc-canvas');
+	const ctx = arcCanvas.getContext('2d');
+	const arcs = [];
+	let animFrame;
+
+	function resizeCanvas() {
+		arcCanvas.width  = window.innerWidth;
+		arcCanvas.height = window.innerHeight;
+	}
+	resizeCanvas();
+	window.addEventListener('resize', resizeCanvas);
+
+	// Proyectar coords a píxeles
+	function project(lng, lat) {
+		try {
+			const p = map3d.project([lng, lat]);
+			return { x: p.x, y: p.y };
+		} catch(e) { return null; }
+	}
+
+	// Paleta de arcos
+	const ARC_COLORS = [
+		{ r:0,   g:229, b:255 }, // cyan
+		{ r:0,   g:255, b:136 }, // green
+		{ r:255, g:0,   b:110 }, // magenta
+		{ r:255, g:170, b:0   }, // amber
+	];
+
+	function createArc(from, to) {
+		const col = ARC_COLORS[Math.floor(Math.random() * ARC_COLORS.length)];
+		return {
+			from, to,
+			progress: 0,
+			speed: 0.004 + Math.random() * 0.006,
+			color: col,
+			alpha: 0,
+			trail: [],
+			maxTrail: 40 + Math.floor(Math.random() * 30),
+		};
+	}
+
+	function spawnArcs(points) {
+		if (points.length < 2) return;
+		for (let i = 0; i < Math.min(points.length * 2, 12); i++) {
+			const a = points[Math.floor(Math.random() * points.length)];
+			const b = points[Math.floor(Math.random() * points.length)];
+			if (a !== b) arcs.push(createArc(a, b));
+		}
+	}
+
+	function drawArcs() {
+		ctx.clearRect(0, 0, arcCanvas.width, arcCanvas.height);
+
+		for (let i = arcs.length - 1; i >= 0; i--) {
+			const arc = arcs[i];
+			arc.progress += arc.speed;
+
+			// Fade in/out
+			if (arc.progress < 0.1) arc.alpha = arc.progress / 0.1;
+			else if (arc.progress > 0.85) arc.alpha = (1 - arc.progress) / 0.15;
+			else arc.alpha = 1;
+
+			if (arc.progress >= 1) { arcs.splice(i, 1); continue; }
+
+			const pA = project(arc.from.lng, arc.from.lat);
+			const pB = project(arc.to.lng,   arc.to.lat);
+			if (!pA || !pB) continue;
+
+			// Control point para la curva (elevado)
+			const mx = (pA.x + pB.x) / 2;
+			const my = (pA.y + pB.y) / 2;
+			const dist = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+			const cp = { x: mx, y: my - dist * 0.35 };
+
+			// Punto actual en la curva bezier
+			const t = arc.progress;
+			const bx = (1-t)*(1-t)*pA.x + 2*(1-t)*t*cp.x + t*t*pB.x;
+			const by = (1-t)*(1-t)*pA.y + 2*(1-t)*t*cp.y + t*t*pB.y;
+
+			// Acumular trail
+			arc.trail.push({ x: bx, y: by });
+			if (arc.trail.length > arc.maxTrail) arc.trail.shift();
+
+			// Dibujar trail
+			if (arc.trail.length > 1) {
+				for (let j = 1; j < arc.trail.length; j++) {
+					const ta = j / arc.trail.length;
+					const { r, g, b } = arc.color;
+					ctx.beginPath();
+					ctx.moveTo(arc.trail[j-1].x, arc.trail[j-1].y);
+					ctx.lineTo(arc.trail[j].x,   arc.trail[j].y);
+					ctx.strokeStyle = `rgba(${r},${g},${b},${ta * arc.alpha * 0.7})`;
+					ctx.lineWidth = ta * 1.5;
+					ctx.stroke();
+				}
+
+				// Glow en la cabeza
+				const { r, g, b } = arc.color;
+				ctx.beginPath();
+				ctx.arc(bx, by, 3, 0, Math.PI * 2);
+				ctx.fillStyle = `rgba(${r},${g},${b},${arc.alpha})`;
+				ctx.fill();
+
+				const grad = ctx.createRadialGradient(bx, by, 0, bx, by, 8);
+				grad.addColorStop(0, `rgba(${r},${g},${b},${arc.alpha * 0.5})`);
+				grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+				ctx.beginPath();
+				ctx.arc(bx, by, 8, 0, Math.PI * 2);
+				ctx.fillStyle = grad;
+				ctx.fill();
+			}
+		}
+
+		animFrame = requestAnimationFrame(drawArcs);
+	}
+
+	drawArcs();
+
+	// ── SATÉLITE ──
+	const satBtn = document.getElementById('satToggle');
+	const SAT_SOURCE_ID = 'esri-sat-source';
+	const SAT_LAYER_ID  = 'esri-sat-layer';
+
+	async function addSatLayer() {
+		if (!map3d.getSource(SAT_SOURCE_ID)) {
+			map3d.addSource(SAT_SOURCE_ID, {
+				type: 'raster',
+				tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+				tileSize: 256, maxzoom: 19
+			});
+		}
+		if (!map3d.getLayer(SAT_LAYER_ID)) {
+			map3d.addLayer({ id: SAT_LAYER_ID, type: 'raster', source: SAT_SOURCE_ID,
+				paint: { 'raster-opacity': 1.0, 'raster-brightness-max': 0.45, 'raster-saturation': -0.3 }
+			});
+		} else {
+			map3d.setLayoutProperty(SAT_LAYER_ID, 'visibility', 'visible');
+		}
+		document.getElementById('modeLabel').textContent = 'SATÉLITE';
+	}
+
+	function hideSatLayer() {
+		try { map3d.setLayoutProperty(SAT_LAYER_ID, 'visibility', 'none'); } catch(e){}
+		document.getElementById('modeLabel').textContent = 'PLANO';
+	}
+
+	satBtn.addEventListener('click', async () => {
+		const on = satBtn.getAttribute('aria-pressed') === 'true';
+		if (on) { hideSatLayer(); satBtn.setAttribute('aria-pressed','false'); satBtn.textContent='Satélite'; }
+		else { await addSatLayer(); satBtn.setAttribute('aria-pressed','true'); satBtn.textContent='Mapa'; }
+	});
+
+	map3d.on('styledata', () => {
+		if (satBtn.getAttribute('aria-pressed') === 'true') setTimeout(addSatLayer, 200);
+	});
+
+	// ── MARCADORES ──
+	const markers = new Map();
+	const markerPoints = [];
+
+	function pickMarkerClass(idx) {
+		const classes = ['', 'magenta', 'green'];
+		return classes[idx % classes.length];
+	}
+
+	function escapeHtml(s) {
+		return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]);
+	}
+
+	window.addOrUpdate3DMarker = function(id, coords, html) {
+		if (!coords || typeof coords.lat !== 'number') return;
+		const key = String(id);
+		if (markers.has(key)) {
+			try { markers.get(key).setLngLat([coords.lng, coords.lat]); } catch(e){}
+			return;
+		}
+		const el = document.createElement('div');
+		el.className = 'marker-custom';
+		const marker = new maplibregl.Marker(el).setLngLat([coords.lng, coords.lat]).addTo(map3d);
+		if (html) marker.setPopup(new maplibregl.Popup({offset:18}).setHTML(html));
+		markers.set(key, marker);
+		markerPoints.push({ lng: coords.lng, lat: coords.lat });
+		spawnArcs(markerPoints);
+		document.getElementById('markerCount').textContent = markers.size;
+	};
+
+	window.addOrUpdateGroupMarker = function(locationKey, coords, profiles) {
+		if (!coords || typeof coords.lat !== 'number') return;
+		const key = 'group:' + String(locationKey);
+
+		const items = profiles.map(p => {
+			const av = p.photo && (typeof p.photo === 'string' ? p.photo : p.photo?.url);
+			const nm = escapeHtml(((p.firstName||'')+' '+(p.lastName||'')).trim() || p.email || 'Usuario');
+			const lo = escapeHtml(p.location || p.locality || '');
+			const avatarHtml = av
+				? `<img class="popup-avatar" src="${escapeHtml(av)}" alt="${nm}">`
+				: `<div class="popup-avatar-placeholder">${nm.charAt(0).toUpperCase()}</div>`;
+			return `<div class="popup-profile">${avatarHtml}<div><div class="popup-name">${nm}</div>${lo ? `<div class="popup-loc">${lo}</div>` : ''}</div></div>`;
+		}).join('');
+
+		const html = `<div class="popup-inner"><div class="popup-header">${profiles.length} registro${profiles.length!==1?'s':''}</div>${items}</div>`;
+
+		if (markers.has(key)) {
+			try { const m = markers.get(key); m.setLngLat([coords.lng, coords.lat]); m.setPopup(new maplibregl.Popup({offset:18}).setHTML(html)); } catch(e){}
+			return;
+		}
+
+		const idx = markers.size;
+		const el = document.createElement('div');
+		el.className = 'marker-custom ' + pickMarkerClass(idx);
+		const marker = new maplibregl.Marker(el).setLngLat([coords.lng, coords.lat]).addTo(map3d);
+		marker.setPopup(new maplibregl.Popup({offset:18}).setHTML(html));
+		markers.set(key, marker);
+		markerPoints.push({ lng: coords.lng, lat: coords.lat });
+		spawnArcs(markerPoints);
+		document.getElementById('markerCount').textContent = markers.size;
+	};
+
+	window.clear3DMarkers = function() { markers.forEach(m=>m.remove()); markers.clear(); markerPoints.length=0; document.getElementById('markerCount').textContent='0'; };
+
+	window.fit3DMarkers = function() {
+		if (!markers.size) return;
+		const bounds = new maplibregl.LngLatBounds();
+		markers.forEach(m=>bounds.extend(m.getLngLat()));
+		try { map3d.fitBounds(bounds, { padding: 60, maxZoom: 14 }); } catch(e){}
+	};
+
+	window._map3d = map3d;
+
+	// ── CARGAR PERFILES ──
+	function loadProfilesFromStorage() {
+		try {
+			const profiles = JSON.parse(localStorage.getItem('profiles')) || [];
+			document.getElementById('statTotal').textContent  = profiles.length;
+			const geo = profiles.filter(p => p.location || p.locality);
+			document.getElementById('statGeo').textContent    = geo.length;
+			document.getElementById('statNoGeo').textContent  = profiles.length - geo.length;
+			const pct = profiles.length ? Math.round(geo.length/profiles.length*100) : 0;
+			document.getElementById('barTotal').style.width   = '100%';
+			document.getElementById('barGeo').style.width     = pct + '%';
+
+			// Lista de perfiles en el panel
+			const listEl = document.getElementById('profileList');
+			if (!profiles.length) {
+				listEl.innerHTML = '<div style="font-size:10px;color:var(--muted);letter-spacing:0.06em;">Sin datos cargados</div>';
+				return;
+			}
+			const colors = ['var(--cyan)','var(--green)','var(--magenta)','var(--amber)'];
+			listEl.innerHTML = profiles.slice(0,12).map((p,i) => {
+				const nm = escapeHtml(((p.firstName||'')+' '+(p.lastName||'')).trim() || p.email || '—');
+				const lo = escapeHtml(p.location || p.locality || '—');
+				return `<div class="profile-entry">
+					<div class="profile-dot" style="background:${colors[i%colors.length]};box-shadow:0 0 6px ${colors[i%colors.length]}"></div>
+					<div><div class="profile-entry-name">${nm}</div><div class="profile-entry-loc">${lo}</div></div>
+				</div>`;
+			}).join('');
+		} catch(e) { console.error(e); }
+	}
+
+	map3d.on('load', loadProfilesFromStorage);
+
+	// Spawn de arcos periódico
+	setInterval(() => {
+		if (markerPoints.length >= 2 && arcs.length < 18) {
+			spawnArcs(markerPoints);
+		}
+	}, 2500);
+
 })();
-
-function nrm(s) {
-  return String(s || '').toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-}
-
-function geocodeLocal(city, country) {
-  if (!city) return null;
-  const c = nrm(city);
-  const co = nrm(country || '');
-
-  // Rechazar si el país no es Perú (cuando se especifica)
-  if (co && !['peru', 'perú', 'pe'].includes(co)) return null;
-
-  // 1. Exacto
-  if (GEO_IDX[c]) return GEO_IDX[c];
-
-  // 2. Prefijo 3 letras → buscar starts-with
-  const p3 = c.slice(0, 3);
-  const bucket = GEO_IDX['__p__' + p3] || [];
-  for (const e of bucket) {
-    if (e.nombre.startsWith(c) || c.startsWith(e.nombre)) return e;
-  }
-
-  // 3. Scan lineal con includes (fallback)
-  for (let i = 0; i < PERU_GEO.length; i++) {
-    const n = PERU_GEO[i][0];
-    if (n.includes(c) || c.includes(n)) return { nombre: n, lat: PERU_GEO[i][1], lng: PERU_GEO[i][2], tipo: PERU_GEO[i][3], depto: PERU_GEO[i][4] };
-  }
-
-  return null;
-}
-
-// ── PROYECCIÓN SVG ─────────────────────────────────────────────────────────
-// Bounding box real de Perú
-const LAT_MAX = -0.038, LAT_MIN = -18.35;
-const LNG_MIN = -81.33, LNG_MAX = -68.65;
-const SVG_W = 680, SVG_H = 950;
-
-function project(lat, lng) {
-  const x = (lng - LNG_MIN) / (LNG_MAX - LNG_MIN) * SVG_W;
-  const y = (LAT_MAX - lat) / (LAT_MAX - LAT_MIN) * SVG_H;
-  return [x, y];
-}
-
-// ── DEPARTAMENTOS — POLÍGONOS CON COORDS REALES ────────────────────────────
-// Cada array es una lista de [lat, lng] formando el contorno del departamento.
-// Simplificados pero fieles al territorio real.
-const DEPTS = [
-  { n:'Tumbes', pts:[[-3.47,-80.44],[-3.82,-80.46],[-4.23,-80.32],[-3.98,-79.88],[-3.52,-79.98]] },
-  { n:'Piura', pts:[[-4.23,-80.32],[-3.82,-80.46],[-4.0,-81.33],[-5.82,-81.1],[-6.0,-80.6],[-5.57,-79.5],[-4.57,-79.71]] },
-  { n:'Lambayeque', pts:[[-5.57,-79.5],[-6.0,-80.6],[-7.0,-79.98],[-6.38,-79.23]] },
-  { n:'La Libertad', pts:[[-6.38,-79.23],[-7.0,-79.98],[-8.17,-78.68],[-8.8,-78.18],[-7.84,-77.56],[-7.07,-77.93],[-6.6,-78.32]] },
-  { n:'Áncash', pts:[[-8.8,-78.18],[-9.87,-77.26],[-10.27,-76.96],[-9.68,-76.43],[-8.92,-76.68],[-8.17,-77.25],[-7.84,-77.56]] },
-  { n:'Lima', pts:[[-10.27,-76.96],[-11.0,-77.3],[-12.55,-77.25],[-13.38,-76.6],[-12.5,-75.72],[-11.42,-75.35]] },
-  { n:'Ica', pts:[[-13.38,-76.6],[-14.78,-76.18],[-15.7,-75.3],[-15.03,-74.55],[-13.7,-74.3]] },
-  { n:'Cajamarca', pts:[[-4.57,-79.71],[-5.57,-79.5],[-6.38,-79.23],[-6.6,-78.32],[-7.07,-77.93],[-7.84,-77.56],[-7.3,-77.0],[-6.9,-77.2],[-5.45,-78.5]] },
-  { n:'Amazonas', pts:[[-4.0,-78.0],[-5.45,-78.5],[-6.9,-77.2],[-7.3,-77.0],[-7.0,-76.5],[-6.0,-76.5],[-5.0,-78.2]] },
-  { n:'San Martín', pts:[[-5.0,-78.2],[-6.0,-76.5],[-7.0,-76.5],[-8.3,-75.5],[-7.5,-74.9],[-6.2,-75.8]] },
-  { n:'Loreto', pts:[[-0.04,-73.0],[-2.0,-70.1],[-4.2,-70.1],[-4.23,-72.0],[-5.1,-73.8],[-6.5,-73.8],[-8.3,-75.5],[-7.0,-76.5],[-4.0,-78.0],[-5.0,-78.2],[-6.2,-75.8],[-4.0,-75.5],[-2.0,-75.0]] },
-  { n:'Ucayali', pts:[[-7.5,-74.9],[-8.3,-75.5],[-11.4,-73.9],[-10.0,-72.8],[-9.5,-74.5],[-8.0,-74.0]] },
-  { n:'Huánuco', pts:[[-8.3,-75.5],[-9.87,-76.96],[-10.27,-76.96],[-9.68,-76.43],[-8.92,-76.68]] },
-  { n:'Pasco', pts:[[-9.68,-76.43],[-10.27,-76.96],[-11.0,-76.5],[-10.5,-75.4],[-9.5,-75.5]] },
-  { n:'Junín', pts:[[-10.5,-75.4],[-11.0,-76.5],[-11.42,-75.35],[-12.5,-75.72],[-12.0,-74.5],[-11.0,-74.5]] },
-  { n:'Huancavelica', pts:[[-12.0,-74.5],[-12.5,-75.72],[-13.38,-76.6],[-13.7,-74.3],[-13.0,-73.6]] },
-  { n:'Ayacucho', pts:[[-13.0,-73.6],[-13.7,-74.3],[-15.03,-74.55],[-14.5,-73.0],[-12.5,-72.5]] },
-  { n:'Apurímac', pts:[[-12.5,-72.5],[-14.5,-73.0],[-14.5,-71.5],[-13.5,-71.0],[-12.5,-71.5]] },
-  { n:'Cusco', pts:[[-12.5,-72.5],[-12.5,-71.5],[-13.5,-71.0],[-14.5,-71.5],[-15.5,-70.0],[-14.0,-69.5],[-12.7,-69.5],[-12.0,-71.5]] },
-  { n:'Madre de Dios', pts:[[-9.5,-74.5],[-10.0,-72.8],[-11.4,-73.9],[-13.2,-70.2],[-12.7,-69.5],[-14.0,-69.5],[-13.0,-71.5],[-10.5,-73.0]] },
-  { n:'Puno', pts:[[-13.5,-71.0],[-14.5,-71.5],[-15.5,-70.0],[-18.35,-69.5],[-17.0,-70.5],[-15.0,-69.5]] },
-  { n:'Arequipa', pts:[[-14.8,-76.18],[-16.6,-73.5],[-15.0,-71.0],[-15.5,-70.0],[-17.0,-70.5],[-18.35,-70.5],[-18.35,-72.5],[-15.7,-75.3]] },
-  { n:'Moquegua', pts:[[-16.6,-71.7],[-18.35,-70.5],[-17.0,-70.5]] },
-  { n:'Tacna', pts:[[-17.3,-70.5],[-18.35,-70.5],[-18.35,-69.5],[-17.0,-69.3]] },
-];
-
-// ── CONSTRUIR SVG DEL MAPA ─────────────────────────────────────────────────
-function buildMapSVG() {
-  const NS = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(NS, 'svg');
-  svg.id = 'peru-svg';
-  svg.setAttribute('viewBox', `0 0 ${SVG_W} ${SVG_H}`);
-  svg.setAttribute('width', SVG_W);
-  svg.setAttribute('height', SVG_H);
-
-  // Fondo
-  const bg = document.createElementNS(NS, 'rect');
-  bg.setAttribute('width', SVG_W); bg.setAttribute('height', SVG_H);
-  bg.setAttribute('fill', '#040b0e');
-  svg.appendChild(bg);
-
-  // Grid sutil
-  for (let x = 0; x <= SVG_W; x += 68) {
-    const l = document.createElementNS(NS, 'line');
-    l.setAttribute('x1', x); l.setAttribute('y1', 0);
-    l.setAttribute('x2', x); l.setAttribute('y2', SVG_H);
-    l.setAttribute('stroke', 'rgba(0,229,255,0.04)'); l.setAttribute('stroke-width', '0.5');
-    svg.appendChild(l);
-  }
-  for (let y = 0; y <= SVG_H; y += 95) {
-    const l = document.createElementNS(NS, 'line');
-    l.setAttribute('x1', 0); l.setAttribute('y1', y);
-    l.setAttribute('x2', SVG_W); l.setAttribute('y2', y);
-    l.setAttribute('stroke', 'rgba(0,229,255,0.04)'); l.setAttribute('stroke-width', '0.5');
-    svg.appendChild(l);
-  }
-
-  // Departamentos
-  const fills = ['#0d2530','#0c2932','#0e2b36','#0b2630'];
-
-  DEPTS.forEach((d, i) => {
-    const points = d.pts.map(([lat, lng]) => {
-      const [x, y] = project(lat, lng);
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
-
-    const poly = document.createElementNS(NS, 'polygon');
-    poly.setAttribute('points', points);
-    poly.setAttribute('fill', fills[i % fills.length]);
-    poly.setAttribute('stroke', 'rgba(0,229,255,0.3)');
-    poly.setAttribute('stroke-width', '0.7');
-    poly.setAttribute('class', 'dept');
-    poly.setAttribute('data-name', d.n);
-    svg.appendChild(poly);
-
-    // Label del departamento (centroide aproximado)
-    const avgLat = d.pts.reduce((s, p) => s + p[0], 0) / d.pts.length;
-    const avgLng = d.pts.reduce((s, p) => s + p[1], 0) / d.pts.length;
-    const [lx, ly] = project(avgLat, avgLng);
-    const txt = document.createElementNS(NS, 'text');
-    txt.setAttribute('x', lx.toFixed(1));
-    txt.setAttribute('y', ly.toFixed(1));
-    txt.setAttribute('class', 'dept-label');
-    txt.setAttribute('text-anchor', 'middle');
-    txt.setAttribute('dominant-baseline', 'central');
-    txt.textContent = d.n.toUpperCase().slice(0, 8);
-    svg.appendChild(txt);
-  });
-
-  document.getElementById('svg-stage').appendChild(svg);
-}
-
-// ── PAN & ZOOM ─────────────────────────────────────────────────────────────
-let tx = 0, ty = 0, scale = 1;
-let dragging = false, startX = 0, startY = 0, startTx = 0, startTy = 0;
-const SCALE_MIN = 0.5, SCALE_MAX = 8;
-
-function applyTransform() {
-  document.getElementById('svg-stage').style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
-  document.getElementById('zoomVal').textContent = scale.toFixed(1) + 'x';
-  updateMarkersPosition();
-}
-
-function fitMap() {
-  const mc = document.getElementById('map-container');
-  const cw = mc.clientWidth, ch = mc.clientHeight;
-  const margin = 40;
-  const sx = (cw - margin * 2) / SVG_W;
-  const sy = (ch - margin * 2) / SVG_H;
-  scale = Math.min(sx, sy, 1);
-  tx = (cw - SVG_W * scale) / 2;
-  ty = (ch - SVG_H * scale) / 2;
-  applyTransform();
-}
-
-const mc = document.getElementById('map-container');
-
-mc.addEventListener('mousedown', e => {
-  if (e.target.closest('.mk')) return;
-  dragging = true; startX = e.clientX; startY = e.clientY;
-  startTx = tx; startTy = ty;
-});
-window.addEventListener('mousemove', e => {
-  if (!dragging) return;
-  tx = startTx + (e.clientX - startX);
-  ty = startTy + (e.clientY - startY);
-  applyTransform();
-});
-window.addEventListener('mouseup', () => { dragging = false; });
-
-mc.addEventListener('wheel', e => {
-  e.preventDefault();
-  const rect = mc.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  const delta = e.deltaY < 0 ? 1.12 : 1 / 1.12;
-  const newScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, scale * delta));
-  tx = mx - (mx - tx) * (newScale / scale);
-  ty = my - (my - ty) * (newScale / scale);
-  scale = newScale;
-  applyTransform();
-}, { passive: false });
-
-// Touch
-let lastDist = 0, touchSX = 0, touchSY = 0, touchSTx = 0, touchSTy = 0;
-mc.addEventListener('touchstart', e => {
-  if (e.touches.length === 1) {
-    touchSX = e.touches[0].clientX; touchSY = e.touches[0].clientY;
-    touchSTx = tx; touchSTy = ty; dragging = true;
-  } else if (e.touches.length === 2) {
-    dragging = false;
-    lastDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-  }
-});
-mc.addEventListener('touchmove', e => {
-  e.preventDefault();
-  if (e.touches.length === 1 && dragging) {
-    tx = touchSTx + (e.touches[0].clientX - touchSX);
-    ty = touchSTy + (e.touches[0].clientY - touchSY);
-    applyTransform();
-  } else if (e.touches.length === 2) {
-    const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-    const delta = d / lastDist;
-    scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, scale * delta));
-    lastDist = d; applyTransform();
-  }
-}, { passive: false });
-mc.addEventListener('touchend', () => { dragging = false; });
-
-document.getElementById('zIn').onclick  = () => { scale = Math.min(SCALE_MAX, scale * 1.25); applyTransform(); };
-document.getElementById('zOut').onclick = () => { scale = Math.max(SCALE_MIN, scale / 1.25); applyTransform(); };
-document.getElementById('zFit').onclick = fitMap;
-
-// ── MARCADORES ─────────────────────────────────────────────────────────────
-const markers = new Map();
-const markerPts = [];
-const COLORS = ['', 'mg', 'gn'];
-
-function updateMarkersPosition() {
-  const rect = mc.getBoundingClientRect();
-  markers.forEach((m, key) => {
-    const [svgX, svgY] = m.svgPos;
-    const screenX = svgX * scale + tx + rect.left;
-    const screenY = svgY * scale + ty + rect.top;
-    m.el.style.left = screenX + 'px';
-    m.el.style.top  = screenY + 'px';
-  });
-}
-
-function addGroupMarker(locationKey, lat, lng, profiles) {
-  const key = 'g:' + locationKey;
-  const [svgX, svgY] = project(lat, lng);
-  const rect = mc.getBoundingClientRect();
-
-  let el;
-  if (markers.has(key)) {
-    el = markers.get(key).el;
-    markers.get(key).profiles = profiles;
-  } else {
-    el = document.createElement('div');
-    el.className = 'mk ' + COLORS[markers.size % COLORS.length];
-    const dot = document.createElement('div');
-    dot.className = 'mk-dot';
-    el.appendChild(dot);
-    el.style.position = 'fixed';
-    document.body.appendChild(el);
-
-    el.addEventListener('click', () => showPopup(key, el));
-    markers.set(key, { el, svgPos: [svgX, svgY], profiles });
-    markerPts.push({ lat, lng });
-    spawnArcs(markerPts);
-
-    const count = markers.size;
-    document.getElementById('markerCount').textContent = count;
-    document.getElementById('markerCountBar').textContent = count;
-  }
-
-  const screenX = svgX * scale + tx + rect.left;
-  const screenY = svgY * scale + ty + rect.top;
-  el.style.left = screenX + 'px';
-  el.style.top  = screenY + 'px';
-}
-
-// ── POPUP ──────────────────────────────────────────────────────────────────
-function esc(s) {
-  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-}
-
-function showPopup(key, el) {
-  const data = markers.get(key);
-  if (!data) return;
-  const profiles = data.profiles;
-
-  const items = profiles.map(p => {
-    const av = p.photo && (typeof p.photo === 'string' ? p.photo : p.photo?.url);
-    const nm = esc(((p.firstName || '') + ' ' + (p.lastName || '')).trim() || p.name || p.email || 'Usuario');
-    const lo = esc(p.city || p.country || p.location || p.locality || '');
-    const avHtml = av
-      ? `<div class="pu-av"><img src="${esc(av)}" alt="${nm}"></div>`
-      : `<div class="pu-av">${nm.charAt(0).toUpperCase()}</div>`;
-    return `<div class="pu-row">${avHtml}<div><div class="pu-name">${nm}</div>${lo ? `<div class="pu-loc">${lo}</div>` : ''}</div></div>`;
-  }).join('');
-
-  document.getElementById('popupContent').innerHTML =
-    `<div class="pu-header">${profiles.length} registro${profiles.length !== 1 ? 's' : ''}</div>${items}`;
-
-  const popup = document.getElementById('popup');
-  popup.classList.add('show');
-
-  const er = el.getBoundingClientRect();
-  let left = er.left + 20, top = er.top - 10;
-  if (left + 290 > window.innerWidth) left = er.left - 290;
-  if (top + 200 > window.innerHeight) top = window.innerHeight - 210;
-  popup.style.left = left + 'px';
-  popup.style.top  = Math.max(50, top) + 'px';
-}
-
-document.getElementById('popupClose').onclick = () =>
-  document.getElementById('popup').classList.remove('show');
-
-document.addEventListener('click', e => {
-  if (!e.target.closest('#popup') && !e.target.closest('.mk'))
-    document.getElementById('popup').classList.remove('show');
-});
-
-// ── ARC CANVAS ────────────────────────────────────────────────────────────
-const arcCanvas = document.getElementById('arc-canvas');
-const ctx = arcCanvas.getContext('2d');
-const arcs = [];
-
-function resizeCanvas() {
-  arcCanvas.width  = mc.clientWidth;
-  arcCanvas.height = mc.clientHeight;
-}
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
-const ARC_COLS = [
-  {r:0,g:229,b:255},{r:0,g:255,b:136},{r:255,g:0,b:110},{r:255,g:170,b:0}
-];
-
-function projectScreen(lat, lng) {
-  const [svgX, svgY] = project(lat, lng);
-  return { x: svgX * scale + tx, y: svgY * scale + ty };
-}
-
-function createArc(a, b) {
-  const col = ARC_COLS[Math.floor(Math.random() * ARC_COLS.length)];
-  return { from: a, to: b, progress: 0, speed: 0.003 + Math.random() * 0.005, color: col, alpha: 0, trail: [], maxTrail: 35 + Math.floor(Math.random() * 25) };
-}
-
-function spawnArcs(pts) {
-  if (pts.length < 2) return;
-  for (let i = 0; i < Math.min(pts.length * 2, 10); i++) {
-    const a = pts[Math.floor(Math.random() * pts.length)];
-    const b = pts[Math.floor(Math.random() * pts.length)];
-    if (a !== b) arcs.push(createArc(a, b));
-  }
-}
-
-function drawArcs() {
-  ctx.clearRect(0, 0, arcCanvas.width, arcCanvas.height);
-  for (let i = arcs.length - 1; i >= 0; i--) {
-    const arc = arcs[i];
-    arc.progress += arc.speed;
-    if (arc.progress < 0.1) arc.alpha = arc.progress / 0.1;
-    else if (arc.progress > 0.85) arc.alpha = (1 - arc.progress) / 0.15;
-    else arc.alpha = 1;
-    if (arc.progress >= 1) { arcs.splice(i, 1); continue; }
-
-    const pA = projectScreen(arc.from.lat, arc.from.lng);
-    const pB = projectScreen(arc.to.lat,   arc.to.lng);
-    const mx = (pA.x + pB.x) / 2, my = (pA.y + pB.y) / 2;
-    const dist = Math.hypot(pB.x - pA.x, pB.y - pA.y);
-    const cp = { x: mx, y: my - dist * 0.35 };
-    const t = arc.progress;
-    const bx = (1-t)*(1-t)*pA.x + 2*(1-t)*t*cp.x + t*t*pB.x;
-    const by = (1-t)*(1-t)*pA.y + 2*(1-t)*t*cp.y + t*t*pB.y;
-
-    arc.trail.push({ x: bx, y: by });
-    if (arc.trail.length > arc.maxTrail) arc.trail.shift();
-
-    if (arc.trail.length > 1) {
-      for (let j = 1; j < arc.trail.length; j++) {
-        const ta = j / arc.trail.length;
-        const {r,g,b} = arc.color;
-        ctx.beginPath();
-        ctx.moveTo(arc.trail[j-1].x, arc.trail[j-1].y);
-        ctx.lineTo(arc.trail[j].x,   arc.trail[j].y);
-        ctx.strokeStyle = `rgba(${r},${g},${b},${ta * arc.alpha * 0.65})`;
-        ctx.lineWidth = ta * 1.4;
-        ctx.stroke();
-      }
-      const {r,g,b} = arc.color;
-      ctx.beginPath(); ctx.arc(bx, by, 2.5, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(${r},${g},${b},${arc.alpha})`; ctx.fill();
-      const gr = ctx.createRadialGradient(bx,by,0,bx,by,7);
-      gr.addColorStop(0, `rgba(${r},${g},${b},${arc.alpha*0.5})`);
-      gr.addColorStop(1, `rgba(${r},${g},${b},0)`);
-      ctx.beginPath(); ctx.arc(bx, by, 7, 0, Math.PI*2);
-      ctx.fillStyle = gr; ctx.fill();
-    }
-  }
-  requestAnimationFrame(drawArcs);
-}
-drawArcs();
-
-setInterval(() => {
-  if (markerPts.length >= 2 && arcs.length < 16) spawnArcs(markerPts);
-}, 2500);
-
-// ── CARGAR PERFILES DESDE API ──────────────────────────────────────────────
-async function loadProfiles() {
-  const listEl = document.getElementById('profileList');
-
-  let profiles = [];
-  try {
-    const res = await fetch('/api/profiles');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    profiles = await res.json();
-  } catch (e) {
-    console.error('Error cargando perfiles:', e);
-    listEl.innerHTML = '<div style="font-size:10px;color:var(--red)">Error al conectar con /api/profiles</div>';
-    return;
-  }
-
-  // Stats
-  document.getElementById('statTotal').textContent = profiles.length;
-  const withGeo = profiles.filter(p => p.city || p.country || p.location || p.locality);
-  document.getElementById('statGeo').textContent   = withGeo.length;
-  document.getElementById('statNoGeo').textContent = profiles.length - withGeo.length;
-  const pct = profiles.length ? Math.round(withGeo.length / profiles.length * 100) : 0;
-  document.getElementById('barTotal').style.width = '100%';
-  document.getElementById('barGeo').style.width   = pct + '%';
-
-  // Lista lateral
-  const PCOLS = ['var(--cyan)','var(--green)','var(--magenta)','var(--amber)'];
-  if (!profiles.length) {
-    listEl.innerHTML = '<div style="font-size:10px;color:var(--muted)">Sin perfiles en la BD</div>';
-  } else {
-    listEl.innerHTML = profiles.slice(0, 12).map((p, i) => {
-      const nm = esc(((p.firstName||'')+ ' '+(p.lastName||'')).trim() || p.name || p.email || '—');
-      const lo = esc(p.city || p.country || p.location || p.locality || '—');
-      return `<div class="profile-entry">
-        <div class="profile-dot" style="background:${PCOLS[i%4]};box-shadow:0 0 5px ${PCOLS[i%4]}"></div>
-        <div><div class="profile-entry-name">${nm}</div><div class="profile-entry-loc">${lo}</div></div>
-      </div>`;
-    }).join('');
-  }
-
-  // Agrupar por ciudad+país y geocodificar local
-  const groups = {};
-  let notFound = 0;
-  for (const p of profiles) {
-    const city    = nrm(p.city    || p.locality  || '');
-    const country = nrm(p.country || p.location  || '');
-    if (!city && !country) continue;
-
-    const geo = geocodeLocal(city, country);
-    if (!geo) { notFound++; continue; }
-
-    const key = geo.nombre + '||' + geo.depto;
-    if (!groups[key]) groups[key] = { geo, profiles: [] };
-    groups[key].profiles.push(p);
-  }
-
-  if (notFound > 0) console.info(`${notFound} perfiles sin match en geocoder local. Amplía el dataset con convert_inei.js.`);
-
-  // Pintar marcadores
-  for (const [key, grp] of Object.entries(groups)) {
-    addGroupMarker(key, grp.geo.lat, grp.geo.lng, grp.profiles);
-  }
-
-  // Fit al primer marcador
-  if (markers.size > 0 && markers.size < 4) setTimeout(fitMap, 100);
-}
-
-// ── PANEL TOGGLE ──────────────────────────────────────────────────────────
-const panel = document.getElementById('side-panel');
-document.getElementById('togglePanel').addEventListener('click', function() {
-  panel.classList.toggle('collapsed');
-  mc.classList.toggle('panel-hidden', panel.classList.contains('collapsed'));
-  this.textContent = panel.classList.contains('collapsed') ? '›' : '‹';
-  setTimeout(fitMap, 280);
-});
-
-// ── RELOJ ─────────────────────────────────────────────────────────────────
-function updateClock() {
-  document.getElementById('clockDisplay').textContent =
-    new Date().toISOString().replace('T',' ').substring(0,19) + ' UTC';
-}
-updateClock(); setInterval(updateClock, 1000);
-
-// ── INFO GEOCODER ─────────────────────────────────────────────────────────
-document.getElementById('geoDbCount').textContent = PERU_GEO.length.toLocaleString();
-
-// ── INIT ──────────────────────────────────────────────────────────────────
-buildMapSVG();
-fitMap();
-loadProfiles().finally(() => {
-  setTimeout(() => document.getElementById('loading').classList.add('out'), 400);
-});
 </script>
 </body>
 </html>

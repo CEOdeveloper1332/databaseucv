@@ -288,6 +288,21 @@
 		#instructions.hidden{display:none}
 		#instructions .big{font-size:32px;display:block;margin-bottom:8px;opacity:.3}
 
+		/* Read-only badge */
+		#readonly-badge{
+			display:none;
+			background:rgba(248,81,73,.15);
+			border:1px solid rgba(248,81,73,.4);
+			color:#f85149;
+			font-size:11px;
+			font-weight:bold;
+			padding:4px 10px;
+			border-radius:5px;
+			letter-spacing:.5px;
+			white-space:nowrap;
+		}
+		#readonly-badge.visible{ display:inline-block; }
+
 		/* Node right-click menu */
 		#ctx-menu{
 			position:fixed;background:#161b22;border:1px solid #30363d;
@@ -317,6 +332,7 @@
 		<select class="tb-select" id="networksSelect">
 			<option value="">-- Seleccionar red --</option>
 		</select>
+		<span id="readonly-badge">🔒 Solo lectura</span>
 		<button class="tb-btn" id="btnTogglePool" title="Mostrar/ocultar perfiles">☰ Perfiles</button>
 		<button class="tb-btn" id="btnFit" title="Ajustar vista">⤢ Ajustar</button>
 		<button class="tb-btn" id="btnClear" title="Limpiar layout">⟳ Layout</button>
@@ -745,13 +761,12 @@ function renderNode(profileId){
 	g.addEventListener('click',(e)=>{
 		e.stopPropagation();
 		if(state.connecting && state.connecting!==profileId){
-			openEdgeModal(state.connecting, profileId);
+			if(state.isAdmin) openEdgeModal(state.connecting, profileId);
 			state.connecting=null;
 			renderGraph();
 			return;
 		}
-		if(state.isAdmin) openSidePanel(profileId);
-		else openSidePanelReadonly(profileId);
+		openSidePanel(profileId);
 	});
 
 	g.addEventListener('contextmenu',(e)=>{
@@ -823,6 +838,7 @@ function renderPool(){
 		addBtn.className='pool-add-btn';
 		addBtn.textContent='+';
 		addBtn.title='Agregar a la red';
+		if(!state.isAdmin) addBtn.style.display='none';
 		addBtn.addEventListener('click',(e)=>{ e.stopPropagation(); addToNetwork(p.id); });
 
 		div.appendChild(img);div.appendChild(name);div.appendChild(addBtn);
@@ -833,6 +849,7 @@ function renderPool(){
 
 // ── ADD / REMOVE NODE ──────────────────────────────────────
 function addToNetwork(profileId){
+	if(!state.isAdmin) return showReadonlyToast();
 	if(!state.currentNet) return alert('Selecciona o crea una red primero.');
 	if(state.nodes.has(profileId)) return;
 	const profile=state.profiles.find(p=>p.id===profileId);
@@ -864,6 +881,7 @@ function addToNetwork(profileId){
 }
 
 function removeFromNetwork(profileId){
+	if(!state.isAdmin) return showReadonlyToast();
 	if(!confirm('¿Quitar este nodo de la red?')) return;
 	state.nodes.delete(profileId);
 	state.edges=state.edges.filter(e=>e.from!==profileId&&e.to!==profileId);
@@ -879,6 +897,7 @@ function removeFromNetwork(profileId){
 // ── EDGE MODAL ─────────────────────────────────────────────
 let edgePending={from:null,to:null};
 function openEdgeModal(from,to){
+	if(!state.isAdmin) return showReadonlyToast();
 	edgePending={from,to};
 	const fromName=getNodeName(from), toName=getNodeName(to);
 	edgeModal.querySelector('.em-title').textContent=`Relación: ${fromName} → ${toName}`;
@@ -888,6 +907,7 @@ function openEdgeModal(from,to){
 }
 document.getElementById('em-cancel').addEventListener('click',()=>{ edgeModal.classList.remove('open'); edgePending={from:null,to:null}; });
 document.getElementById('em-save').addEventListener('click',()=>{
+	if(!state.isAdmin){ edgeModal.classList.remove('open'); return showReadonlyToast(); }
 	if(!edgePending.from||!edgePending.to) return;
 	const rel=document.getElementById('em-rel').value;
 	const desc=document.getElementById('em-desc').value;
@@ -906,6 +926,7 @@ document.getElementById('em-save').addEventListener('click',()=>{
 });
 
 function openEdgeDelete(edgeId){
+	if(!state.isAdmin) return showReadonlyToast();
 	if(!confirm('¿Eliminar esta relación?')) return;
 	state.edges=state.edges.filter(e=>e.id!==edgeId);
 	if(state.currentNet) state.currentNet.links=(state.currentNet.links||[]).filter(e=>e.id!==edgeId);
@@ -1279,6 +1300,30 @@ document.getElementById('createNetworkBtn').addEventListener('click',async()=>{
 	} catch(e){ alert('Error creando la red.'); }
 });
 
+// ── READONLY TOAST ─────────────────────────────────────────
+let _toastTimer=null;
+function showReadonlyToast(){
+	let toast=document.getElementById('readonly-toast');
+	if(!toast){
+		toast=document.createElement('div');
+		toast.id='readonly-toast';
+		Object.assign(toast.style,{
+			position:'fixed',bottom:'24px',left:'50%',transform:'translateX(-50%)',
+			background:'rgba(248,81,73,.92)',color:'#fff',
+			padding:'9px 20px',borderRadius:'8px',
+			fontSize:'13px',fontWeight:'bold',
+			zIndex:'9999',pointerEvents:'none',
+			boxShadow:'0 4px 16px rgba(0,0,0,.4)',
+			transition:'opacity .2s',whiteSpace:'nowrap'
+		});
+		document.body.appendChild(toast);
+	}
+	toast.textContent='🔒 Solo administradores pueden modificar la red.';
+	toast.style.opacity='1';
+	clearTimeout(_toastTimer);
+	_toastTimer=setTimeout(()=>{ toast.style.opacity='0'; },2800);
+}
+
 // ── INIT ───────────────────────────────────────────────────
 async function init(){
 	// Check admin
@@ -1290,10 +1335,11 @@ async function init(){
 		}
 	} catch(e){}
 
-	// Hide create controls if not admin
+	// Hide create controls if not admin; show readonly badge
 	if(!state.isAdmin){
 		document.getElementById('createNetworkBtn').style.display='none';
 		document.getElementById('networkName').style.display='none';
+		document.getElementById('readonly-badge').classList.add('visible');
 	}
 
 	// Load profiles

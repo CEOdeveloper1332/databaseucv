@@ -1,108 +1,818 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title>Ciclo - Grupos</title>
-	<link rel="stylesheet" href="styles.css">
-	<link rel="stylesheet" href="cycle.css">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Ciclo · Grupos — A1 Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Martian+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:      #EDEAE4;
+  --surface: #F4F1EB;
+  --ink:     #18130E;
+  --ink2:    #3D3428;
+  --muted:   #8A7E72;
+  --line:    rgba(24,19,14,.12);
+  --line2:   rgba(24,19,14,.22);
+  --red:     #D63B1F;
+  --chip-bg: rgba(24,19,14,.06);
+  --r:       6px;
+  --sans:    'Syne', sans-serif;
+  --mono:    'Martian Mono', monospace;
+}
+
+html,body{
+  height:100%;background:var(--bg);
+  color:var(--ink);font-family:var(--sans);font-size:13px;
+}
+body{display:flex;flex-direction:column;overflow:hidden}
+
+/* ───── TOPBAR ───── */
+.topbar{
+  display:flex;align-items:stretch;
+  border-bottom:2px solid var(--ink);
+  background:var(--ink);
+  flex-shrink:0;height:52px;
+}
+.topbar-brand{
+  display:flex;align-items:center;
+  padding:0 22px 0 20px;
+  border-right:1px solid rgba(255,255,255,.1);
+}
+.topbar-back{
+  color:rgba(255,255,255,.55);text-decoration:none;
+  font-size:11px;font-weight:600;letter-spacing:.8px;
+  text-transform:uppercase;transition:color .15s;
+  display:flex;align-items:center;gap:6px;
+}
+.topbar-back:hover{color:#fff}
+.topbar-title{
+  display:flex;align-items:center;gap:10px;padding:0 20px;
+}
+.topbar-label{font-size:13px;font-weight:800;color:#fff;letter-spacing:-.2px}
+.topbar-sub{
+  font-size:10px;color:rgba(255,255,255,.3);
+  font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase;
+}
+.topbar-right{
+  margin-left:auto;display:flex;align-items:center;padding-right:20px;
+}
+.topbar-tag{
+  font-size:9px;font-weight:500;letter-spacing:1.2px;text-transform:uppercase;
+  color:rgba(255,255,255,.3);font-family:var(--mono);
+  border:1px solid rgba(255,255,255,.12);border-radius:3px;padding:3px 8px;
+}
+
+/* ───── SHELL ───── */
+.shell{
+  flex:1;display:grid;grid-template-rows:auto 1fr;overflow:hidden;
+}
+
+/* ───── GROUPS RAIL ───── */
+.groups-rail{
+  background:var(--surface);
+  border-bottom:2px solid var(--ink);
+  display:flex;align-items:stretch;
+  overflow-x:auto;overflow-y:hidden;
+  flex-shrink:0;height:68px;
+  scrollbar-width:none;
+}
+.groups-rail::-webkit-scrollbar{display:none}
+
+.rail-new{
+  display:flex;align-items:center;
+  border-right:2px solid var(--ink);
+  flex-shrink:0;padding:0 16px;gap:10px;min-width:240px;
+}
+.rail-new-input{
+  background:transparent;border:none;outline:none;
+  font-family:var(--sans);font-size:12px;font-weight:700;
+  color:var(--ink);width:130px;
+  border-bottom:2px solid var(--line2);padding:4px 0;
+  transition:border-color .15s;
+}
+.rail-new-input::placeholder{color:var(--muted);font-weight:400}
+.rail-new-input:focus{border-color:var(--ink)}
+.rail-new-btn{
+  background:var(--ink);color:var(--surface);border:none;
+  padding:7px 14px;font-family:var(--sans);font-size:11px;font-weight:700;
+  cursor:pointer;letter-spacing:.3px;white-space:nowrap;
+  transition:all .15s;flex-shrink:0;display:flex;align-items:center;gap:5px;
+}
+.rail-new-btn:hover{background:var(--red)}
+.rail-new-btn:active{transform:scale(.97)}
+
+/* Groups list container — main.js renders .group-item into here */
+#groupsList{
+  display:flex;align-items:stretch;flex:1;
+  overflow-x:auto;scrollbar-width:none;
+}
+#groupsList::-webkit-scrollbar{display:none}
+
+/* main.js .group-item — restyled via JS to .rail-group */
+.rail-group{
+  display:flex;flex-direction:column;justify-content:center;align-items:flex-start;
+  height:100%;padding:0 22px;
+  border-right:1px solid var(--line);
+  cursor:pointer;transition:background .15s;
+  flex-shrink:0;position:relative;min-width:130px;
+}
+.rail-group::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;
+  height:3px;background:transparent;transition:background .15s;
+}
+.rail-group:hover{background:rgba(24,19,14,.04)}
+.rail-group.active{background:#fff}
+.rail-group.active::after{background:var(--ink)}
+.rail-empty{
+  display:flex;align-items:center;padding:0 24px;
+  color:var(--muted);font-size:11px;font-family:var(--mono);letter-spacing:.3px;
+}
+
+/* ───── WORKSPACE ───── */
+.workspace{
+  flex:1;overflow-y:auto;background:var(--bg);
+  display:flex;flex-direction:column;
+}
+.workspace::-webkit-scrollbar{width:3px}
+.workspace::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
+
+/* Empty */
+.ws-empty{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:14px;
+}
+.ws-empty-glyph{
+  font-size:60px;opacity:.12;font-weight:800;font-family:var(--sans);
+  letter-spacing:-4px;line-height:1;
+}
+.ws-empty p{font-size:12px;color:var(--muted);font-family:var(--mono);letter-spacing:.5px}
+
+#emptyState.hidden,.group-content.hidden{display:none!important}
+
+/* ───── WS HEADER ───── */
+.ws-header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:28px 32px 20px;
+  border-bottom:1px solid var(--line);
+  background:var(--surface);flex-shrink:0;gap:16px;
+  flex-wrap:wrap;
+}
+.ws-eyebrow{
+  font-size:9px;font-weight:600;color:var(--red);
+  font-family:var(--mono);letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:6px;
+}
+.ws-group-title{
+  font-size:32px;font-weight:800;color:var(--ink);letter-spacing:-1.5px;line-height:1;
+}
+.ws-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+/* ───── ADD STRIP ───── */
+.add-strip{
+  display:flex;align-items:center;gap:14px;
+  padding:12px 32px;border-bottom:1px solid var(--line);
+  background:var(--surface);flex-shrink:0;flex-wrap:wrap;
+}
+.add-strip-label{
+  font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:1.5px;font-family:var(--mono);white-space:nowrap;
+}
+.add-profiles{display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap}
+.profile-select-wrap{position:relative;flex:1;max-width:280px;min-width:160px}
+.profile-select-wrap svg{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  pointer-events:none;opacity:.35;
+}
+select#profilesSelect{
+  width:100%;appearance:none;background:var(--bg);
+  border:1.5px solid var(--line2);color:var(--ink);
+  padding:8px 30px 8px 12px;font-family:var(--sans);font-size:12px;font-weight:700;
+  outline:none;cursor:pointer;transition:border-color .15s;
+}
+select#profilesSelect:focus{border-color:var(--ink)}
+
+/* Pool chips */
+.cycle-profiles-pool{
+  display:flex;flex-wrap:wrap;gap:6px;
+  padding:10px 32px 12px;
+  border-bottom:1px solid var(--line);
+  background:var(--surface);
+}
+.cycle-profile-card{
+  display:flex;align-items:center;gap:6px;
+  background:var(--bg);border:1.5px solid var(--line2);
+  padding:3px 10px 3px 3px;
+  transition:all .15s;
+}
+.cycle-profile-card:hover{border-color:var(--ink);transform:translateY(-1px)}
+.cycle-profile-card img{
+  width:26px;height:26px;border-radius:50%;object-fit:cover;
+  border:1px solid var(--line);
+}
+.cycle-profile-card div:nth-child(2){
+  font-size:11px;font-weight:700;color:var(--ink);
+  max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.cycle-profile-card .btn{
+  font-size:9px;padding:2px 8px;background:var(--chip-bg);
+  border:1px solid var(--line);color:var(--ink2);font-family:var(--sans);
+  font-weight:700;cursor:pointer;transition:all .15s;
+}
+.cycle-profile-card .btn:hover{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+
+/* ───── PARTICIPANTS ───── */
+.participants-section{padding:24px 32px 48px;flex:1}
+.participants-section h4{
+  font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:2px;font-family:var(--mono);margin-bottom:20px;
+  display:flex;align-items:center;gap:12px;
+}
+.participants-section h4::after{
+  content:'';flex:1;height:1px;background:var(--line);display:block;
+}
+.participants-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:2px;
+}
+
+/* Participant card — horizontal magazine style */
+.participant-card{
+  background:var(--surface);
+  border:1.5px solid var(--line);
+  transition:all .18s;
+  display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
+}
+.participant-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--chip-bg);transition:background .18s;
+}
+.participant-card:hover{
+  border-color:var(--ink);
+  box-shadow:4px 4px 0 var(--ink);
+  transform:translate(-2px,-2px);
+}
+.participant-card:hover::before{background:var(--red)}
+
+.pc-top{
+  display:flex;align-items:stretch;
+  border-bottom:1px solid var(--line);
+}
+.pc-index-col{
+  width:44px;flex-shrink:0;border-right:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:var(--muted);font-family:var(--mono);font-weight:400;
+}
+.pc-avatar-col{
+  padding:10px 0 10px 10px;flex-shrink:0;border-right:1px solid var(--line);
+  display:flex;align-items:center;
+}
+.participant-avatar{
+  width:38px;height:38px;border-radius:50%;object-fit:cover;
+  border:1.5px solid var(--line);display:block;
+}
+.pc-info-col{flex:1;padding:10px 12px;display:flex;flex-direction:column;justify-content:center}
+.participant-name{font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.3px;margin-bottom:2px}
+.participant-stats{font-size:9px;color:var(--muted);font-family:var(--mono);letter-spacing:.2px}
+
+/* Bar */
+.participation-bar{
+  height:3px;background:var(--chip-bg);margin:0 12px 0;
+  border-top:1px solid var(--line);
+}
+.participation-fill{
+  height:100%;background:var(--ink);
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+}
+
+/* Actions row */
+.participant-actions{display:flex;border-top:1px solid var(--line)}
+.participant-actions .btn{
+  flex:1;border:none;border-right:1px solid var(--line);
+  background:transparent;color:var(--muted);
+  padding:9px 0;font-family:var(--mono);font-size:10px;font-weight:500;
+  cursor:pointer;transition:all .15s;letter-spacing:.3px;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.participant-actions .btn:last-child{border-right:none}
+.participant-actions .btn:hover{background:var(--ink);color:var(--surface)}
+.participant-actions .btn-remove:hover,
+.participant-actions .btn-danger:hover{background:var(--red)!important;color:#fff!important}
+
+/* ───── BUTTONS ───── */
+.btn{
+  display:inline-flex;align-items:center;gap:5px;
+  border:1.5px solid var(--line2);
+  background:transparent;color:var(--ink);
+  padding:7px 16px;font-family:var(--sans);font-size:11px;font-weight:700;
+  cursor:pointer;transition:all .15s;white-space:nowrap;letter-spacing:.2px;
+}
+.btn:hover{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn-primary,.btn.btn-primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn-primary:hover,.btn.btn-primary:hover{background:var(--red);border-color:var(--red)}
+.btn-danger,.btn.btn-danger{color:var(--red);border-color:rgba(214,59,31,.25)}
+.btn-danger:hover,.btn.btn-danger:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-small{padding:4px 10px;font-size:10px}
+
+/* ───── MODAL ───── */
+.modal{
+  position:fixed;inset:0;z-index:999;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(24,19,14,.6);backdrop-filter:blur(4px);
+}
+.modal.hidden{display:none!important}
+.modal-content{
+  background:var(--surface);width:500px;max-width:96vw;
+  border:2px solid var(--ink);
+  animation:mIn .18s cubic-bezier(.4,0,.2,1);
+}
+@keyframes mIn{
+  from{opacity:0;transform:translateY(12px) scale(.98)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+.modal-topbar{
+  background:var(--ink);padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-topbar-title{
+  font-size:10px;font-weight:700;color:#fff;
+  text-transform:uppercase;letter-spacing:1.8px;font-family:var(--mono);
+}
+.modal-close-x{
+  background:transparent;border:none;color:rgba(255,255,255,.4);
+  font-size:20px;cursor:pointer;line-height:1;padding:0;
+  transition:color .15s;
+}
+.modal-close-x:hover{color:#fff}
+.modal-body{padding:22px 20px}
+.psycho-rows{display:flex;flex-direction:column;gap:14px}
+.psycho-row{display:grid;grid-template-columns:118px 1fr 38px;align-items:center;gap:14px}
+.psycho-label{
+  font-size:11px;font-weight:700;color:var(--ink2);
+  text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);
+}
+.psy-track{
+  height:10px;background:var(--chip-bg);border:1.5px solid var(--line2);
+  cursor:crosshair;position:relative;
+}
+.psy-fill{height:100%;background:var(--ink);transition:width .08s;pointer-events:none}
+.psy-num{
+  font-size:12px;font-weight:700;color:var(--ink);
+  font-family:var(--mono);text-align:right;
+}
+.modal-footer{
+  display:flex;justify-content:flex-end;gap:8px;
+  padding:14px 20px;border-top:2px solid var(--ink);background:var(--bg);
+}
+
+/* hidden number inputs for main.js compat */
+#psychoForm input[type="number"]{display:none}
+
+/* muted text */
+.muted{color:var(--muted);font-family:var(--mono);font-size:11px}
+
+/* ── READ-ONLY BADGE ── */
+#readonly-badge{
+  display:none;
+  font-size:9px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+  font-family:var(--mono);
+  color:#D63B1F;
+  border:1.5px solid rgba(214,59,31,.4);
+  padding:3px 10px;
+  background:rgba(214,59,31,.08);
+}
+#readonly-badge.visible{display:inline-block}
+
+/* ── ADMIN TOAST ── */
+#admin-toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--ink);color:var(--surface);
+  font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.4px;
+  padding:10px 20px;
+  border-left:3px solid var(--red);
+  opacity:0;pointer-events:none;
+  transition:opacity .2s, transform .2s;
+  z-index:9999;white-space:nowrap;
+}
+#admin-toast.show{
+  opacity:1;transform:translateX(-50%) translateY(0);
+}
+
+/* ───── RESPONSIVE ───── */
+@media(max-width:860px){
+  html,body{overflow:auto}
+  .shell{overflow:auto}
+  .workspace{overflow:visible}
+  .participants-list{grid-template-columns:1fr}
+  .ws-header,.add-strip,.cycle-profiles-pool,.participants-section{
+    padding-left:16px;padding-right:16px;
+  }
+  .ws-group-title{font-size:22px}
+}
+</style>
 </head>
 <body>
-	<header>
-		<nav class="navbar">
-			<div class="nav-texts">
-				<a href="index.html" class="nav-text-btn" style="font-weight:600;color:#fffdfd;text-decoration:none;padding:8px 12px;border-radius:6px;transition:all .1s ease;display:inline-block;">
-					Inicio
-				</a>
-				<span style="color:rgba(26,58,92,0.7);margin-left:8px">Ciclo - Grupos</span>
-			</div>
-		</nav>
-	</header>
 
-	<main class="cycle-page">
-		<!-- Panel izquierdo: Gestión de grupos -->
-		<aside class="groups-panel">
-			<h2>Grupos</h2>
-			
-			<div class="create-group">
-				<input type="text" id="groupNameInput" placeholder="Nombre del grupo" maxlength="50">
-				<button id="createGroupBtn" class="btn btn-primary">Crear grupo</button>
-			</div>
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-brand">
+    <a href="index.html" class="topbar-back">
+      <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="8 2 3 6 8 10"/></svg>
+      Inicio
+    </a>
+  </div>
+  <div class="topbar-title">
+    <div>
+      <div class="topbar-label">Ciclo · Grupos</div>
+      <div class="topbar-sub">Gestión de ciclos</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span id="readonly-badge">🔒 Solo lectura</span>
+    <span class="topbar-tag">A1 Analytics</span>
+  </div>
+</header>
 
-			<div id="groupsList" class="groups-list">
-				<p class="muted">No hay grupos creados.</p>
-			</div>
-		</aside>
+<div class="shell">
 
-		<!-- Panel derecho: Detalles del grupo y participación -->
-		<section class="group-detail">
-			<div id="emptyState" class="empty-state">
-				<p>Seleccione un grupo para ver detalles.</p>
-			</div>
+  <!-- GROUPS RAIL -->
+  <div class="groups-rail">
+    <div class="rail-new">
+      <input type="text" id="groupNameInput" class="rail-new-input" placeholder="Nombre del grupo…" maxlength="50">
+      <button id="createGroupBtn" class="rail-new-btn">
+        <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/></svg>
+        Crear
+      </button>
+    </div>
+    <!-- main.js injects .group-item children here -->
+    <div id="groupsList" style="display:flex;align-items:stretch;flex:1;overflow-x:auto">
+      <div class="rail-empty" id="railPlaceholder">— ningún grupo —</div>
+    </div>
+  </div>
 
-			<div id="groupContent" class="group-content hidden">
-				<div class="group-header">
-					<h3 id="groupTitle"></h3>
-					<button id="deleteGroupBtn" class="btn btn-danger">Eliminar grupo</button>
-				</div>
+  <!-- WORKSPACE -->
+  <div class="workspace">
 
-				<!-- Agregar perfiles al grupo -->
-				<div class="add-profiles">
-					<label>Agregar perfiles:</label>
-					<div class="profiles-selector">
-						<select id="profilesSelect">
-							<option value="">-- Seleccione un perfil --</option>
-						</select>
-						<button id="addProfileBtn" class="btn btn-primary">Agregar</button>
-					</div>
+    <div id="emptyState" class="ws-empty">
+      <div class="ws-empty-glyph">◎</div>
+      <p>Crea o selecciona un grupo</p>
+    </div>
 
-					<!-- Pool visual de perfiles (mini-tarjetas) -->
-					<div id="cycleProfilesPool" class="cycle-profiles-pool"></div>
-				</div>
+    <div id="groupContent" class="group-content hidden">
 
-				<!-- Participantes con barras de participación -->
-				<div class="participants-section">
-					<h4>Participantes</h4>
-					<div id="participantsList" class="participants-list"></div>
-				</div>
-			</div>
-		</section>
-	</main>
+      <!-- Header -->
+      <div class="ws-header">
+        <div>
+          <div class="ws-eyebrow">Grupo activo</div>
+          <h2 class="ws-group-title" id="groupTitle">—</h2>
+        </div>
+        <div class="ws-actions">
+          <button id="deleteGroupBtn" class="btn btn-danger">
+            <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="8" y2="8"/><line x1="8" y1="1" x2="1" y2="8"/></svg>
+            Eliminar grupo
+          </button>
+        </div>
+      </div>
 
-	<!-- Modal para editar opciones socio-psicológicas -->
-	<div id="psychoModal" class="modal hidden">
-		<div class="modal-content">
-			<h3 id="psychoModalTitle">Opciones socio-psicológicas</h3>
-			<form id="psychoForm">
-				<input type="hidden" name="participantId">
-				<div class="form-group">
-					<label>Liderazgo (%)</label>
-					<input type="number" name="leadership" min="0" max="100" value="50">
-				</div>
-				<div class="form-group">
-					<label>Comunicación (%)</label>
-					<input type="number" name="communication" min="0" max="100" value="50">
-				</div>
-				<div class="form-group">
-					<label>Empatía (%)</label>
-					<input type="number" name="empathy" min="0" max="100" value="50">
-				</div>
-				<div class="form-group">
-					<label>Creatividad (%)</label>
-					<input type="number" name="creativity" min="0" max="100" value="50">
-				</div>
-				<div class="form-group">
-					<label>Compromiso (%)</label>
-					<input type="number" name="commitment" min="0" max="100" value="50">
-				</div>
-				<div class="form-actions">
-					<button type="submit" class="btn btn-primary">Guardar</button>
-					<button type="button" id="cancelPsychoBtn" class="btn">Cancelar</button>
-				</div>
-			</form>
-		</div>
-	</div>
+      <!-- Add profile strip -->
+      <div class="add-strip">
+        <span class="add-strip-label">+ Perfil</span>
+        <div class="add-profiles">
+          <div class="profile-select-wrap">
+            <select id="profilesSelect">
+              <option value="">— Seleccionar perfil —</option>
+            </select>
+            <svg width="10" height="6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="1 1 5 5 9 1"/></svg>
+          </div>
+          <button id="addProfileBtn" class="btn btn-primary">Agregar</button>
+        </div>
+      </div>
 
-	<script src="main.js"></script>
+      <!-- Pool -->
+      <div id="cycleProfilesPool" class="cycle-profiles-pool"></div>
+
+      <!-- Participants -->
+      <div class="participants-section">
+        <h4>Participantes</h4>
+        <div id="participantsList" class="participants-list"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- PSYCHO MODAL -->
+<div id="psychoModal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-topbar">
+      <div class="modal-topbar-title" id="psychoModalTitle">Opciones socio-psicológicas</div>
+      <button class="modal-close-x" id="cancelPsychoBtn">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="psychoForm">
+        <input type="hidden" name="participantId">
+        <input type="number" name="leadership"    id="inp-leadership"    min="0" max="100" value="50">
+        <input type="number" name="communication" id="inp-communication" min="0" max="100" value="50">
+        <input type="number" name="empathy"       id="inp-empathy"       min="0" max="100" value="50">
+        <input type="number" name="creativity"    id="inp-creativity"    min="0" max="100" value="50">
+        <input type="number" name="commitment"    id="inp-commitment"    min="0" max="100" value="50">
+        <div class="psycho-rows">
+          <div class="psycho-row">
+            <div class="psycho-label">Liderazgo</div>
+            <div class="psy-track" data-stat="leadership"><div class="psy-fill" id="pbar-leadership" style="width:50%"></div></div>
+            <div class="psy-num" id="pval-leadership">50</div>
+          </div>
+          <div class="psycho-row">
+            <div class="psycho-label">Comunicación</div>
+            <div class="psy-track" data-stat="communication"><div class="psy-fill" id="pbar-communication" style="width:50%"></div></div>
+            <div class="psy-num" id="pval-communication">50</div>
+          </div>
+          <div class="psycho-row">
+            <div class="psycho-label">Empatía</div>
+            <div class="psy-track" data-stat="empathy"><div class="psy-fill" id="pbar-empathy" style="width:50%"></div></div>
+            <div class="psy-num" id="pval-empathy">50</div>
+          </div>
+          <div class="psycho-row">
+            <div class="psycho-label">Creatividad</div>
+            <div class="psy-track" data-stat="creativity"><div class="psy-fill" id="pbar-creativity" style="width:50%"></div></div>
+            <div class="psy-num" id="pval-creativity">50</div>
+          </div>
+          <div class="psycho-row">
+            <div class="psycho-label">Compromiso</div>
+            <div class="psy-track" data-stat="commitment"><div class="psy-fill" id="pbar-commitment" style="width:50%"></div></div>
+            <div class="psy-num" id="pval-commitment">50</div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn" id="cancelPsychoBtn2">Cancelar</button>
+      <button type="submit" form="psychoForm" class="btn btn-primary">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Rail groups: style main.js .group-item → .rail-group ─────────────────
+(function(){
+  const list   = document.getElementById('groupsList');
+  const holder = document.getElementById('railPlaceholder');
+
+  function styleItem(el){
+    if(!el || el.classList.contains('rail-group')) return;
+    el.classList.add('rail-group');
+  }
+
+  function refresh(){
+    const items = list.querySelectorAll('.group-item');
+    items.forEach(styleItem);
+    if(holder) holder.style.display = items.length ? 'none' : '';
+  }
+
+  new MutationObserver(refresh).observe(list,{childList:true});
+  setTimeout(refresh, 80);
+})();
+
+// ── Participant card: number index + btn-remove danger ───────────────────
+(function(){
+  const list = document.getElementById('participantsList');
+  if(!list) return;
+
+  function enrichAll(){
+    list.querySelectorAll('.participant-card').forEach(function(card, i){
+      // Add pc-top wrapper if not present
+      if(!card.querySelector('.pc-top')){
+        const nameEl   = card.querySelector('.participant-name');
+        const statsEl  = card.querySelector('.participant-stats');
+        const avatarEl = card.querySelector('img, .participant-avatar');
+        const barEl    = card.querySelector('.participation-bar');
+        const actEl    = card.querySelector('.participant-actions');
+
+        if(nameEl){
+          // Build structured top row
+          const top = document.createElement('div');
+          top.className = 'pc-top';
+
+          // Index
+          const idx = document.createElement('div');
+          idx.className = 'pc-index-col';
+          idx.textContent = String(i+1).padStart(2,'0');
+          top.appendChild(idx);
+
+          // Avatar
+          const avCol = document.createElement('div');
+          avCol.className = 'pc-avatar-col';
+          if(avatarEl){ avCol.appendChild(avatarEl); }
+          top.appendChild(avCol);
+
+          // Info
+          const infoCol = document.createElement('div');
+          infoCol.className = 'pc-info-col';
+          if(nameEl)  infoCol.appendChild(nameEl);
+          if(statsEl) infoCol.appendChild(statsEl);
+          top.appendChild(infoCol);
+
+          card.prepend(top);
+        }
+      }
+
+      // danger class on remove buttons
+      card.querySelectorAll('.btn-remove').forEach(function(b){
+        b.classList.add('btn-danger');
+      });
+    });
+  }
+
+  new MutationObserver(enrichAll).observe(list,{childList:true, subtree:true});
+  setTimeout(enrichAll, 100);
+})();
+
+// ── Psycho modal: interactive drag bars ─────────────────────────────────
+(function(){
+  const STATS = ['leadership','communication','empathy','creativity','commitment'];
+
+  function set(name, raw){
+    const v = Math.min(100, Math.max(0, Math.round(raw)));
+    const inp = document.getElementById('inp-'+name);
+    const bar = document.getElementById('pbar-'+name);
+    const num = document.getElementById('pval-'+name);
+    if(inp) inp.value = v;
+    if(bar) bar.style.width = v+'%';
+    if(num) num.textContent = v;
+  }
+
+  document.querySelectorAll('.psy-track').forEach(function(track){
+    const name = track.dataset.stat;
+    let active = false;
+
+    function calc(cx){
+      const r = track.getBoundingClientRect();
+      return ((cx - r.left) / r.width) * 100;
+    }
+
+    track.addEventListener('mousedown', function(e){ active=true; set(name, calc(e.clientX)); e.preventDefault(); });
+    document.addEventListener('mousemove', function(e){ if(active) set(name, calc(e.clientX)); });
+    document.addEventListener('mouseup', function(){ active=false; });
+    track.addEventListener('touchstart', function(e){ set(name, calc(e.touches[0].clientX)); },{passive:true});
+    track.addEventListener('touchmove', function(e){ set(name, calc(e.touches[0].clientX)); e.preventDefault(); },{passive:false});
+  });
+
+  // Sync bars when modal opens
+  const modal = document.getElementById('psychoModal');
+  new MutationObserver(function(){
+    if(!modal.classList.contains('hidden')){
+      STATS.forEach(function(n){
+        const inp = document.getElementById('inp-'+n);
+        set(n, parseInt(inp ? inp.value : 50)||50);
+      });
+    }
+  }).observe(modal,{attributes:true,attributeFilter:['class']});
+
+  // Intercept main.js setValue calls
+  try{
+    const d = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+    if(d && d.set){
+      const orig = d.set;
+      Object.defineProperty(HTMLInputElement.prototype,'value',{
+        set:function(v){
+          orig.call(this,v);
+          if(this.id && this.id.startsWith('inp-')){
+            const n = this.id.slice(4);
+            const val = Math.min(100,Math.max(0,parseInt(v)||0));
+            const b = document.getElementById('pbar-'+n);
+            const u = document.getElementById('pval-'+n);
+            if(b) b.style.width=val+'%';
+            if(u) u.textContent=val;
+          }
+        }, get:d.get
+      });
+    }
+  }catch(e){}
+
+  // Second cancel
+  const c2 = document.getElementById('cancelPsychoBtn2');
+  const c1 = document.getElementById('cancelPsychoBtn');
+  if(c2 && c1) c2.addEventListener('click', function(){ c1.click(); });
+})();
+</script>
+
+<!-- Toast -->
+<div id="admin-toast">🔒 Solo administradores pueden realizar esta acción</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  ADMIN GATE — verifica rol y restringe todas las acciones
+// ═══════════════════════════════════════════════════════
+(function(){
+  'use strict';
+
+  /* ── Toast ─────────────────────────────────────────── */
+  let _toastTimer = null;
+  function toast(){
+    const el = document.getElementById('admin-toast');
+    if(!el) return;
+    el.classList.add('show');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2600);
+  }
+
+  /* ── Intercept a button: replace its click handler ── */
+  function block(el){
+    if(!el || el._blocked) return;
+    el._blocked = true;
+    el.addEventListener('click', function(e){
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      toast();
+    }, true); // capture phase → fires before main.js handlers
+  }
+
+  /* ── Hide an element ────────────────────────────────── */
+  function hide(el){ if(el) el.style.display = 'none'; }
+
+  /* ── Apply restrictions (called once isAdmin known) ── */
+  function applyReadonly(){
+    // Topbar badge
+    const badge = document.getElementById('readonly-badge');
+    if(badge) badge.classList.add('visible');
+
+    // Rail: crear grupo
+    hide(document.getElementById('groupNameInput'));
+    hide(document.getElementById('createGroupBtn'));
+
+    // Group header: eliminar grupo
+    block(document.getElementById('deleteGroupBtn'));
+
+    // Add-profile strip
+    hide(document.querySelector('.add-strip'));
+
+    // Pool chips area (también ocultamos)
+    const pool = document.getElementById('cycleProfilesPool');
+    if(pool) pool.style.display = 'none';
+
+    // Watch participantsList → block action buttons in every card injected by main.js
+    const pList = document.getElementById('participantsList');
+    if(pList){
+      function lockCards(){
+        pList.querySelectorAll('.participant-actions .btn, .participant-actions button').forEach(block);
+      }
+      lockCards();
+      new MutationObserver(lockCards).observe(pList, {childList:true, subtree:true});
+    }
+
+    // Watch pool chips → block "Quitar" buttons
+    const poolEl = document.getElementById('cycleProfilesPool');
+    if(poolEl){
+      function lockPool(){
+        poolEl.querySelectorAll('.btn, button').forEach(block);
+      }
+      lockPool();
+      new MutationObserver(lockPool).observe(poolEl, {childList:true, subtree:true});
+    }
+
+    // Psycho modal: block form submission
+    const psychoForm = document.getElementById('psychoForm');
+    if(psychoForm){
+      psychoForm.addEventListener('submit', function(e){
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        toast();
+        // Close modal
+        const modal = document.getElementById('psychoModal');
+        if(modal) modal.classList.add('hidden');
+      }, true);
+    }
+
+    // Also block the "Guardar" button inside the modal footer
+    document.querySelectorAll('[form="psychoForm"]').forEach(block);
+  }
+
+  /* ── Init: check role via /status ───────────────────── */
+  async function init(){
+    let isAdmin = false;
+    try{
+      const email = localStorage.getItem('userEmail');
+      if(email){
+        const r = await fetch('/status?email=' + encodeURIComponent(email));
+        if(r.ok){
+          const d = await r.json();
+          isAdmin = !!(d.approved && d.role === 'admin');
+        }
+      }
+    } catch(e){}
+
+    if(!isAdmin) applyReadonly();
+  }
+
+  init();
+})();
+</script>
+
+<script src="main.js"></script>
 </body>
 </html>

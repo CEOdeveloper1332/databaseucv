@@ -1,79 +1,1332 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<title>Neural networks</title>
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1"/>
+	<title>Redes Neuronales - A1 Analytics</title>
 	<link rel="stylesheet" href="styles.css">
+	<style>
+		*{margin:0;padding:0;box-sizing:border-box}
+		html,body{height:100%;overflow:hidden;background:#0d1117;font-family:Arial,sans-serif;color:#c9d1d9}
+
+		/* ── HEADER ── */
+		header{
+			position:relative;z-index:200;
+			background:linear-gradient(180deg,#0f2847 0%,#1a3a5c 100%);
+			border-bottom:2px solid #d4af37;
+			padding:0 16px;height:52px;
+			display:flex;align-items:center;justify-content:space-between;
+			flex-shrink:0;
+		}
+		.hd-left{display:flex;align-items:center;gap:16px}
+		.hd-left a{color:rgba(255,255,255,.85);text-decoration:none;font-size:13px;transition:color .15s}
+		.hd-left a:hover{color:#d4af37}
+		.hd-sep{color:rgba(255,255,255,.3)}
+		.hd-title{color:#d4af37;font-size:14px;font-weight:bold}
+		.hd-right{display:flex;gap:8px;align-items:center}
+
+		/* toolbar buttons */
+		.tb-btn{
+			background:#1a3a5c;border:1px solid #2a5a7c;color:#c9d1d9;
+			padding:5px 12px;border-radius:5px;font-size:12px;cursor:pointer;
+			transition:all .15s;font-family:Arial,sans-serif;
+		}
+		.tb-btn:hover{background:#2a5a7c;border-color:#d4af37;color:#fff}
+		.tb-btn.gold{background:linear-gradient(135deg,#d4af37,#e4c961);color:#0f2847;border-color:#d4af37;font-weight:bold}
+		.tb-btn.gold:hover{background:linear-gradient(135deg,#e4c961,#f0d960)}
+		.tb-select{
+			background:#1a3a5c;border:1px solid #2a5a7c;color:#c9d1d9;
+			padding:5px 8px;border-radius:5px;font-size:12px;cursor:pointer;
+			font-family:Arial,sans-serif;outline:none;
+		}
+		.tb-select:focus{border-color:#d4af37}
+		.tb-input{
+			background:#1a3a5c;border:1px solid #2a5a7c;color:#c9d1d9;
+			padding:5px 10px;border-radius:5px;font-size:12px;
+			font-family:Arial,sans-serif;outline:none;width:160px;
+		}
+		.tb-input:focus{border-color:#d4af37}
+		.tb-input::placeholder{color:#484f58}
+
+		/* ── LAYOUT ── */
+		.app-body{display:flex;height:calc(100vh - 52px);position:relative}
+
+		/* ── LEFT PANEL: Pool ── */
+		#pool-panel{
+			width:200px;min-width:200px;
+			background:#161b22;border-right:1px solid #21262d;
+			display:flex;flex-direction:column;flex-shrink:0;
+			transition:transform .25s;
+		}
+		#pool-panel.hidden{transform:translateX(-100%);position:absolute;z-index:50;height:100%}
+		.pool-header{
+			padding:10px 12px;
+			border-bottom:1px solid #21262d;
+			background:#0d1117;
+			font-size:11px;color:#8b949e;text-transform:uppercase;letter-spacing:1px;
+			display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+		}
+		.pool-count{
+			background:#21262d;border-radius:10px;
+			padding:2px 7px;font-size:10px;color:#8b949e;
+		}
+		#pool-list{
+			flex:1;overflow-y:auto;padding:8px;
+			display:flex;flex-direction:column;gap:4px;
+		}
+		#pool-list::-webkit-scrollbar{width:4px}
+		#pool-list::-webkit-scrollbar-thumb{background:#30363d;border-radius:2px}
+		.pool-item{
+			display:flex;align-items:center;gap:8px;
+			padding:6px 8px;border-radius:6px;
+			background:#21262d;border:1px solid transparent;
+			cursor:grab;transition:all .15s;font-size:12px;
+			user-select:none;
+		}
+		.pool-item:hover{border-color:#388bfd;background:#1c2128}
+		.pool-item.in-network{opacity:.35;cursor:default;pointer-events:none}
+		.pool-item.dragging{opacity:.5;border-color:#388bfd}
+		.pool-avatar{
+			width:32px;height:32px;border-radius:50%;
+			object-fit:cover;background:#30363d;flex-shrink:0;
+			border:1.5px solid #30363d;
+		}
+		.pool-name{color:#c9d1d9;font-size:11px;line-height:1.3;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+		.pool-add-btn{
+			background:#1f6feb;border:none;color:#fff;
+			width:18px;height:18px;border-radius:4px;
+			font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+			flex-shrink:0;transition:background .15s;
+		}
+		.pool-add-btn:hover{background:#388bfd}
+
+		/* ── CANVAS ── */
+		#canvas-wrap{
+			flex:1;position:relative;overflow:hidden;background:#0d1117;
+		}
+		#maltego-svg{
+			width:100%;height:100%;
+			background:radial-gradient(ellipse at 50% 50%,#161b22 0%,#0d1117 70%);
+		}
+
+		/* Grid pattern */
+		.grid-line{stroke:#161b22;stroke-width:1}
+
+		/* Edges */
+		.edge-path{fill:none;stroke-width:1.5;transition:stroke .2s,stroke-width .2s}
+		.edge-path:hover{stroke-width:3;cursor:pointer}
+		.edge-label-bg{fill:#161b22;rx:4}
+		.edge-label-text{font-size:10px;fill:#8b949e;font-family:Arial,sans-serif;pointer-events:none}
+		.edge-selected .edge-path{stroke-width:3!important}
+
+		/* Relation colors */
+		.rel-amistad .edge-path{stroke:#3fb950}
+		.rel-odio .edge-path{stroke:#f85149}
+		.rel-neutral .edge-path{stroke:#484f58}
+		.rel-estres .edge-path{stroke:#ffa657}
+
+		/* Nodes */
+		.node-g{cursor:pointer}
+		.node-g:hover .node-outer-ring{r:36!important;opacity:1!important}
+		.node-outer-ring{transition:r .2s,opacity .2s;opacity:.5}
+		.node-inner{transition:filter .2s}
+		.node-g:hover .node-inner{filter:brightness(1.15)}
+		.node-photo-clip clipPath circle{r:26}
+		.node-name{
+			font-size:11px;fill:#c9d1d9;
+			text-anchor:middle;dominant-baseline:hanging;
+			font-family:Arial,sans-serif;pointer-events:none;
+		}
+		.node-sub{
+			font-size:9px;fill:#8b949e;
+			text-anchor:middle;dominant-baseline:hanging;
+			font-family:Arial,sans-serif;pointer-events:none;
+		}
+		.node-selected .node-outer-ring{opacity:1!important;r:38!important}
+		.node-selected .node-inner{filter:brightness(1.3)}
+
+		/* ── SIDE PANEL ── */
+		#side-panel{
+			width:260px;min-width:260px;
+			background:#161b22;border-left:1px solid #21262d;
+			display:flex;flex-direction:column;
+			transform:translateX(100%);
+			transition:transform .25s cubic-bezier(.4,0,.2,1);
+			position:absolute;right:0;top:0;bottom:0;z-index:100;
+		}
+		#side-panel.open{transform:translateX(0)}
+		.sp-header{
+			background:#0d1117;border-bottom:1px solid #21262d;
+			padding:14px 14px 12px;display:flex;align-items:center;gap:10px;
+		}
+		.sp-avatar{
+			width:48px;height:48px;border-radius:50%;
+			object-fit:cover;background:#30363d;
+			border:2px solid #388bfd;flex-shrink:0;
+		}
+		.sp-name{color:#c9d1d9;font-size:14px;font-weight:bold;line-height:1.2}
+		.sp-sub{color:#8b949e;font-size:11px;margin-top:3px}
+		.sp-close{
+			margin-left:auto;background:transparent;border:none;
+			color:#8b949e;font-size:20px;cursor:pointer;padding:2px 5px;
+			border-radius:4px;transition:color .15s;
+		}
+		.sp-close:hover{color:#c9d1d9;background:#21262d}
+		.sp-body{flex:1;overflow-y:auto;padding:12px}
+		.sp-body::-webkit-scrollbar{width:4px}
+		.sp-body::-webkit-scrollbar-thumb{background:#21262d;border-radius:2px}
+		.sp-section{margin-bottom:14px}
+		.sp-section-title{
+			font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:1px;
+			border-bottom:1px solid #21262d;padding-bottom:5px;margin-bottom:8px;
+		}
+		.sp-row{
+			display:flex;justify-content:space-between;align-items:center;
+			padding:4px 0;border-bottom:1px solid #161b22;font-size:12px;
+		}
+		.sp-row:last-child{border-bottom:none}
+		.sp-label{color:#8b949e}
+		.sp-value{color:#c9d1d9;text-align:right;max-width:140px;word-break:break-word}
+		.sp-stat-row{margin:6px 0}
+		.sp-stat-label{font-size:11px;color:#8b949e;margin-bottom:3px;display:flex;justify-content:space-between}
+		.sp-bar-track{height:5px;background:#21262d;border-radius:3px;overflow:hidden}
+		.sp-bar-fill{height:100%;border-radius:3px;transition:width .4s}
+
+		/* Connections list */
+		.sp-conn{
+			display:flex;align-items:center;gap:8px;
+			padding:6px 8px;border-radius:6px;
+			background:#21262d;border:1px solid transparent;
+			cursor:pointer;font-size:12px;margin-bottom:4px;
+			transition:border-color .15s;
+		}
+		.sp-conn:hover{border-color:#30363d}
+		.sp-conn-avatar{width:26px;height:26px;border-radius:50%;object-fit:cover;background:#30363d;flex-shrink:0}
+		.sp-conn-name{color:#c9d1d9;flex:1;font-size:11px}
+		.rel-badge{
+			font-size:9px;padding:2px 6px;border-radius:10px;font-weight:bold;
+			text-transform:uppercase;flex-shrink:0;
+		}
+		.rb-amistad{background:#122c1a;color:#3fb950}
+		.rb-odio{background:#3d1418;color:#f85149}
+		.rb-neutral{background:#21262d;color:#8b949e}
+		.rb-estres{background:#2d1f0e;color:#ffa657}
+
+		.sp-footer{
+			padding:12px;border-top:1px solid #21262d;
+			display:flex;flex-direction:column;gap:6px;
+		}
+		.sp-btn{
+			background:#21262d;border:1px solid #30363d;color:#c9d1d9;
+			padding:7px 12px;border-radius:6px;font-size:12px;cursor:pointer;
+			transition:all .15s;text-align:center;font-family:Arial,sans-serif;
+		}
+		.sp-btn:hover{background:#30363d;border-color:#8b949e}
+		.sp-btn.danger{color:#f85149;border-color:#3d1418}
+		.sp-btn.danger:hover{background:#3d1418}
+		.sp-btn.primary{background:#1f6feb;border-color:#388bfd;color:#fff}
+		.sp-btn.primary:hover{background:#388bfd}
+
+		/* ── EDGE MODAL ── */
+		#edge-modal{
+			position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;
+			display:flex;align-items:center;justify-content:center;display:none;
+		}
+		#edge-modal.open{display:flex}
+		.em-box{
+			background:#161b22;border:1px solid #30363d;border-radius:10px;
+			padding:20px;width:320px;box-shadow:0 20px 60px rgba(0,0,0,.5);
+		}
+		.em-title{color:#c9d1d9;font-size:15px;font-weight:bold;margin-bottom:16px;
+			border-bottom:2px solid #d4af37;padding-bottom:10px}
+		.em-group{margin-bottom:12px}
+		.em-label{display:block;font-size:11px;color:#8b949e;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+		.em-select,.em-input{
+			width:100%;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;
+			padding:7px 10px;border-radius:6px;font-size:12px;
+			font-family:Arial,sans-serif;outline:none;
+		}
+		.em-select:focus,.em-input:focus{border-color:#d4af37}
+		.em-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+
+		/* ── ZOOM CONTROLS ── */
+		#zoom-ctrl{
+			position:absolute;bottom:16px;left:16px;
+			display:flex;flex-direction:column;gap:3px;z-index:50;
+		}
+		.z-btn{
+			background:#21262d;border:1px solid #30363d;color:#c9d1d9;
+			width:30px;height:30px;border-radius:6px;font-size:16px;cursor:pointer;
+			display:flex;align-items:center;justify-content:center;transition:all .15s;
+		}
+		.z-btn:hover{background:#30363d;color:#fff}
+
+		/* ── LEGEND ── */
+		#legend{
+			position:absolute;bottom:16px;right:16px;z-index:50;
+			background:rgba(22,27,34,.92);border:1px solid #21262d;border-radius:8px;
+			padding:10px 14px;font-size:11px;min-width:130px;
+		}
+		.leg-title{color:#8b949e;font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px}
+		.leg-row{display:flex;align-items:center;gap:7px;margin:3px 0;color:#c9d1d9;font-size:11px}
+		.leg-line{width:20px;height:2px;border-radius:1px;flex-shrink:0}
+
+		/* ── TOOLTIP ── */
+		#tooltip{
+			position:absolute;background:#21262d;border:1px solid #30363d;
+			border-radius:6px;padding:5px 9px;font-size:11px;color:#c9d1d9;
+			pointer-events:none;opacity:0;transition:opacity .1s;z-index:150;white-space:nowrap;
+		}
+
+		/* ── INSTRUCTIONS ── */
+		#instructions{
+			position:absolute;top:50%;left:50%;
+			transform:translate(-50%,-50%);
+			text-align:center;pointer-events:none;
+			color:#484f58;font-size:13px;line-height:1.8;
+		}
+		#instructions.hidden{display:none}
+		#instructions .big{font-size:32px;display:block;margin-bottom:8px;opacity:.3}
+
+		/* Node right-click menu */
+		#ctx-menu{
+			position:fixed;background:#161b22;border:1px solid #30363d;
+			border-radius:8px;padding:5px;z-index:400;display:none;min-width:170px;
+		}
+		.ctx-item{
+			padding:7px 12px;border-radius:5px;font-size:12px;color:#c9d1d9;
+			cursor:pointer;display:flex;align-items:center;gap:8px;
+		}
+		.ctx-item:hover{background:#21262d}
+		.ctx-sep{height:1px;background:#21262d;margin:4px 0}
+		.ctx-danger{color:#f85149}
+	</style>
 </head>
 <body>
-	<header>
-		<nav class="navbar">
-			<div class="nav-texts">
-				<a href="index.html" class="nav-text-btn">Inicio</a>
-				<span style="color:rgba(255,255,255,0.6);margin-left:8px">Redes Neuronales</span>
-			</div>
-		</nav>
-	</header>
 
-	<main style="max-width:1400px;margin:20px auto;padding:0 16px;">
-		<!-- Panel de control de redes -->
-		<section class="form-panel" style="grid-column:1/-1;margin-bottom:20px;">
-			<h2>Panel de Redes Neuronales</h2>
-			<div class="neural-toolbar">
-				<input id="networkName" placeholder="Nombre de la red" style="padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-family:Arial">
-				<button id="createNetworkBtn" class="btn btn-primary">Crear nueva red</button>
-				<select id="networksSelect" style="padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-family:Arial">
-					<option value="">-- Seleccionar red existente --</option>
-				</select>
-			</div>
-		</section>
+<!-- HEADER -->
+<header>
+	<div class="hd-left">
+		<a href="index.html">← Inicio</a>
+		<span class="hd-sep">/</span>
+		<span class="hd-title">Redes Neuronales</span>
+	</div>
+	<div class="hd-right">
+		<input class="tb-input" id="networkName" placeholder="Nombre de la red...">
+		<button class="tb-btn gold" id="createNetworkBtn">+ Nueva red</button>
+		<select class="tb-select" id="networksSelect">
+			<option value="">-- Seleccionar red --</option>
+		</select>
+		<button class="tb-btn" id="btnTogglePool" title="Mostrar/ocultar perfiles">☰ Perfiles</button>
+		<button class="tb-btn" id="btnFit" title="Ajustar vista">⤢ Ajustar</button>
+		<button class="tb-btn" id="btnClear" title="Limpiar layout">⟳ Layout</button>
+	</div>
+</header>
 
-		<!-- Contenedor de dos paneles: Perfiles disponibles y Red actual -->
-		<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-			<!-- Panel 1: Perfiles disponibles -->
-			<section class="form-panel">
-				<h3 style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--primary)">Perfiles disponibles</h3>
-				<div id="profilesPool" style="border:1px dashed var(--border);padding:12px;border-radius:6px;min-height:250px;max-height:500px;overflow-y:auto;background:rgba(245,245,245,0.5);display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start">
-				</div>
-			</section>
+<div class="app-body">
 
-			<!-- Panel 2: Red actual (vista de nodos) -->
-			<section class="form-panel">
-				<h3 style="font-size:14px;font-weight:bold;margin-bottom:12px;color:var(--primary)">Red actual</h3>
-				<div class="neural-canvas" id="neuralCanvas" style="position:relative;border:1px solid var(--border);border-radius:6px;background:#fafafa;min-height:250px;overflow:auto;display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start;padding:12px">
-					<div id="nodesContainer" style="position:relative;display:flex;flex-wrap:wrap;gap:12px;width:100%;align-content:flex-start">
-					</div>
-				</div>
-			</section>
+	<!-- LEFT: Pool panel -->
+	<div id="pool-panel">
+		<div class="pool-header">
+			<span>Perfiles</span>
+			<span class="pool-count" id="pool-count">0</span>
 		</div>
-	</main>
+		<div id="pool-list"></div>
+	</div>
 
-	<!-- modal editar stats -->
-	<div id="neuralModal" class="neural-modal" aria-hidden="true">
-		<div class="modal-box">
-			<h3 id="modalTitle" style="margin-bottom:12px;color:var(--primary);font-weight:bold">Editar estadísticas</h3>
-			<form id="nodeStatsForm">
-				<div style="margin-bottom:12px">
-					<label style="display:block;font-size:12px;font-weight:bold;margin-bottom:4px">Amistad (%)</label>
-					<input type="number" name="amistad" min="0" max="100" value="50" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-family:Arial">
-				</div>
-				<div style="margin-bottom:12px">
-					<label style="display:block;font-size:12px;font-weight:bold;margin-bottom:4px">Odio (%)</label>
-					<input type="number" name="odio" min="0" max="100" value="0" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-family:Arial">
-				</div>
-				<div style="margin-bottom:16px">
-					<label style="display:block;font-size:12px;font-weight:bold;margin-bottom:4px">Estrés (%)</label>
-					<input type="number" name="estres" min="0" max="100" value="10" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-family:Arial">
-				</div>
-				<div style="display:flex;gap:8px;justify-content:flex-end">
-					<button type="button" id="cancelNodeEdit" class="btn">Cancelar</button>
-					<button type="submit" class="btn btn-primary">Guardar</button>
-				</div>
-			</form>
+	<!-- CANVAS -->
+	<div id="canvas-wrap">
+		<svg id="maltego-svg" xmlns="http://www.w3.org/2000/svg">
+			<defs id="svg-defs">
+				<!-- arrow markers dinámicos aquí -->
+			</defs>
+			<g id="grid-group"></g>
+			<g id="edges-group"></g>
+			<g id="nodes-group"></g>
+		</svg>
+
+		<!-- Instructions overlay -->
+		<div id="instructions">
+			<span class="big">◎</span>
+			Selecciona o crea una red y agrega perfiles<br>
+			<small>Arrastra nodos · Rueda para zoom · Clic derecho en nodo para conectar</small>
+		</div>
+
+		<!-- Zoom controls -->
+		<div id="zoom-ctrl">
+			<button class="z-btn" id="zIn">+</button>
+			<button class="z-btn" id="zOut">−</button>
+			<button class="z-btn" id="zFit" title="Fit all">⤢</button>
+		</div>
+
+		<!-- Legend -->
+		<div id="legend">
+			<div class="leg-title">Relaciones</div>
+			<div class="leg-row"><div class="leg-line" style="background:#3fb950"></div>Amistad</div>
+			<div class="leg-row"><div class="leg-line" style="background:#f85149"></div>Odio</div>
+			<div class="leg-row"><div class="leg-line" style="background:#ffa657"></div>Estrés</div>
+			<div class="leg-row"><div class="leg-line" style="background:#484f58"></div>Neutral</div>
 		</div>
 	</div>
 
-	<script src="main.js"></script>
+	<!-- SIDE PANEL -->
+	<div id="side-panel">
+		<div class="sp-header">
+			<img class="sp-avatar" id="sp-avatar" src="" alt="">
+			<div>
+				<div class="sp-name" id="sp-name">—</div>
+				<div class="sp-sub" id="sp-sub">—</div>
+			</div>
+			<button class="sp-close" id="sp-close">×</button>
+		</div>
+		<div class="sp-body" id="sp-body"></div>
+		<div class="sp-footer" id="sp-footer"></div>
+	</div>
+
+	<!-- Tooltip -->
+	<div id="tooltip"></div>
+</div>
+
+<!-- EDGE MODAL -->
+<div id="edge-modal">
+	<div class="em-box">
+		<div class="em-title">Establecer relación</div>
+		<div class="em-group">
+			<label class="em-label">Tipo de relación</label>
+			<select class="em-select" id="em-rel">
+				<option value="amistad">Amistad</option>
+				<option value="neutral" selected>Neutral</option>
+				<option value="odio">Odio</option>
+				<option value="estres">Estrés</option>
+			</select>
+		</div>
+		<div class="em-group">
+			<label class="em-label">Descripción (opcional)</label>
+			<input class="em-input" id="em-desc" placeholder="Ej: compañeros de aula...">
+		</div>
+		<div class="em-actions">
+			<button class="tb-btn" id="em-cancel">Cancelar</button>
+			<button class="tb-btn gold" id="em-save">Guardar relación</button>
+		</div>
+	</div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div id="ctx-menu">
+	<div class="ctx-item" id="ctx-connect">🔗 Conectar con...</div>
+	<div class="ctx-item" id="ctx-info">ℹ️ Ver info</div>
+	<div class="ctx-item" id="ctx-edit" style="display:none">✏️ Editar relaciones</div>
+	<div class="ctx-sep"></div>
+	<div class="ctx-item ctx-danger" id="ctx-remove">✕ Quitar de la red</div>
+</div>
+
+<!-- MODAL STATS (compatibilidad con main.js) -->
+<div id="neuralModal" class="neural-modal" aria-hidden="true">
+	<div class="modal-box" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#161b22;border:1px solid #30363d;border-radius:10px;padding:20px;width:300px;z-index:500">
+		<h3 id="modalTitle" style="color:#d4af37;font-size:14px;margin-bottom:14px;border-bottom:1px solid #30363d;padding-bottom:10px">Editar estadísticas</h3>
+		<form id="nodeStatsForm">
+			<div style="margin-bottom:10px">
+				<label style="display:block;font-size:11px;color:#8b949e;margin-bottom:4px">Amistad (%)</label>
+				<input type="number" name="amistad" min="0" max="100" value="50" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:7px 10px;border-radius:6px;font-size:12px;font-family:Arial;outline:none">
+			</div>
+			<div style="margin-bottom:10px">
+				<label style="display:block;font-size:11px;color:#8b949e;margin-bottom:4px">Odio (%)</label>
+				<input type="number" name="odio" min="0" max="100" value="0" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:7px 10px;border-radius:6px;font-size:12px;font-family:Arial;outline:none">
+			</div>
+			<div style="margin-bottom:14px">
+				<label style="display:block;font-size:11px;color:#8b949e;margin-bottom:4px">Estrés (%)</label>
+				<input type="number" name="estres" min="0" max="100" value="10" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:7px 10px;border-radius:6px;font-size:12px;font-family:Arial;outline:none">
+			</div>
+			<div style="display:flex;gap:8px;justify-content:flex-end">
+				<button type="button" id="cancelNodeEdit" class="tb-btn">Cancelar</button>
+				<button type="submit" class="tb-btn gold">Guardar</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<!-- También el profilesPool oculto para compatibilidad con main.js -->
+<div id="profilesPool" style="display:none"></div>
+<div id="nodesContainer" style="display:none"></div>
+
+<script>
+// ============================================================
+//  MALTEGO GRAPH ENGINE
+// ============================================================
+(function(){
+'use strict';
+
+// ── STATE ──────────────────────────────────────────────────
+const state = {
+	profiles: [],       // todos los perfiles del sistema
+	networks: [],       // todas las redes
+	currentNet: null,   // red activa { id, name, nodes:[], links:[] }
+	nodes: new Map(),   // nodeId(profileId) → { x, y, profile, stats }
+	edges: [],          // { id, from, to, rel, desc }
+	transform: { x:0, y:0, k:1 },
+	drag: null,         // { nodeId, ox, oy, startX, startY }
+	pan: null,          // { startX, startY, tx, ty }
+	selected: null,     // profileId seleccionado
+	connecting: null,   // profileId origen de conexión pendiente
+	ctxTarget: null,    // profileId del ctx menu
+	isAdmin: false,
+};
+
+// ── DOM REFS ───────────────────────────────────────────────
+const svg        = document.getElementById('maltego-svg');
+const svgDefs    = document.getElementById('svg-defs');
+const edgesG     = document.getElementById('edges-group');
+const nodesG     = document.getElementById('nodes-group');
+const gridG      = document.getElementById('grid-group');
+const instructions = document.getElementById('instructions');
+const tooltip    = document.getElementById('tooltip');
+const ctxMenu    = document.getElementById('ctx-menu');
+const sidePanel  = document.getElementById('side-panel');
+const poolList   = document.getElementById('pool-list');
+const poolCount  = document.getElementById('pool-count');
+const edgeModal  = document.getElementById('edge-modal');
+
+// ── HELPERS ────────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]); }
+
+function getPhoto(p){
+	const ph='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 52 52%22%3E%3Crect fill=%22%2330363d%22 width=%2252%22 height=%2252%22 rx=%2226%22/%3E%3Ctext x=%2226%22 y=%2232%22 text-anchor=%22middle%22 fill=%22%238b949e%22 font-size=%2222%22 font-family=%22Arial%22%3E%3F%3C/text%3E%3C/svg%3E';
+	if(!p) return ph;
+	for(const k of ['photo','avatar','picture','image','photoUrl','url']){
+		if(p[k] && typeof p[k]==='string' && p[k].trim()) return p[k];
+		if(p[k] && p[k].url) return p[k].url;
+	}
+	return ph;
+}
+
+function relColor(rel){
+	return {amistad:'#3fb950',odio:'#f85149',estres:'#ffa657',neutral:'#484f58'}[rel]||'#484f58';
+}
+
+function svgPoint(clientX, clientY){
+	const rect = svg.getBoundingClientRect();
+	return {
+		x: (clientX - rect.left - state.transform.x) / state.transform.k,
+		y: (clientY - rect.top  - state.transform.y) / state.transform.k,
+	};
+}
+
+function applyTransform(){
+	const t = state.transform;
+	edgesG.setAttribute('transform', `translate(${t.x},${t.y}) scale(${t.k})`);
+	nodesG.setAttribute('transform', `translate(${t.x},${t.y}) scale(${t.k})`);
+	gridG.setAttribute('transform',  `translate(${t.x % 40},${t.y % 40})`);
+}
+
+// ── GRID ──────────────────────────────────────────────────
+function drawGrid(){
+	gridG.innerHTML='';
+	const W=window.innerWidth, H=window.innerHeight;
+	const step=40;
+	for(let x=-step;x<W+step;x+=step){
+		const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+		l.setAttribute('x1',x);l.setAttribute('y1',-step);l.setAttribute('x2',x);l.setAttribute('y2',H+step);
+		l.setAttribute('stroke','#161b22');l.setAttribute('stroke-width','1');
+		gridG.appendChild(l);
+	}
+	for(let y=-step;y<H+step;y+=step){
+		const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+		l.setAttribute('x1',-step);l.setAttribute('y1',y);l.setAttribute('x2',W+step);l.setAttribute('y2',y);
+		l.setAttribute('stroke','#161b22');l.setAttribute('stroke-width','1');
+		gridG.appendChild(l);
+	}
+}
+
+// ── ARROW MARKERS ─────────────────────────────────────────
+function ensureMarker(rel){
+	const id=`arr-${rel}`;
+	if(svgDefs.querySelector(`#${id}`)) return;
+	const color=relColor(rel);
+	const m=document.createElementNS('http://www.w3.org/2000/svg','marker');
+	m.setAttribute('id',id);
+	m.setAttribute('viewBox','0 0 10 10');
+	m.setAttribute('refX','34');m.setAttribute('refY','5');
+	m.setAttribute('markerWidth','6');m.setAttribute('markerHeight','6');
+	m.setAttribute('orient','auto-start-reverse');
+	const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+	path.setAttribute('d','M1 1L9 5L1 9');
+	path.setAttribute('fill','none');
+	path.setAttribute('stroke',color);
+	path.setAttribute('stroke-width','1.5');
+	path.setAttribute('stroke-linecap','round');
+	m.appendChild(path);
+	svgDefs.appendChild(m);
+}
+
+// ── LAYOUT: Force-directed posicionamiento inicial ─────────
+function layoutNodes(){
+	const ids=[...state.nodes.keys()];
+	const n=ids.length;
+	if(n===0) return;
+	const W=svg.clientWidth||800;
+	const H=svg.clientHeight||600;
+	const cx=W/2, cy=H/2;
+	if(n===1){
+		state.nodes.get(ids[0]).x=cx; state.nodes.get(ids[0]).y=cy; return;
+	}
+	const radius=Math.min(W,H)*0.3;
+	ids.forEach((id,i)=>{
+		const nd=state.nodes.get(id);
+		if(!nd.x || !nd.y || (nd.x===cx && nd.y===cy)){
+			const angle=(2*Math.PI*i/n)-Math.PI/2;
+			nd.x=cx+radius*Math.cos(angle);
+			nd.y=cy+radius*Math.sin(angle);
+		}
+	});
+}
+
+// ── RENDER EDGE ────────────────────────────────────────────
+function renderEdge(edge){
+	const fromNode=state.nodes.get(edge.from);
+	const toNode=state.nodes.get(edge.to);
+	if(!fromNode||!toNode) return;
+
+	ensureMarker(edge.rel||'neutral');
+
+	const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+	g.dataset.edgeId=edge.id;
+	g.classList.add('edge-g');
+
+	// Curva suave tipo Maltego
+	const x1=fromNode.x, y1=fromNode.y, x2=toNode.x, y2=toNode.y;
+	const mx=(x1+x2)/2, my=(y1+y2)/2;
+	const dx=x2-x1, dy=y2-y1;
+	const perp={x:-dy*0.15, y:dx*0.15};
+	const cx=mx+perp.x, cy=my+perp.y;
+
+	const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+	path.setAttribute('d',`M${x1},${y1} Q${cx},${cy} ${x2},${y2}`);
+	path.setAttribute('fill','none');
+	path.setAttribute('stroke',relColor(edge.rel||'neutral'));
+	path.setAttribute('stroke-width','1.5');
+	path.setAttribute('marker-end',`url(#arr-${edge.rel||'neutral'})`);
+	path.setAttribute('opacity','0.7');
+	path.classList.add('edge-path');
+
+	// Etiqueta en el punto medio de la curva
+	if(edge.rel && edge.rel!=='neutral'){
+		const lx=(x1+2*cx+x2)/4, ly=(y1+2*cy+y2)/4;
+		const bg=document.createElementNS('http://www.w3.org/2000/svg','rect');
+		bg.setAttribute('x',lx-22);bg.setAttribute('y',ly-8);
+		bg.setAttribute('width',44);bg.setAttribute('height',14);
+		bg.setAttribute('rx',4);bg.setAttribute('fill','#161b22');bg.setAttribute('opacity','.85');
+		const lt=document.createElementNS('http://www.w3.org/2000/svg','text');
+		lt.setAttribute('x',lx);lt.setAttribute('y',ly+2);
+		lt.setAttribute('text-anchor','middle');lt.setAttribute('dominant-baseline','middle');
+		lt.setAttribute('font-size','9');lt.setAttribute('fill',relColor(edge.rel));
+		lt.setAttribute('font-family','Arial');lt.setAttribute('pointer-events','none');
+		lt.textContent=edge.rel;
+		g.appendChild(bg);g.appendChild(lt);
+	}
+
+	// Hit area invisible más gruesa
+	const hit=document.createElementNS('http://www.w3.org/2000/svg','path');
+	hit.setAttribute('d',`M${x1},${y1} Q${cx},${cy} ${x2},${y2}`);
+	hit.setAttribute('fill','none');hit.setAttribute('stroke','transparent');hit.setAttribute('stroke-width','12');
+	hit.style.cursor='pointer';
+	hit.addEventListener('click',()=>{ if(state.isAdmin) openEdgeDelete(edge.id); });
+	hit.addEventListener('mouseenter',()=>showTooltip(`${getNodeName(edge.from)} → ${getNodeName(edge.to)} [${edge.rel||'neutral'}]`));
+	hit.addEventListener('mouseleave',hideTooltip);
+
+	g.appendChild(path);g.appendChild(hit);
+	edgesG.appendChild(g);
+}
+
+function getNodeName(profileId){
+	const nd=state.nodes.get(profileId);
+	if(!nd||!nd.profile) return profileId;
+	return `${nd.profile.firstName||''} ${nd.profile.lastName||''}`.trim();
+}
+
+// ── RENDER NODE ────────────────────────────────────────────
+function renderNode(profileId){
+	const nd=state.nodes.get(profileId);
+	if(!nd) return;
+	const p=nd.profile;
+	const photoUrl=getPhoto(p);
+	const name=`${p.firstName||''} ${p.lastName||''}`.trim();
+	const initials=(p.firstName||'?').charAt(0).toUpperCase();
+
+	// Clip path único por nodo
+	const clipId=`clip-${profileId.replace(/[^a-z0-9]/gi,'_')}`;
+	if(!svgDefs.querySelector(`#${clipId}`)){
+		const cp=document.createElementNS('http://www.w3.org/2000/svg','clipPath');
+		cp.setAttribute('id',clipId);
+		const circ=document.createElementNS('http://www.w3.org/2000/svg','circle');
+		circ.setAttribute('cx','0');circ.setAttribute('cy','0');circ.setAttribute('r','26');
+		cp.appendChild(circ);svgDefs.appendChild(cp);
+	}
+
+	const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+	g.setAttribute('transform',`translate(${nd.x},${nd.y})`);
+	g.dataset.profileId=profileId;
+	g.classList.add('node-g');
+
+	// Aura exterior (indica actividad)
+	const amistadVal=nd.stats?.amistad||0;
+	const odioVal=nd.stats?.odio||0;
+	const auraColor=odioVal>50?'#f85149':amistadVal>50?'#3fb950':'#388bfd';
+	const outerR=32+Math.round((amistadVal+odioVal)/20);
+
+	const aura=document.createElementNS('http://www.w3.org/2000/svg','circle');
+	aura.setAttribute('r',String(outerR));
+	aura.setAttribute('fill',auraColor);aura.setAttribute('opacity','.12');
+	aura.classList.add('node-outer-ring');
+	g.appendChild(aura);
+
+	// Ring de color
+	const ring=document.createElementNS('http://www.w3.org/2000/svg','circle');
+	ring.setAttribute('r','28');
+	ring.setAttribute('fill','none');
+	ring.setAttribute('stroke',auraColor);ring.setAttribute('stroke-width','2');
+	g.appendChild(ring);
+
+	// Fondo círculo
+	const bg=document.createElementNS('http://www.w3.org/2000/svg','circle');
+	bg.setAttribute('r','26');bg.setAttribute('fill','#21262d');
+	g.appendChild(bg);
+
+	// Foto
+	const img=document.createElementNS('http://www.w3.org/2000/svg','image');
+	img.setAttribute('href',photoUrl);
+	img.setAttribute('x','-26');img.setAttribute('y','-26');
+	img.setAttribute('width','52');img.setAttribute('height','52');
+	img.setAttribute('clip-path',`url(#${clipId})`);
+	img.setAttribute('preserveAspectRatio','xMidYMid slice');
+	img.classList.add('node-inner');
+	g.appendChild(img);
+
+	// Texto nombre
+	const nameTxt=document.createElementNS('http://www.w3.org/2000/svg','text');
+	nameTxt.setAttribute('y','38');
+	nameTxt.setAttribute('text-anchor','middle');
+	nameTxt.setAttribute('font-size','11');
+	nameTxt.setAttribute('fill','#c9d1d9');
+	nameTxt.setAttribute('font-family','Arial');
+	nameTxt.setAttribute('pointer-events','none');
+	nameTxt.textContent=name.length>14?name.substring(0,13)+'…':name;
+	g.appendChild(nameTxt);
+
+	// Sub stats
+	if(nd.stats){
+		const subTxt=document.createElementNS('http://www.w3.org/2000/svg','text');
+		subTxt.setAttribute('y','50');
+		subTxt.setAttribute('text-anchor','middle');
+		subTxt.setAttribute('font-size','9');
+		subTxt.setAttribute('fill','#8b949e');
+		subTxt.setAttribute('font-family','Arial');
+		subTxt.setAttribute('pointer-events','none');
+		subTxt.textContent=`A:${nd.stats.amistad||0} O:${nd.stats.odio||0} E:${nd.stats.estres||0}`;
+		g.appendChild(subTxt);
+	}
+
+	// Indicator dot (connecting mode)
+	if(state.connecting && state.connecting!==profileId){
+		const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+		dot.setAttribute('r','8');dot.setAttribute('cy','-20');dot.setAttribute('cx','20');
+		dot.setAttribute('fill','#d4af37');dot.setAttribute('stroke','#0d1117');dot.setAttribute('stroke-width','1.5');
+		const dt=document.createElementNS('http://www.w3.org/2000/svg','text');
+		dt.setAttribute('x','20');dt.setAttribute('y','-16');
+		dt.setAttribute('text-anchor','middle');dt.setAttribute('font-size','9');
+		dt.setAttribute('fill','#0d1117');dt.setAttribute('font-family','Arial');dt.setAttribute('pointer-events','none');
+		dt.textContent='+';
+		g.appendChild(dot);g.appendChild(dt);
+	}
+
+	// Events
+	g.addEventListener('mouseenter',(e)=>showTooltip(name,e));
+	g.addEventListener('mouseleave',hideTooltip);
+
+	g.addEventListener('click',(e)=>{
+		e.stopPropagation();
+		if(state.connecting && state.connecting!==profileId){
+			openEdgeModal(state.connecting, profileId);
+			state.connecting=null;
+			renderGraph();
+			return;
+		}
+		if(state.isAdmin) openSidePanel(profileId);
+		else openSidePanelReadonly(profileId);
+	});
+
+	g.addEventListener('contextmenu',(e)=>{
+		e.preventDefault();e.stopPropagation();
+		state.ctxTarget=profileId;
+		showCtxMenu(e.clientX, e.clientY);
+	});
+
+	// Drag
+	g.addEventListener('mousedown',(e)=>{
+		if(e.button!==0) return;
+		e.stopPropagation();
+		const pt=svgPoint(e.clientX,e.clientY);
+		state.drag={profileId, ox:pt.x-nd.x, oy:pt.y-nd.y};
+		svg.style.cursor='grabbing';
+	});
+
+	nodesG.appendChild(g);
+}
+
+// ── RENDER GRAPH ───────────────────────────────────────────
+function renderGraph(){
+	edgesG.innerHTML='';
+	nodesG.innerHTML='';
+
+	const hasNodes=state.nodes.size>0;
+	instructions.classList.toggle('hidden',hasNodes);
+
+	if(!hasNodes) return;
+
+	// Edges first
+	(state.currentNet?.links||[]).forEach(edge=>{
+		renderEdge(edge);
+	});
+
+	// Nodes on top
+	state.nodes.forEach((_,profileId)=>renderNode(profileId));
+
+	// Mark pool items
+	document.querySelectorAll('.pool-item').forEach(el=>{
+		el.classList.toggle('in-network', state.nodes.has(el.dataset.id));
+	});
+}
+
+// ── POOL ───────────────────────────────────────────────────
+function renderPool(){
+	poolList.innerHTML='';
+	const sorted=[...state.profiles].sort((a,b)=>{
+		const na=`${a.firstName||''}${a.lastName||''}`;
+		const nb=`${b.firstName||''}${b.lastName||''}`;
+		return na.localeCompare(nb);
+	});
+	sorted.forEach(p=>{
+		const div=document.createElement('div');
+		div.className='pool-item';
+		div.dataset.id=p.id;
+		if(state.nodes.has(p.id)) div.classList.add('in-network');
+
+		const img=document.createElement('img');
+		img.className='pool-avatar';
+		img.src=getPhoto(p);
+		img.onerror=()=>{ img.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect fill=%22%2330363d%22 width=%2232%22 height=%2232%22 rx=%2216%22/%3E%3C/svg%3E'; };
+
+		const name=document.createElement('span');
+		name.className='pool-name';
+		name.textContent=`${p.firstName||''} ${p.lastName||''}`.trim();
+
+		const addBtn=document.createElement('button');
+		addBtn.className='pool-add-btn';
+		addBtn.textContent='+';
+		addBtn.title='Agregar a la red';
+		addBtn.addEventListener('click',(e)=>{ e.stopPropagation(); addToNetwork(p.id); });
+
+		div.appendChild(img);div.appendChild(name);div.appendChild(addBtn);
+		poolList.appendChild(div);
+	});
+	poolCount.textContent=sorted.length;
+}
+
+// ── ADD / REMOVE NODE ──────────────────────────────────────
+function addToNetwork(profileId){
+	if(!state.currentNet) return alert('Selecciona o crea una red primero.');
+	if(state.nodes.has(profileId)) return;
+	const profile=state.profiles.find(p=>p.id===profileId);
+	if(!profile) return;
+
+	const W=svg.clientWidth||800, H=svg.clientHeight||600;
+	const cx=W/2, cy=H/2;
+	// Offset random para no apilarse
+	const angle=Math.random()*Math.PI*2;
+	const r=80+Math.random()*120;
+	state.nodes.set(profileId,{
+		x: cx+r*Math.cos(angle),
+		y: cy+r*Math.sin(angle),
+		profile, stats:{amistad:50,odio:0,estres:10}
+	});
+
+	// Sync con currentNet
+	if(!state.currentNet.nodes) state.currentNet.nodes=[];
+	if(!state.currentNet.nodes.some(n=>n.profileId===profileId)){
+		state.currentNet.nodes.push({
+			profileId,
+			x: state.nodes.get(profileId).x,
+			y: state.nodes.get(profileId).y,
+			stats:{amistad:50,odio:0,estres:10}
+		});
+	}
+	saveNetwork();
+	renderGraph();
+}
+
+function removeFromNetwork(profileId){
+	if(!confirm('¿Quitar este nodo de la red?')) return;
+	state.nodes.delete(profileId);
+	state.edges=state.edges.filter(e=>e.from!==profileId&&e.to!==profileId);
+	if(state.currentNet){
+		state.currentNet.nodes=(state.currentNet.nodes||[]).filter(n=>n.profileId!==profileId);
+		state.currentNet.links=(state.currentNet.links||[]).filter(e=>e.from!==profileId&&e.to!==profileId);
+	}
+	if(state.selected===profileId){ closeSidePanel(); state.selected=null; }
+	saveNetwork();
+	renderGraph();
+}
+
+// ── EDGE MODAL ─────────────────────────────────────────────
+let edgePending={from:null,to:null};
+function openEdgeModal(from,to){
+	edgePending={from,to};
+	const fromName=getNodeName(from), toName=getNodeName(to);
+	edgeModal.querySelector('.em-title').textContent=`Relación: ${fromName} → ${toName}`;
+	document.getElementById('em-rel').value='neutral';
+	document.getElementById('em-desc').value='';
+	edgeModal.classList.add('open');
+}
+document.getElementById('em-cancel').addEventListener('click',()=>{ edgeModal.classList.remove('open'); edgePending={from:null,to:null}; });
+document.getElementById('em-save').addEventListener('click',()=>{
+	if(!edgePending.from||!edgePending.to) return;
+	const rel=document.getElementById('em-rel').value;
+	const desc=document.getElementById('em-desc').value;
+	// Evitar duplicados
+	const exists=(state.currentNet?.links||[]).some(e=>(e.from===edgePending.from&&e.to===edgePending.to)||(e.from===edgePending.to&&e.to===edgePending.from));
+	if(exists){ alert('Ya existe una relación entre estos nodos.'); edgeModal.classList.remove('open'); return; }
+
+	const edge={id:`e_${Date.now()}`, from:edgePending.from, to:edgePending.to, rel, desc};
+	if(!state.currentNet.links) state.currentNet.links=[];
+	state.currentNet.links.push(edge);
+	state.edges.push(edge);
+	saveNetwork();
+	renderGraph();
+	edgeModal.classList.remove('open');
+	edgePending={from:null,to:null};
+});
+
+function openEdgeDelete(edgeId){
+	if(!confirm('¿Eliminar esta relación?')) return;
+	state.edges=state.edges.filter(e=>e.id!==edgeId);
+	if(state.currentNet) state.currentNet.links=(state.currentNet.links||[]).filter(e=>e.id!==edgeId);
+	saveNetwork();
+	renderGraph();
+}
+
+// ── SIDE PANEL ─────────────────────────────────────────────
+function openSidePanel(profileId){
+	state.selected=profileId;
+	const nd=state.nodes.get(profileId);
+	if(!nd) return;
+	const p=nd.profile;
+	const name=`${p.firstName||''} ${p.lastName||''}`.trim();
+
+	document.getElementById('sp-avatar').src=getPhoto(p);
+	document.getElementById('sp-name').textContent=name;
+	document.getElementById('sp-sub').textContent=p.email||p.dni||'Sin datos';
+
+	const body=document.getElementById('sp-body');
+	const stats=nd.stats||{};
+	const amistad=stats.amistad||0, odio=stats.odio||0, estres=stats.estres||0;
+	const perfil=p.stats||{};
+
+	// Connections
+	const conns=(state.currentNet?.links||[]).filter(e=>e.from===profileId||e.to===profileId);
+	const connHTML=conns.length===0?'<div style="color:#484f58;font-size:11px;padding:6px 0">Sin conexiones</div>':
+		conns.map(e=>{
+			const otherId=e.from===profileId?e.to:e.from;
+			const otherNd=state.nodes.get(otherId);
+			if(!otherNd) return '';
+			const otherP=otherNd.profile;
+			const otherName=`${otherP.firstName||''} ${otherP.lastName||''}`.trim();
+			return `<div class="sp-conn" onclick="window._focusNode('${otherId}')">
+				<img class="sp-conn-avatar" src="${esc(getPhoto(otherP))}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 26 26%22%3E%3Crect fill=%22%2330363d%22 width=%2226%22 height=%2226%22 rx=%2213%22/%3E%3C/svg%3E'">
+				<span class="sp-conn-name">${esc(otherName)}</span>
+				<span class="rel-badge rb-${e.rel||'neutral'}">${e.rel||'neutro'}</span>
+			</div>`;
+		}).join('');
+
+	body.innerHTML=`
+		<div class="sp-section">
+			<div class="sp-section-title">Información</div>
+			<div class="sp-row"><span class="sp-label">DNI</span><span class="sp-value">${esc(p.dni||'—')}</span></div>
+			<div class="sp-row"><span class="sp-label">Teléfono</span><span class="sp-value">${esc(p.phone||'—')}</span></div>
+			<div class="sp-row"><span class="sp-label">Ubicación</span><span class="sp-value">${esc(p.location||p.locality||'—')}</span></div>
+		</div>
+		<div class="sp-section">
+			<div class="sp-section-title">Estadísticas de red</div>
+			<div class="sp-stat-row">
+				<div class="sp-stat-label"><span>Amistad</span><span style="color:#3fb950">${amistad}%</span></div>
+				<div class="sp-bar-track"><div class="sp-bar-fill" style="width:${amistad}%;background:#3fb950"></div></div>
+			</div>
+			<div class="sp-stat-row">
+				<div class="sp-stat-label"><span>Odio</span><span style="color:#f85149">${odio}%</span></div>
+				<div class="sp-bar-track"><div class="sp-bar-fill" style="width:${odio}%;background:#f85149"></div></div>
+			</div>
+			<div class="sp-stat-row">
+				<div class="sp-stat-label"><span>Estrés</span><span style="color:#ffa657">${estres}%</span></div>
+				<div class="sp-bar-track"><div class="sp-bar-fill" style="width:${estres}%;background:#ffa657"></div></div>
+			</div>
+		</div>
+		<div class="sp-section">
+			<div class="sp-section-title">Perfil académico</div>
+			${['skill','intelligence','performance','jobs','occupation'].map(k=>{
+				const v=perfil[k]||0;
+				const labels={skill:'Habilidad',intelligence:'Inteligencia',performance:'Desempeño',jobs:'Trabajos',occupation:'Ocupación'};
+				return `<div class="sp-stat-row">
+					<div class="sp-stat-label"><span>${labels[k]}</span><span style="color:#388bfd">${v}%</span></div>
+					<div class="sp-bar-track"><div class="sp-bar-fill" style="width:${v}%;background:#388bfd"></div></div>
+				</div>`;
+			}).join('')}
+		</div>
+		<div class="sp-section">
+			<div class="sp-section-title">Conexiones (${conns.length})</div>
+			${connHTML}
+		</div>
+	`;
+
+	const footer=document.getElementById('sp-footer');
+	footer.innerHTML='';
+	if(state.isAdmin){
+		const editBtn=document.createElement('button');
+		editBtn.className='sp-btn primary';editBtn.textContent='✏ Editar stats de red';
+		editBtn.addEventListener('click',()=>openNeuralStatsModal(profileId));
+		const connBtn=document.createElement('button');
+		connBtn.className='sp-btn';connBtn.textContent='🔗 Conectar con...';
+		connBtn.addEventListener('click',()=>{ state.connecting=profileId; closeSidePanel(); renderGraph(); });
+		const remBtn=document.createElement('button');
+		remBtn.className='sp-btn danger';remBtn.textContent='✕ Quitar de la red';
+		remBtn.addEventListener('click',()=>{ closeSidePanel(); removeFromNetwork(profileId); });
+		footer.appendChild(editBtn);footer.appendChild(connBtn);footer.appendChild(remBtn);
+	}
+
+	sidePanel.classList.add('open');
+}
+
+function openSidePanelReadonly(profileId){ openSidePanel(profileId); }
+
+function closeSidePanel(){ sidePanel.classList.remove('open'); }
+document.getElementById('sp-close').addEventListener('click',closeSidePanel);
+window._focusNode=function(profileId){ openSidePanel(profileId); };
+
+// ── NEURAL STATS MODAL (compatibilidad con main.js) ────────
+let _editingNeuralId=null;
+function openNeuralStatsModal(profileId){
+	const nd=state.nodes.get(profileId);
+	if(!nd) return;
+	_editingNeuralId=profileId;
+	const p=nd.profile;
+	const modal=document.getElementById('neuralModal');
+	const form=document.getElementById('nodeStatsForm');
+	document.getElementById('modalTitle').textContent=`Editar: ${p.firstName||''} ${p.lastName||''}`;
+	form.amistad.value=nd.stats?.amistad??50;
+	form.odio.value=nd.stats?.odio??0;
+	form.estres.value=nd.stats?.estres??10;
+	modal.setAttribute('aria-hidden','false');
+	modal.style.display='flex';
+	modal.style.position='fixed';modal.style.inset='0';
+	modal.style.background='rgba(0,0,0,.6)';modal.style.zIndex='500';
+	modal.style.alignItems='center';modal.style.justifyContent='center';
+}
+document.getElementById('cancelNodeEdit').addEventListener('click',()=>{
+	document.getElementById('neuralModal').setAttribute('aria-hidden','true');
+	document.getElementById('neuralModal').style.display='none';
+});
+document.getElementById('nodeStatsForm').addEventListener('submit',(e)=>{
+	e.preventDefault();
+	if(!_editingNeuralId) return;
+	const nd=state.nodes.get(_editingNeuralId);
+	if(!nd) return;
+	const form=document.getElementById('nodeStatsForm');
+	nd.stats={amistad:+form.amistad.value||0, odio:+form.odio.value||0, estres:+form.estres.value||0};
+	// Update currentNet node
+	if(state.currentNet){
+		const cn=(state.currentNet.nodes||[]).find(n=>n.profileId===_editingNeuralId);
+		if(cn) cn.stats=nd.stats;
+	}
+	saveNetwork();renderGraph();
+	if(state.selected===_editingNeuralId) openSidePanel(_editingNeuralId);
+	document.getElementById('neuralModal').setAttribute('aria-hidden','true');
+	document.getElementById('neuralModal').style.display='none';
+	_editingNeuralId=null;
+});
+
+// ── CONTEXT MENU ───────────────────────────────────────────
+function showCtxMenu(x,y){
+	ctxMenu.style.left=x+'px'; ctxMenu.style.top=y+'px';
+	ctxMenu.style.display='block';
+	document.getElementById('ctx-remove').style.display=state.isAdmin?'flex':'none';
+	document.getElementById('ctx-connect').style.display=state.isAdmin?'flex':'none';
+}
+function hideCtxMenu(){ ctxMenu.style.display='none'; state.ctxTarget=null; }
+document.getElementById('ctx-connect').addEventListener('click',()=>{
+	if(state.ctxTarget){ state.connecting=state.ctxTarget; renderGraph(); } hideCtxMenu();
+});
+document.getElementById('ctx-info').addEventListener('click',()=>{
+	if(state.ctxTarget) openSidePanel(state.ctxTarget); hideCtxMenu();
+});
+document.getElementById('ctx-remove').addEventListener('click',()=>{
+	if(state.ctxTarget) removeFromNetwork(state.ctxTarget); hideCtxMenu();
+});
+document.addEventListener('click',hideCtxMenu);
+
+// ── TOOLTIP ────────────────────────────────────────────────
+function showTooltip(text,e){
+	tooltip.textContent=text;
+	tooltip.style.opacity='1';
+	if(e){ tooltip.style.left=(e.clientX+12)+'px'; tooltip.style.top=(e.clientY-24)+'px'; }
+}
+function hideTooltip(){ tooltip.style.opacity='0'; }
+
+// ── PAN & ZOOM ─────────────────────────────────────────────
+svg.addEventListener('mousedown',(e)=>{
+	if(e.button!==0||state.drag) return;
+	state.pan={startX:e.clientX, startY:e.clientY, tx:state.transform.x, ty:state.transform.y};
+	svg.style.cursor='grabbing';
+});
+svg.addEventListener('mousemove',(e)=>{
+	if(state.drag){
+		const nd=state.nodes.get(state.drag.profileId);
+		if(!nd) return;
+		const pt=svgPoint(e.clientX,e.clientY);
+		nd.x=pt.x-state.drag.ox; nd.y=pt.y-state.drag.oy;
+		// update currentNet node position
+		if(state.currentNet){
+			const cn=(state.currentNet.nodes||[]).find(n=>n.profileId===state.drag.profileId);
+			if(cn){cn.x=nd.x;cn.y=nd.y;}
+		}
+		renderGraph();
+		return;
+	}
+	if(state.pan){
+		state.transform.x=state.pan.tx+(e.clientX-state.pan.startX);
+		state.transform.y=state.pan.ty+(e.clientY-state.pan.startY);
+		applyTransform();
+	}
+	// Move tooltip
+	if(tooltip.style.opacity==='1'){
+		tooltip.style.left=(e.clientX+12)+'px';
+		tooltip.style.top=(e.clientY-24)+'px';
+	}
+});
+document.addEventListener('mouseup',(e)=>{
+	if(state.drag){ saveNetworkThrottle(); state.drag=null; svg.style.cursor=''; }
+	if(state.pan){ state.pan=null; svg.style.cursor=''; }
+});
+svg.addEventListener('wheel',(e)=>{
+	e.preventDefault();
+	const factor=e.deltaY<0?1.1:0.9;
+	const rect=svg.getBoundingClientRect();
+	const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+	state.transform.x=mx-factor*(mx-state.transform.x);
+	state.transform.y=my-factor*(my-state.transform.y);
+	state.transform.k=Math.min(4,Math.max(0.1,state.transform.k*factor));
+	applyTransform();
+},{passive:false});
+
+// Touch pan/pinch
+let lastTouches=[];
+svg.addEventListener('touchstart',(e)=>{
+	lastTouches=[...e.touches];
+	if(e.touches.length===1){
+		state.pan={startX:e.touches[0].clientX,startY:e.touches[0].clientY,tx:state.transform.x,ty:state.transform.y};
+	}
+},{passive:true});
+svg.addEventListener('touchmove',(e)=>{
+	if(e.touches.length===2&&lastTouches.length===2){
+		const d0=Math.hypot(lastTouches[0].clientX-lastTouches[1].clientX,lastTouches[0].clientY-lastTouches[1].clientY);
+		const d1=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+		const factor=d1/d0;
+		state.transform.k=Math.min(4,Math.max(0.1,state.transform.k*factor));
+		applyTransform();
+		lastTouches=[...e.touches];
+	} else if(e.touches.length===1&&state.pan){
+		state.transform.x=state.pan.tx+(e.touches[0].clientX-state.pan.startX);
+		state.transform.y=state.pan.ty+(e.touches[0].clientY-state.pan.startY);
+		applyTransform();
+	}
+},{passive:true});
+svg.addEventListener('touchend',()=>{ state.pan=null; lastTouches=[]; });
+
+// ── ZOOM BUTTONS ───────────────────────────────────────────
+function zoom(f){
+	const W=svg.clientWidth/2, H=svg.clientHeight/2;
+	state.transform.x=W-f*(W-state.transform.x);
+	state.transform.y=H-f*(H-state.transform.y);
+	state.transform.k=Math.min(4,Math.max(0.1,state.transform.k*f));
+	applyTransform();
+}
+document.getElementById('zIn').addEventListener('click',()=>zoom(1.2));
+document.getElementById('zOut').addEventListener('click',()=>zoom(0.8));
+document.getElementById('zFit').addEventListener('click',fitAll);
+document.getElementById('btnFit').addEventListener('click',fitAll);
+document.getElementById('btnClear').addEventListener('click',()=>{
+	state.nodes.forEach(nd=>{nd.x=undefined;nd.y=undefined;});
+	layoutNodes();renderGraph();
+});
+
+function fitAll(){
+	if(state.nodes.size===0) return;
+	let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+	state.nodes.forEach(nd=>{
+		minX=Math.min(minX,nd.x);maxX=Math.max(maxX,nd.x);
+		minY=Math.min(minY,nd.y);maxY=Math.max(maxY,nd.y);
+	});
+	const W=svg.clientWidth,H=svg.clientHeight;
+	const pad=80;
+	const scaleX=(W-pad*2)/Math.max(maxX-minX,1);
+	const scaleY=(H-pad*2)/Math.max(maxY-minY,1);
+	const k=Math.min(scaleX,scaleY,2);
+	state.transform.k=k;
+	state.transform.x=(W/2)-k*((minX+maxX)/2);
+	state.transform.y=(H/2)-k*((minY+maxY)/2);
+	applyTransform();
+}
+
+// ── TOGGLE POOL ────────────────────────────────────────────
+document.getElementById('btnTogglePool').addEventListener('click',()=>{
+	document.getElementById('pool-panel').classList.toggle('hidden');
+});
+
+// ── SAVE / LOAD ────────────────────────────────────────────
+let _saveTimer=null;
+function saveNetworkThrottle(){ clearTimeout(_saveTimer); _saveTimer=setTimeout(saveNetwork,800); }
+
+async function saveNetwork(){
+	if(!state.currentNet) return;
+	// Sync positions & stats back to currentNet.nodes
+	state.currentNet.nodes=(state.currentNet.nodes||[]).map(n=>{
+		const nd=state.nodes.get(n.profileId);
+		if(nd) return {...n, x:nd.x, y:nd.y, stats:nd.stats};
+		return n;
+	});
+	try{
+		await fetch(`/api/networks/${state.currentNet.id}`,{
+			method:'PUT',
+			headers:{'Content-Type':'application/json'},
+			body:JSON.stringify({
+				name:state.currentNet.name,
+				nodes:state.currentNet.nodes,
+				links:state.currentNet.links||[]
+			})
+		});
+	} catch(err){ console.warn('saveNetwork error',err); }
+}
+
+async function loadNetwork(net){
+	state.currentNet=JSON.parse(JSON.stringify(net));
+	state.nodes.clear();
+	state.edges=[];
+	const W=svg.clientWidth||800, H=svg.clientHeight||600;
+	const cx=W/2, cy=H/2;
+	const total=(net.nodes||[]).length;
+
+	(net.nodes||[]).forEach((n,i)=>{
+		const profile=state.profiles.find(p=>p.id===n.profileId);
+		if(!profile) return;
+		let x=n.x, y=n.y;
+		if(!x||!y){
+			const angle=(2*Math.PI*i/total)-Math.PI/2;
+			const r=Math.min(W,H)*0.3;
+			x=cx+r*Math.cos(angle); y=cy+r*Math.sin(angle);
+		}
+		state.nodes.set(n.profileId,{ x, y, profile, stats:n.stats||{amistad:50,odio:0,estres:10} });
+	});
+
+	state.edges=(net.links||[]).map(l=>({...l}));
+	if(state.currentNet.links) state.currentNet.links=[...state.edges];
+
+	renderGraph();
+	fitAll();
+}
+
+// ── NETWORKS SELECT ────────────────────────────────────────
+function renderNetworksSelect(){
+	const sel=document.getElementById('networksSelect');
+	const cur=sel.value;
+	sel.innerHTML='<option value="">-- Seleccionar red --</option>';
+	state.networks.forEach(n=>{
+		const o=document.createElement('option');
+		o.value=n.id; o.textContent=n.name||`Red ${n.id.substring(0,6)}`;
+		sel.appendChild(o);
+	});
+	if(cur) sel.value=cur;
+}
+
+document.getElementById('networksSelect').addEventListener('change',async function(){
+	const id=this.value;
+	if(!id){ state.currentNet=null; state.nodes.clear(); state.edges=[]; renderGraph(); return; }
+	const net=state.networks.find(x=>x.id===id);
+	if(net) await loadNetwork(net);
+});
+
+document.getElementById('createNetworkBtn').addEventListener('click',async()=>{
+	if(!state.isAdmin) return alert('Solo administradores pueden crear redes.');
+	const name=(document.getElementById('networkName').value||'').trim();
+	if(!name) return alert('Asigna un nombre a la red.');
+	try{
+		const res=await fetch('/api/networks',{
+			method:'POST',headers:{'Content-Type':'application/json'},
+			body:JSON.stringify({name,nodes:[],links:[]})
+		});
+		if(!res.ok) throw new Error();
+		const created=await res.json();
+		state.networks.unshift(created);
+		renderNetworksSelect();
+		document.getElementById('networksSelect').value=created.id;
+		await loadNetwork(created);
+		document.getElementById('networkName').value='';
+	} catch(e){ alert('Error creando la red.'); }
+});
+
+// ── INIT ───────────────────────────────────────────────────
+async function init(){
+	// Check admin
+	try{
+		const email=localStorage.getItem('userEmail');
+		if(email){
+			const r=await fetch('/status?email='+encodeURIComponent(email));
+			if(r.ok){ const d=await r.json(); state.isAdmin=!!(d.approved&&d.role==='admin'); }
+		}
+	} catch(e){}
+
+	// Hide create controls if not admin
+	if(!state.isAdmin){
+		document.getElementById('createNetworkBtn').style.display='none';
+		document.getElementById('networkName').style.display='none';
+	}
+
+	// Load profiles
+	try{
+		const r=await fetch('/api/profiles');
+		state.profiles=r.ok?(await r.json()):[];
+	} catch(e){ state.profiles=[]; }
+
+	// Load networks
+	try{
+		const r=await fetch('/api/networks');
+		state.networks=r.ok?(await r.json()):[];
+	} catch(e){ state.networks=[]; }
+
+	renderPool();
+	renderNetworksSelect();
+	drawGrid();
+	applyTransform();
+
+	// Auto-load first network
+	if(state.networks.length>0){
+		document.getElementById('networksSelect').value=state.networks[0].id;
+		await loadNetwork(state.networks[0]);
+	}
+}
+
+window.addEventListener('resize',()=>{ drawGrid(); applyTransform(); });
+init();
+
+})();
+</script>
+
+<!-- main.js para compatibilidad (manejo de las APIs) -->
+<script src="main.js"></script>
 </body>
 </html>

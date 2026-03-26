@@ -1,0 +1,2202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Sistema de Investigación</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #07090d;
+  --bg2:      #0b0f16;
+  --bg3:      #0f1520;
+  --panel:    #090d14;
+  --border:   #162030;
+  --border2:  #1e3048;
+  --accent:   #00c8f0;
+  --accent2:  #f05a00;
+  --accent3:  #00f07a;
+  --red:      #f0002a;
+  --yellow:   #f0c800;
+  --purple:   #8b5cf6;
+  --teal:     #00b4d8;
+  --text:     #b8cfe0;
+  --text2:    #5a7a98;
+  --text3:    #2a4060;
+
+  --c-suspect:  #f0002a;
+  --c-victim:   #f05a00;
+  --c-witness:  #f0c800;
+  --c-place:    #00c8f0;
+  --c-event:    #8b5cf6;
+  --c-object:   #00f07a;
+  --c-org:      #f08000;
+  --c-doc:      #00b4d8;
+  --c-vehicle:  #20c8b0;
+  --c-phone:    #d870e0;
+  --c-family:   #f0c800;
+  --c-finance:  #00e890;
+  --c-social:   #3090f0;
+  --c-note:     #f0f070;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Barlow', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── TOPBAR ─── */
+#topbar {
+  height: 42px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border2);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 0;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 200;
+}
+
+.tb-logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  color: var(--accent);
+  padding: 0 16px 0 6px;
+  border-right: 1px solid var(--border2);
+  margin-right: 8px;
+  text-transform: uppercase;
+  position: relative;
+}
+.tb-logo span { color: var(--red); }
+.tb-logo::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 100%; height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
+
+.tb-actions { display: flex; gap: 1px; }
+.tb-btn {
+  height: 42px;
+  padding: 0 14px;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--text2);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.tb-btn:hover { background: rgba(0,200,240,.07); color: var(--accent); }
+.tb-btn svg { opacity: .7; }
+.tb-btn:hover svg { opacity: 1; }
+
+.tb-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-left: 12px;
+  border-left: 1px solid var(--border);
+}
+
+/* Back to home button */
+.tb-home {
+  height: 42px;
+  padding: 0 14px;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--accent);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all .15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.tb-home:hover { background: rgba(0,200,240,.1); }
+
+#caseLabel {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 2px;
+}
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,240,122,.06);
+  border: 1px solid rgba(0,240,122,.2);
+  border-radius: 3px;
+  padding: 2px 10px;
+}
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent3);
+  box-shadow: 0 0 6px var(--accent3);
+  animation: blink 2s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.status-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: var(--accent3);
+}
+
+/* sync indicator */
+.sync-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0,200,240,.06);
+  border: 1px solid rgba(0,200,240,.2);
+  border-radius: 3px;
+  padding: 2px 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--text3);
+  transition: all .3s;
+}
+.sync-pill.syncing { border-color: rgba(0,200,240,.5); color: var(--accent); }
+.sync-pill.synced  { border-color: rgba(0,240,122,.4); color: var(--accent3); }
+.sync-pill.error   { border-color: rgba(240,0,42,.4); color: var(--red); }
+
+/* ─── MAIN ─── */
+#main {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ─── SIDEBAR TOOLS ─── */
+#sidebar {
+  width: 54px;
+  background: var(--panel);
+  border-right: 1px solid var(--border2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 0 10px;
+  gap: 1px;
+  overflow-y: auto;
+  overflow-x: visible;
+  flex-shrink: 0;
+  z-index: 100;
+  scrollbar-width: none;
+}
+#sidebar::-webkit-scrollbar { display: none; }
+
+.sb-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 0;
+}
+.sb-divider {
+  width: 32px; height: 1px;
+  background: var(--border2);
+  margin: 3px 0;
+  flex-shrink: 0;
+}
+.sb-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin: 4px 0 2px;
+}
+
+.tool {
+  width: 44px; height: 44px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  transition: all .15s;
+  position: relative;
+  flex-shrink: 0;
+  color: var(--text3);
+  overflow: visible;
+}
+.tool:hover {
+  background: rgba(0,200,240,.08);
+  border-color: var(--border2);
+  color: var(--text2);
+}
+.tool.active {
+  background: rgba(0,200,240,.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.tool svg { display: block; transition: all .15s; }
+.tool:hover svg { filter: drop-shadow(0 0 4px currentColor); }
+.tool.active svg { filter: drop-shadow(0 0 6px var(--accent)); }
+
+.tool-tip {
+  position: absolute;
+  left: 52px;
+  top: 50%; transform: translateY(-50%);
+  background: #0b1522;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: 'Barlow Condensed', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .12s;
+  z-index: 9999;
+  box-shadow: 0 2px 12px rgba(0,200,240,.2);
+}
+.tool:hover .tool-tip { opacity: 1; }
+
+.tool[data-type]:hover {
+  border-color: var(--tc, var(--border2));
+  background: color-mix(in srgb, var(--tc, var(--accent)) 10%, transparent);
+}
+.tool[data-type].active {
+  border-color: var(--tc, var(--accent));
+  background: color-mix(in srgb, var(--tc, var(--accent)) 15%, transparent);
+}
+
+/* ─── CANVAS ─── */
+#canvasWrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 60% at 15% 15%, rgba(0,200,240,.04) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 60% at 85% 85%, rgba(240,0,42,.03) 0%, transparent 70%),
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(30,48,72,.35) 39px, rgba(30,48,72,.35) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(30,48,72,.35) 39px, rgba(30,48,72,.35) 40px);
+  cursor: default;
+}
+
+#svgLayer {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+#canvas {
+  position: absolute; inset: 0;
+  z-index: 3;
+}
+
+#hint {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  text-align: center;
+  pointer-events: none;
+  transition: opacity .4s;
+}
+.hint-icon { margin: 0 auto 12px; opacity: .08; }
+.hint-h { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 4px; color: var(--text2); text-transform: uppercase; }
+.hint-sub { font-size: 12px; color: var(--text3); letter-spacing: 1px; margin-top: 6px; }
+
+/* ─── NODES ─── */
+.inv-node {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: grab;
+  z-index: 10;
+  transform-origin: top left;
+  user-select: none;
+}
+.inv-node:active { cursor: grabbing; }
+
+.node-card {
+  width: 110px;
+  background: var(--bg3);
+  border: 1.5px solid var(--border2);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  transition: border-color .15s, box-shadow .15s;
+}
+.node-card:hover { border-color: var(--tc, var(--accent)); box-shadow: 0 0 16px color-mix(in srgb, var(--tc, var(--accent)) 30%, transparent); }
+.inv-node.selected .node-card {
+  border-color: var(--tc, var(--accent));
+  box-shadow: 0 0 24px color-mix(in srgb, var(--tc, var(--accent)) 40%, transparent);
+  animation: selPulse 2s infinite;
+}
+@keyframes selPulse {
+  0%,100%{ box-shadow: 0 0 16px color-mix(in srgb, var(--tc, var(--accent)) 30%, transparent); }
+  50%{     box-shadow: 0 0 30px color-mix(in srgb, var(--tc, var(--accent)) 60%, transparent); }
+}
+
+.node-bar { height: 3px; }
+.node-media { width: 100%; height: 68px; object-fit: cover; display: block; background: var(--bg2); }
+.node-placeholder {
+  width: 100%; height: 68px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg2);
+}
+
+.node-body { padding: 5px 6px; }
+.node-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: .5px;
+  color: var(--text);
+  text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.node-type {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  text-align: center;
+  margin-top: 1px;
+}
+
+.node-btns {
+  position: absolute; top: 3px; right: 3px;
+  display: flex; gap: 2px;
+  opacity: 0; transition: opacity .15s;
+}
+.node-card:hover .node-btns { opacity: 1; }
+.nbtn {
+  width: 18px; height: 18px;
+  border-radius: 3px; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(7,9,13,.85);
+  transition: background .12s;
+}
+.nbtn:hover { background: rgba(0,200,240,.3); }
+.nbtn.del:hover { background: rgba(240,0,42,.4); }
+
+.node-sublabel {
+  margin-top: 3px;
+  font-size: 9px; letter-spacing: .5px;
+  color: var(--text3);
+  text-align: center;
+  max-width: 120px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ─── RIGHT PANEL ─── */
+#rp {
+  width: 310px;
+  background: var(--panel);
+  border-left: 1px solid var(--border2);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.rp-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border2);
+  flex-shrink: 0;
+}
+.rp-tab {
+  flex: 1; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  cursor: pointer; color: var(--text3);
+  border-bottom: 2px solid transparent;
+  transition: all .15s;
+}
+.rp-tab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(0,200,240,.05); }
+
+.rp-body {
+  flex: 1; overflow-y: auto; padding: 12px;
+  scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+}
+.rp-body::-webkit-scrollbar { width: 3px; }
+.rp-body::-webkit-scrollbar-thumb { background: var(--border2); }
+
+/* ─── SHARED FORM STYLES ─── */
+.sec-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--accent2); margin-bottom: 9px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-title::after { content:''; flex:1; height:1px; background:var(--border2); }
+.sec-title svg { opacity:.8; }
+
+.sec { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+.sec:last-child { border-bottom: none; }
+
+.fl { display: flex; gap: 7px; }
+.fl .fg { flex: 1; }
+
+.fg { margin-bottom: 7px; }
+.fg label {
+  display: block;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 3px;
+}
+
+input.fi, select.fi, textarea.fi {
+  width: 100%;
+  background: var(--bg2); border: 1px solid var(--border2);
+  color: var(--text); font-family: 'Barlow', sans-serif; font-size: 12px;
+  padding: 5px 8px; border-radius: 4px; outline: none;
+  transition: border .15s, box-shadow .15s;
+}
+input.fi:focus, select.fi:focus, textarea.fi:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0,200,240,.1);
+}
+input.fi::placeholder, textarea.fi::placeholder { color: var(--text3); }
+textarea.fi { resize: vertical; min-height: 54px; line-height: 1.5; }
+select.fi {
+  appearance: none; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235a7a98' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 26px;
+}
+select.fi option { background: var(--bg2); }
+
+.btn-p {
+  width: 100%; padding: 8px;
+  background: var(--accent); border: none; border-radius: 4px;
+  color: #000; font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  cursor: pointer; transition: all .15s; margin-top: 4px;
+}
+.btn-p:hover { box-shadow: 0 0 14px rgba(0,200,240,.4); filter: brightness(1.1); }
+.btn-s {
+  width: 100%; padding: 7px;
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: 4px;
+  color: var(--text2); font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  cursor: pointer; transition: all .15s; margin-top: 4px;
+}
+.btn-s:hover { border-color: var(--accent); color: var(--accent); }
+.btn-d {
+  width: 100%; padding: 7px;
+  background: rgba(240,0,42,.1); border: 1px solid rgba(240,0,42,.3); border-radius: 4px;
+  color: var(--red); font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  cursor: pointer; transition: all .15s; margin-top: 4px;
+}
+.btn-d:hover { background: rgba(240,0,42,.2); }
+
+/* Tags */
+.tags-wrap {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 4px;
+  padding: 4px; min-height: 34px;
+  display: flex; flex-wrap: wrap; gap: 4px; align-items: center;
+  transition: border .15s;
+  cursor: text;
+}
+.tags-wrap:focus-within { border-color: var(--accent); }
+.tag {
+  background: rgba(0,200,240,.12); border: 1px solid rgba(0,200,240,.25);
+  color: var(--accent); font-size: 10px; letter-spacing: .5px;
+  padding: 1px 6px; border-radius: 2px; display: flex; align-items: center; gap: 4px;
+  font-family: 'Barlow Condensed', sans-serif; font-weight: 600;
+}
+.tag button { background:none; border:none; color:var(--accent); cursor:pointer; font-size:10px; line-height:1; padding:0; }
+.tag-in { background:none; border:none; outline:none; color:var(--text); font-size:12px; font-family:'Barlow',sans-serif; flex:1; min-width:50px; }
+
+/* Connections */
+.conn-row {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 4px; padding: 5px 8px; margin-bottom: 3px;
+  display: flex; align-items: center; gap: 7px;
+}
+.conn-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink:0; }
+.conn-txt { flex:1; font-size: 11px; color: var(--text); }
+.conn-meta { font-size: 9px; color: var(--text3); letter-spacing: .5px; }
+.conn-x { background:none; border:none; color:var(--text3); cursor:pointer; font-size:13px; transition:color .12s; line-height:1; }
+.conn-x:hover { color:var(--red); }
+
+/* Timeline */
+.tl-item { border-left:2px solid var(--border2); padding:0 0 10px 12px; position:relative; }
+.tl-item::before { content:''; position:absolute; left:-4px; top:3px; width:6px; height:6px; border-radius:50%; background:var(--accent); }
+.tl-date { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--accent); letter-spacing:1px; }
+.tl-txt { font-size:11px; color:var(--text); margin-top:2px; line-height:1.4; }
+
+/* Media */
+.media-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; margin-top:5px; }
+.media-cell { aspect-ratio:1; border-radius:3px; overflow:hidden; background:var(--bg2); border:1px solid var(--border); position:relative; cursor:pointer; }
+.media-cell img, .media-cell video { width:100%; height:100%; object-fit:cover; }
+.media-del-btn { position:absolute; top:2px; right:2px; width:16px; height:16px; background:rgba(240,0,42,.8); border:none; border-radius:2px; color:#fff; font-size:9px; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .12px; }
+.media-cell:hover .media-del-btn { opacity:1; }
+
+.upload-area {
+  border: 1.5px dashed var(--border2);
+  border-radius: 5px; padding: 14px;
+  text-align: center; cursor: pointer; transition: all .15s;
+  color: var(--text3);
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.upload-area:hover { border-color: var(--accent); color: var(--text2); background: rgba(0,200,240,.04); }
+.upload-area svg { opacity:.5; }
+.upload-area span { font-family:'Barlow Condensed',sans-serif; font-size:11px; letter-spacing:1px; font-weight:600; }
+
+/* ─── MODAL ─── */
+#overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.82); backdrop-filter:blur(5px);
+  z-index:500; display:none; align-items:center; justify-content:center;
+}
+#overlay.open { display:flex; }
+
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  box-shadow: 0 0 60px rgba(0,0,0,.7), 0 0 30px rgba(0,200,240,.08);
+  width: 700px; max-width: 96vw;
+  max-height: 92vh; display:flex; flex-direction:column;
+  animation: mIn .18s ease;
+}
+@keyframes mIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
+
+.modal-hd {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border2);
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.modal-icon {
+  width: 34px; height: 34px;
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.modal-title-text {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text);
+}
+.modal-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 2px;
+}
+.modal-x {
+  margin-left: auto; width: 28px; height: 28px;
+  border-radius: 4px; border: 1px solid rgba(240,0,42,.3);
+  background: rgba(240,0,42,.08); color: var(--red);
+  font-size: 14px; cursor: pointer; display:flex; align-items:center; justify-content:center;
+  transition: background .12s;
+}
+.modal-x:hover { background: rgba(240,0,42,.25); }
+
+.modal-body {
+  flex:1; overflow-y:auto; padding:16px 18px;
+  scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+}
+.modal-body::-webkit-scrollbar { width:3px; }
+.modal-body::-webkit-scrollbar-thumb { background:var(--border2); }
+
+.modal-ft {
+  padding: 10px 18px; border-top: 1px solid var(--border2);
+  display: flex; gap: 8px; flex-shrink:0;
+}
+.modal-ft .btn-p, .modal-ft .btn-s { width:auto; flex:1; margin-top:0; }
+
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+
+/* ─── STATUSBAR ─── */
+#statusbar {
+  height: 22px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 10px; gap: 18px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--text3);
+  flex-shrink: 0; z-index:200;
+}
+#statusbar .v { color: var(--accent); }
+#statusbar .vr { color: var(--red); }
+#statusbar .vy { color: var(--yellow); }
+#statusbar .ml { margin-left:auto; }
+
+/* ─── TOAST ─── */
+#toast {
+  position:fixed; bottom:36px; left:50%; transform:translateX(-50%);
+  background:var(--bg3); border:1px solid var(--border2);
+  color:var(--text); font-family:'Barlow Condensed',sans-serif;
+  font-size:13px; font-weight:600; letter-spacing:1.5px;
+  padding:7px 18px; border-radius:4px;
+  z-index:9999; opacity:0; transition:opacity .25s; pointer-events:none;
+  white-space:nowrap;
+}
+#toast.in { opacity:1; }
+
+.insp-empty {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding: 40px 0; text-align:center; color:var(--text3);
+}
+.insp-empty svg { opacity:.1; margin-bottom:12px; }
+.insp-empty p { font-family:'Barlow Condensed',sans-serif; font-size:12px; letter-spacing:2px; text-transform:uppercase; }
+
+.nl-item {
+  background:var(--bg3); border:1px solid var(--border); border-radius:4px;
+  padding:6px 8px; margin-bottom:3px; display:flex; align-items:center; gap:8px;
+  cursor:pointer; transition:border-color .12s;
+}
+.nl-item:hover { border-color:var(--border2); }
+.nl-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.nl-name { flex:1; font-size:12px; color:var(--text); }
+.nl-type { font-family:'Barlow Condensed',sans-serif; font-size:9px; letter-spacing:1.5px; color:var(--text3); text-transform:uppercase; }
+
+/* Cases panel */
+.case-item {
+  background:var(--bg3); border:1px solid var(--border); border-radius:4px;
+  padding:8px 10px; margin-bottom:4px; cursor:pointer; transition:border-color .12s;
+  display:flex; align-items:center; gap:8px;
+}
+.case-item:hover { border-color:var(--accent); }
+.case-item.active { border-color:var(--accent); background:rgba(0,200,240,.05); }
+.case-name { flex:1; font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700; color:var(--text); }
+.case-meta { font-size:9px; color:var(--text3); letter-spacing:1px; }
+.case-del { background:none; border:none; color:var(--text3); cursor:pointer; font-size:11px; padding:2px; }
+.case-del:hover { color:var(--red); }
+</style>
+</head>
+<body>
+
+<!-- ── TOPBAR ── -->
+<div id="topbar">
+  <div class="tb-logo">NEX<span>US</span></div>
+
+  <div class="tb-actions">
+    <a href="index.html" class="tb-home">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Inicio
+    </a>
+    <button class="tb-btn" onclick="newCase()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      Nuevo
+    </button>
+    <button class="tb-btn" onclick="saveAll()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Guardar
+    </button>
+    <button class="tb-btn" onclick="exportData()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar
+    </button>
+    <button class="tb-btn" onclick="doImport()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Importar
+    </button>
+    <button class="tb-btn" onclick="autoLayout()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Organizar
+    </button>
+    <button class="tb-btn" onclick="clearCanvas()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      Limpiar
+    </button>
+  </div>
+
+  <div class="tb-right">
+    <div class="sync-pill" id="syncPill">OFFLINE</div>
+    <span id="caseLabel">CASO: SIN ASIGNAR</span>
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      <span class="status-text">EN LÍNEA</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div id="main">
+
+  <!-- ── SIDEBAR ── -->
+  <div id="sidebar">
+    <div class="sb-group">
+      <div class="sb-label">MODO</div>
+      <button class="tool active" id="t-select" onclick="setTool('select')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4l6.5 16.5 3.5-6.5 6.5-3.5z"/>
+          <line x1="14" y1="14" x2="20" y2="20"/>
+        </svg>
+        <div class="tool-tip">SELECCIONAR</div>
+      </button>
+      <button class="tool" id="t-connect" onclick="setTool('connect')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <circle cx="5" cy="12" r="2.5" fill="currentColor"/>
+          <circle cx="19" cy="12" r="2.5" fill="currentColor"/>
+          <line x1="7.5" y1="12" x2="16.5" y2="12"/>
+          <polyline points="13.5 9 16.5 12 13.5 15"/>
+        </svg>
+        <div class="tool-tip">CONECTAR NODOS</div>
+      </button>
+      <button class="tool" id="t-pan" onclick="setTool('pan')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11V6.5a1.5 1.5 0 0 1 3 0V11"/>
+          <path d="M12 11V5.5a1.5 1.5 0 0 1 3 0V11"/>
+          <path d="M15 10.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-12 0v-3a1.5 1.5 0 0 1 3 0"/>
+        </svg>
+        <div class="tool-tip">DESPLAZAR</div>
+      </button>
+      <button class="tool" id="t-delete" onclick="setTool('delete')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <line x1="9" y1="9" x2="15" y2="15"/>
+          <line x1="15" y1="9" x2="9" y2="15"/>
+        </svg>
+        <div class="tool-tip">ELIMINAR</div>
+      </button>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-group">
+      <div class="sb-label">ENTIDADES</div>
+      <button class="tool" data-type="suspect" style="--tc:var(--c-suspect)" onclick="addNode('suspect')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-suspect)" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M19 3l2 2-2 2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 5H17" stroke-linecap="round"/></svg>
+        <div class="tool-tip">SOSPECHOSO</div>
+      </button>
+      <button class="tool" data-type="victim" style="--tc:var(--c-victim)" onclick="addNode('victim')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-victim)" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M9 12l1.5 5m3-5L12 17" stroke-linecap="round"/></svg>
+        <div class="tool-tip">VÍCTIMA</div>
+      </button>
+      <button class="tool" data-type="witness" style="--tc:var(--c-witness)" onclick="addNode('witness')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-witness)" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><ellipse cx="12" cy="14" rx="5" ry="3" stroke-dasharray="2 1.5"/><circle cx="12" cy="14" r="1.5" fill="var(--c-witness)"/></svg>
+        <div class="tool-tip">TESTIGO</div>
+      </button>
+      <button class="tool" data-type="family" style="--tc:var(--c-family)" onclick="addNode('family')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-family)" stroke-width="1.8"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M4 20c0-3 2.2-5 5-5s5 2.2 5 5"/><path d="M14 20c0-2.2 1.3-4 3-4s3 1.8 3 4"/></svg>
+        <div class="tool-tip">FAMILIAR</div>
+      </button>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-group">
+      <div class="sb-label">ESCENA</div>
+      <button class="tool" data-type="place" style="--tc:var(--c-place)" onclick="addNode('place')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-place)" stroke-width="1.8"><path d="M12 2C8.7 2 6 4.7 6 8c0 5 6 13 6 13s6-8 6-13c0-3.3-2.7-6-6-6z"/><circle cx="12" cy="8" r="2.5"/></svg>
+        <div class="tool-tip">LUGAR / ESCENA</div>
+      </button>
+      <button class="tool" data-type="event" style="--tc:var(--c-event)" onclick="addNode('event')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-event)" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <div class="tool-tip">EVENTO / SUCESO</div>
+      </button>
+      <button class="tool" data-type="object" style="--tc:var(--c-object)" onclick="addNode('object')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-object)" stroke-width="1.8"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+        <div class="tool-tip">EVIDENCIA / OBJETO</div>
+      </button>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-group">
+      <div class="sb-label">ACTIVOS</div>
+      <button class="tool" data-type="org" style="--tc:var(--c-org)" onclick="addNode('org')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-org)" stroke-width="1.8"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M8 9V5a2 2 0 0 1 4 0v0a2 2 0 0 1 4 0v4"/></svg>
+        <div class="tool-tip">ORGANIZACIÓN</div>
+      </button>
+      <button class="tool" data-type="doc" style="--tc:var(--c-doc)" onclick="addNode('doc')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-doc)" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+        <div class="tool-tip">DOCUMENTO</div>
+      </button>
+      <button class="tool" data-type="vehicle" style="--tc:var(--c-vehicle)" onclick="addNode('vehicle')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-vehicle)" stroke-width="1.8"><rect x="2" y="11" width="20" height="7" rx="2"/><path d="M4 11l3-6h10l3 6"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+        <div class="tool-tip">VEHÍCULO</div>
+      </button>
+      <button class="tool" data-type="phone" style="--tc:var(--c-phone)" onclick="addNode('phone')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-phone)" stroke-width="1.8"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1" fill="var(--c-phone)"/><line x1="10" y1="6" x2="14" y2="6"/></svg>
+        <div class="tool-tip">TELÉFONO / COMM</div>
+      </button>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-group">
+      <div class="sb-label">DIGITAL</div>
+      <button class="tool" data-type="finance" style="--tc:var(--c-finance)" onclick="addNode('finance')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-finance)" stroke-width="1.8"><rect x="2" y="6" width="20" height="13" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="7" y1="15" x2="10" y2="15"/><line x1="14" y1="15" x2="17" y2="15"/></svg>
+        <div class="tool-tip">TRANSACCIÓN FINANCIERA</div>
+      </button>
+      <button class="tool" data-type="social" style="--tc:var(--c-social)" onclick="addNode('social')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-social)" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        <div class="tool-tip">RED SOCIAL / DIGITAL</div>
+      </button>
+      <button class="tool" data-type="note" style="--tc:var(--c-note)" onclick="addNode('note')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--c-note)" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <div class="tool-tip">NOTA / ANOTACIÓN</div>
+      </button>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-group">
+      <div class="sb-label">VISTA</div>
+      <button class="tool" onclick="doZoom(1.2)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.65" y1="16.65" x2="21" y2="21"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        <div class="tool-tip">ACERCAR</div>
+      </button>
+      <button class="tool" onclick="doZoom(0.83)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.65" y1="16.65" x2="21" y2="21"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        <div class="tool-tip">ALEJAR</div>
+      </button>
+      <button class="tool" onclick="resetView()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <div class="tool-tip">RESTABLECER VISTA</div>
+      </button>
+      <button class="tool" id="t-snap" onclick="toggleSnap()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="4" height="4" rx="1"/><rect x="10" y="3" width="4" height="4" rx="1"/><rect x="17" y="3" width="4" height="4" rx="1"/><rect x="3" y="10" width="4" height="4" rx="1"/><rect x="10" y="10" width="4" height="4" rx="1" fill="currentColor" opacity=".5"/><rect x="17" y="10" width="4" height="4" rx="1"/><rect x="3" y="17" width="4" height="4" rx="1"/><rect x="10" y="17" width="4" height="4" rx="1"/><rect x="17" y="17" width="4" height="4" rx="1"/></svg>
+        <div class="tool-tip">SNAP A CUADRÍCULA</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── CANVAS ── -->
+  <div id="canvasWrap">
+    <svg id="svgLayer" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#2a4060"/>
+        </marker>
+        <marker id="arr-r" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="var(--c-suspect)"/>
+        </marker>
+        <marker id="arr-y" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="var(--c-witness)"/>
+        </marker>
+        <marker id="arr-b" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="var(--c-place)"/>
+        </marker>
+      </defs>
+      <g id="linksG"></g>
+    </svg>
+    <div id="canvas">
+      <div id="hint">
+        <div class="hint-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </div>
+        <p class="hint-h">Lienzo de Investigación</p>
+        <p class="hint-sub">Selecciona una entidad en el panel izquierdo para comenzar</p>
+        <p class="hint-sub">Usa la herramienta CONECTAR para vincular nodos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT PANEL ── -->
+  <div id="rp">
+    <div class="rp-tabs">
+      <div class="rp-tab active" onclick="rpSwitch('inspector')">Inspector</div>
+      <div class="rp-tab" onclick="rpSwitch('caso')">Caso</div>
+      <div class="rp-tab" onclick="rpSwitch('nodos')">Nodos</div>
+      <div class="rp-tab" onclick="rpSwitch('casos')">Casos</div>
+    </div>
+
+    <!-- INSPECTOR -->
+    <div class="rp-body" id="rpInspector">
+      <div class="insp-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p>Selecciona un nodo</p>
+      </div>
+    </div>
+
+    <!-- CASO -->
+    <div class="rp-body" id="rpCaso" style="display:none">
+      <div class="sec">
+        <div class="sec-title">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Datos del Caso
+        </div>
+        <div class="fg"><label>Nombre del caso</label><input class="fi" id="c-name" placeholder="Caso sin nombre" oninput="updateCaseLabel()"></div>
+        <div class="g2">
+          <div class="fg"><label>N° de expediente</label><input class="fi" id="c-num" placeholder="EXP-2024-001"></div>
+          <div class="fg"><label>Fecha del suceso</label><input class="fi" type="date" id="c-date"></div>
+        </div>
+        <div class="fg"><label>Investigador a cargo</label><input class="fi" id="c-agent" placeholder="Nombre completo"></div>
+        <div class="g2">
+          <div class="fg"><label>Estado</label>
+            <select class="fi" id="c-status">
+              <option value="open">Activo</option>
+              <option value="pending">En espera</option>
+              <option value="closed">Cerrado</option>
+              <option value="cold">Caso frío</option>
+            </select>
+          </div>
+          <div class="fg"><label>Prioridad</label>
+            <select class="fi" id="c-priority">
+              <option>Crítica</option><option>Alta</option><option>Media</option><option>Baja</option>
+            </select>
+          </div>
+        </div>
+        <div class="g2">
+          <div class="fg"><label>Tipo de delito</label>
+            <select class="fi" id="c-crime">
+              <option>Homicidio</option><option>Feminicidio</option><option>Secuestro</option>
+              <option>Robo agravado</option><option>Fraude</option><option>Narcotráfico</option>
+              <option>Corrupción</option><option>Terrorismo</option><option>Extorsión</option>
+              <option>Desaparición</option><option>Trata de personas</option><option>Otro</option>
+            </select>
+          </div>
+          <div class="fg"><label>Jurisdicción</label><input class="fi" id="c-juris" placeholder="Ciudad / País"></div>
+        </div>
+        <div class="fg"><label>Unidad / Departamento</label><input class="fi" id="c-unit" placeholder="Unidad de Homicidios..."></div>
+        <div class="fg"><label>Resumen del caso</label><textarea class="fi" id="c-summary" rows="4" placeholder="Descripción general..."></textarea></div>
+        <div class="fg"><label>Observaciones legales</label><textarea class="fi" id="c-legal" rows="3" placeholder="Jurisdicción legal, fiscalía..."></textarea></div>
+      </div>
+      <button class="btn-p" onclick="saveCase()">Guardar Caso</button>
+    </div>
+
+    <!-- NODOS LIST -->
+    <div class="rp-body" id="rpNodos" style="display:none">
+      <div class="sec-title" style="margin-bottom:10px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+        Todos los nodos
+      </div>
+      <div id="nodesList"></div>
+    </div>
+
+    <!-- CASOS GUARDADOS -->
+    <div class="rp-body" id="rpCasos" style="display:none">
+      <div class="sec-title" style="margin-bottom:10px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        Casos guardados
+      </div>
+      <button class="btn-p" onclick="saveAll()" style="margin-bottom:10px">
+        Guardar caso actual
+      </button>
+      <div id="casesList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── STATUS BAR ── -->
+<div id="statusbar">
+  <span>Nodos: <b class="v" id="sb-n">0</b></span>
+  <span>Conexiones: <b class="v" id="sb-l">0</b></span>
+  <span>Sospechosos: <b class="vr" id="sb-s">0</b></span>
+  <span>Víctimas: <b class="vy" id="sb-v">0</b></span>
+  <span class="ml">Herramienta: <b class="v" id="sb-tool">SELECCIONAR</b></span>
+  <span>Zoom: <b class="v" id="sb-zoom">100%</b></span>
+</div>
+
+<!-- ── MODAL ── -->
+<div id="overlay" onclick="overlayClick(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-hd">
+      <div class="modal-icon" id="modalIcon"></div>
+      <div>
+        <div class="modal-title-text" id="modalTitle">Nodo</div>
+        <span class="modal-badge" id="modalBadge"></span>
+      </div>
+      <button class="modal-x" onclick="closeModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-ft" id="modalFt">
+      <button class="btn-s" onclick="closeModal()">Cancelar</button>
+      <button class="btn-p" onclick="saveModal()">Guardar Nodo</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileIn" style="display:none" accept="image/*,video/*" multiple>
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+// NEXUS ENGINE v3 — con integración MongoDB/Supabase
+// ════════════════════════════════════════════════
+
+// ─── Config API ───
+const API_BASE = ''; // rutas relativas al mismo servidor
+
+const TYPES = {
+  suspect: { label:'Sospechoso', color:'#f0002a', marker:'arr-r' },
+  victim:  { label:'Víctima',    color:'#f05a00', marker:'arr' },
+  witness: { label:'Testigo',    color:'#f0c800', marker:'arr-y' },
+  family:  { label:'Familiar',   color:'#f0c800', marker:'arr-y' },
+  place:   { label:'Lugar',      color:'#00c8f0', marker:'arr-b' },
+  event:   { label:'Evento',     color:'#8b5cf6', marker:'arr' },
+  object:  { label:'Evidencia',  color:'#00f07a', marker:'arr' },
+  org:     { label:'Organización',color:'#f08000',marker:'arr' },
+  doc:     { label:'Documento',  color:'#00b4d8', marker:'arr-b' },
+  vehicle: { label:'Vehículo',   color:'#20c8b0', marker:'arr' },
+  phone:   { label:'Teléfono',   color:'#d870e0', marker:'arr' },
+  finance: { label:'Financiero', color:'#00e890', marker:'arr' },
+  social:  { label:'Red Social', color:'#3090f0', marker:'arr-b' },
+  note:    { label:'Nota',       color:'#f0f070', marker:'arr' },
+};
+
+const LINK_TYPES = {
+  parent:'Padre / Hijo', sibling:'Hermano/a', spouse:'Cónyuge',
+  related:'Relacionado con', suspect_of:'Sospechoso de', associate:'Asociado',
+  witness_of:'Testigo de', at_location:'Se encontraba en', called:'Comunicación con',
+  owns:'Posee / Tiene', member_of:'Miembro de', funded:'Financió',
+  victim_of:'Víctima de', fled_to:'Huyó hacia', default:'Vinculado a',
+};
+
+// ─── State ───
+let nodes = [], links = [], caseData = {};
+let currentCaseId = null; // ID en MongoDB del caso activo
+let selNode = null, connFrom = null;
+let tool = 'select', snap = false;
+let zoom = 1, panX = 0, panY = 0;
+let panning = false, px0, py0;
+let nid = 1, lid = 1;
+let editId = null, uploadTarget = null;
+
+const canvas   = document.getElementById('canvas');
+const linksG   = document.getElementById('linksG');
+const hint     = document.getElementById('hint');
+const canvasW  = document.getElementById('canvasWrap');
+
+// ─── SVG icons ───
+const NODE_SVG = {
+  suspect:`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M19 3l2 2-2 2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 5H17" stroke-linecap="round"/></svg>`,
+  victim: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M9 12l1.5 5m3-5L12 17" stroke-linecap="round"/></svg>`,
+  witness:`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M6 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="12" cy="14" r="1.5" fill="COLOR"/></svg>`,
+  family: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M4 20c0-3 2.2-5 5-5s5 2.2 5 5"/><path d="M14 20c0-2.2 1.3-4 3-4s3 1.8 3 4"/></svg>`,
+  place:  `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><path d="M12 2C8.7 2 6 4.7 6 8c0 5 6 13 6 13s6-8 6-13c0-3.3-2.7-6-6-6z"/><circle cx="12" cy="8" r="2.5"/></svg>`,
+  event:  `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  object: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>`,
+  org:    `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M8 9V5a2 2 0 0 1 4 0v0a2 2 0 0 1 4 0v4"/></svg>`,
+  doc:    `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>`,
+  vehicle:`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><rect x="2" y="11" width="20" height="7" rx="2"/><path d="M4 11l3-6h10l3 6"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>`,
+  phone:  `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="18" r="1" fill="COLOR"/><line x1="10" y1="6" x2="14" y2="6"/></svg>`,
+  finance:`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><rect x="2" y="6" width="20" height="13" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="7" y1="15" x2="10" y2="15"/><line x1="14" y1="15" x2="17" y2="15"/></svg>`,
+  social: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`,
+  note:   `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="COLOR" stroke-width="1.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+};
+
+function nodeIcon(type, color) {
+  return (NODE_SVG[type] || NODE_SVG.note).replace(/COLOR/g, color);
+}
+
+// ─── Sync indicator ───
+function setSyncState(state, label) {
+  const el = document.getElementById('syncPill');
+  el.className = 'sync-pill ' + state;
+  el.textContent = label;
+}
+
+// ─── API calls ───
+async function apiSaveCase(data) {
+  try {
+    setSyncState('syncing', 'GUARDANDO...');
+    const method = currentCaseId ? 'PUT' : 'POST';
+    const url = currentCaseId ? `${API_BASE}/api/nexus-cases/${currentCaseId}` : `${API_BASE}/api/nexus-cases`;
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('server error ' + res.status);
+    const saved = await res.json();
+    currentCaseId = saved.id || saved._id?.toString() || currentCaseId;
+    setSyncState('synced', 'SINCRONIZADO');
+    return saved;
+  } catch (err) {
+    setSyncState('error', 'ERROR SYNC');
+    console.error('apiSaveCase error', err);
+    return null;
+  }
+}
+
+async function apiLoadCases() {
+  try {
+    const res = await fetch(`${API_BASE}/api/nexus-cases`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (err) {
+    console.error('apiLoadCases error', err);
+    return [];
+  }
+}
+
+async function apiDeleteCase(id) {
+  try {
+    const res = await fetch(`${API_BASE}/api/nexus-cases/${id}`, { method: 'DELETE' });
+    return res.ok;
+  } catch (err) { return false; }
+}
+
+// ─── Tool management ───
+const TOOL_LABELS = { select:'SELECCIONAR', connect:'CONECTAR', pan:'DESPLAZAR', delete:'ELIMINAR' };
+function setTool(t) {
+  tool = t;
+  document.querySelectorAll('.tool[id^="t-"]').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('t-' + t);
+  if (btn) btn.classList.add('active');
+  document.getElementById('sb-tool').textContent = TOOL_LABELS[t] || t.toUpperCase();
+  canvasW.style.cursor = t === 'pan' ? 'grab' : t === 'delete' ? 'crosshair' : 'default';
+  if (t !== 'connect') { connFrom = null; clearHighlight(); }
+}
+
+function toggleSnap() {
+  snap = !snap;
+  document.getElementById('t-snap').classList.toggle('active', snap);
+  toast(snap ? 'Snap activado' : 'Snap desactivado');
+}
+
+// ─── Node creation ───
+function addNode(type) {
+  const cfg = TYPES[type] || TYPES.note;
+  const wr  = canvasW.getBoundingClientRect();
+  const cx  = (wr.width / 2 - panX) / zoom + (Math.random() * 100 - 50);
+  const cy  = (wr.height / 2 - panY) / zoom + (Math.random() * 100 - 50);
+
+  const n = {
+    id: 'n' + (nid++), type,
+    x: cx - 55, y: cy - 55,
+    name: cfg.label + ' ' + nid,
+    alias:'', description:'', notes:'', tags:[], media:[],
+    firstName:'', lastName:'', dob:'', gender:'', nationality:'',
+    dni:'', passport:'', address:'', phone:'', email:'', occupation:'',
+    status:'', threatLevel:'none',
+    priorRecord:'', motive:'', alibi:'', lastSeen:'', lastKnownLocation:'',
+    familyRole:'', spouse:'', parents:'', children:'',
+    placeType:'', coordinates:'', accessPoints:'', cctv:'',
+    plate:'', brand:'', model:'', vColor:'', vin:'',
+    username:'', platform:'', ip:'', deviceId:'',
+    amount:'', bank:'', account:'', transDate:'',
+    orgType:'', members:'', hierarchy:'',
+    evidCode:'', collectedDate:'', collectedBy:'', custody:'',
+    labResults:'', forensicNotes:'',
+    timeline:[],
+    riskLevel:'low', priority:'normal',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  nodes.push(n);
+  renderNode(n);
+  updateStatus();
+  hint.style.opacity = '0';
+  saveLocal();
+  toast(cfg.label + ' agregado');
+  setTimeout(() => openModal(n.id), 80);
+  return n;
+}
+
+function renderNode(n) {
+  const cfg = TYPES[n.type] || TYPES.note;
+  const el  = document.createElement('div');
+  el.className = 'inv-node';
+  el.id = 'nd-' + n.id;
+  el.style.cssText = `left:${n.x * zoom + panX}px;top:${n.y * zoom + panY}px;transform:scale(${zoom});transform-origin:top left;--tc:${cfg.color}`;
+
+  const imgSrc = n.media && n.media.length ? n.media[0] : null;
+  const mediaHtml = imgSrc
+    ? (imgSrc.mediaType === 'image'
+        ? `<img class="node-media" src="${imgSrc.url}" alt="">`
+        : `<video class="node-media" src="${imgSrc.url}" muted loop></video>`)
+    : `<div class="node-placeholder" style="background:#0b0f16">${nodeIcon(n.type, cfg.color)}</div>`;
+
+  const subLabel = ((n.firstName||'') + ' ' + (n.lastName||'')).trim();
+
+  el.innerHTML = `
+    <div class="node-card" style="--tc:${cfg.color}">
+      <div class="node-bar" style="background:${cfg.color}"></div>
+      ${mediaHtml}
+      <div class="node-body">
+        <div class="node-name">${esc(n.name)}</div>
+        <div class="node-type" style="color:${cfg.color}">${cfg.label.toUpperCase()}</div>
+      </div>
+      <div class="node-btns">
+        <button class="nbtn" onclick="event.stopPropagation();openModal('${n.id}')" title="Editar">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="nbtn del" onclick="event.stopPropagation();delNode('${n.id}')" title="Eliminar">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    ${subLabel ? `<div class="node-sublabel">${esc(subLabel)}</div>` : ''}
+  `;
+
+  el.querySelector('.node-card').addEventListener('click', e => {
+    if (tool === 'delete') { delNode(n.id); return; }
+    if (tool === 'connect') { handleConnect(n.id); return; }
+    selectNode(n.id);
+  });
+
+  dragify(el, n);
+  canvas.appendChild(el);
+}
+
+function reRender(n) {
+  const old = document.getElementById('nd-' + n.id);
+  if (old) old.remove();
+  renderNode(n);
+}
+
+// ─── Drag ───
+function dragify(el, n) {
+  let drag = false, ox, oy, sx, sy;
+  el.querySelector('.node-card').addEventListener('mousedown', e => {
+    if (tool === 'connect' || tool === 'delete') return;
+    if (e.button !== 0) return;
+    drag = true; ox = n.x; oy = n.y; sx = e.clientX; sy = e.clientY;
+    e.preventDefault(); e.stopPropagation();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!drag) return;
+    n.x = ox + (e.clientX - sx) / zoom;
+    n.y = oy + (e.clientY - sy) / zoom;
+    if (snap) { n.x = Math.round(n.x/40)*40; n.y = Math.round(n.y/40)*40; }
+    el.style.left = (n.x * zoom + panX) + 'px';
+    el.style.top  = (n.y * zoom + panY) + 'px';
+    drawLinks();
+  });
+  document.addEventListener('mouseup', () => { if (drag) { drag = false; saveLocal(); } });
+}
+
+// ─── Select ───
+function selectNode(id) {
+  document.querySelectorAll('.inv-node').forEach(e => e.classList.remove('selected'));
+  selNode = nodes.find(n => n.id === id);
+  if (selNode) {
+    document.getElementById('nd-' + id).classList.add('selected');
+    renderInspector(selNode);
+  }
+}
+
+function delNode(id) {
+  if (!confirm('¿Eliminar este nodo?')) return;
+  nodes = nodes.filter(n => n.id !== id);
+  links = links.filter(l => l.from !== id && l.to !== id);
+  const el = document.getElementById('nd-' + id);
+  if (el) el.remove();
+  if (selNode?.id === id) { selNode = null; showInspEmpty(); }
+  drawLinks(); updateStatus(); saveLocal();
+  toast('Nodo eliminado');
+}
+
+// ─── Connect ───
+function handleConnect(id) {
+  if (!connFrom) {
+    connFrom = id;
+    document.getElementById('nd-' + id).querySelector('.node-card').style.outline = '2px solid var(--accent)';
+    toast('Selecciona el nodo destino');
+  } else {
+    clearHighlight();
+    if (connFrom === id) { connFrom = null; return; }
+    showLinkModal(connFrom, id);
+    connFrom = null;
+    setTool('select');
+  }
+}
+
+function clearHighlight() {
+  document.querySelectorAll('.node-card').forEach(c => c.style.outline = '');
+}
+
+function showLinkModal(fromId, toId) {
+  const fn = nodes.find(n => n.id === fromId);
+  const tn = nodes.find(n => n.id === toId);
+  if (!fn || !tn) return;
+
+  const opts = Object.entries(LINK_TYPES).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+
+  document.getElementById('modalIcon').innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><circle cx="5" cy="12" r="2.5" fill="var(--accent)"/><circle cx="19" cy="12" r="2.5" fill="var(--accent)"/><line x1="7.5" y1="12" x2="16.5" y2="12"/></svg>`;
+  document.getElementById('modalIcon').style.background = 'rgba(0,200,240,.1)';
+  document.getElementById('modalTitle').textContent = 'Crear Conexión';
+  document.getElementById('modalBadge').textContent = '';
+  document.getElementById('modalFt').style.display = 'none';
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="sec">
+      <div class="sec-title">Vinculando nodos</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px;background:var(--bg3);border-radius:4px;border:1px solid var(--border)">
+        <div style="font-size:12px;color:${TYPES[fn.type]?.color||'#fff'};font-family:'Barlow Condensed',sans-serif;font-weight:700">${esc(fn.name)}</div>
+        <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><line x1="0" y1="6" x2="18" y2="6" stroke="var(--text3)" stroke-width="1.5"/><polyline points="14 2 18 6 14 10" stroke="var(--text3)" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+        <div style="font-size:12px;color:${TYPES[tn.type]?.color||'#fff'};font-family:'Barlow Condensed',sans-serif;font-weight:700">${esc(tn.name)}</div>
+      </div>
+      <div class="fg"><label>Tipo de vínculo</label><select class="fi" id="lt">${opts}</select></div>
+      <div class="fg"><label>Descripción</label><input class="fi" id="ld" placeholder="Detalle del vínculo..."></div>
+      <div class="g2">
+        <div class="fg"><label>Fecha del vínculo</label><input class="fi" type="date" id="ldate"></div>
+        <div class="fg"><label>Fortaleza</label>
+          <select class="fi" id="lstr">
+            <option value="strong">Confirmado</option>
+            <option value="medium">Probable</option>
+            <option value="weak">Sospechado</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label>Fuente / Evidencia</label><input class="fi" id="lsrc" placeholder="Declaración, video, registro..."></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-s" onclick="closeModal()" style="margin-top:0">Cancelar</button>
+      <button class="btn-p" onclick="confirmLink('${fromId}','${toId}')" style="margin-top:0">Conectar</button>
+    </div>
+  `;
+  openModalEl();
+}
+
+function confirmLink(fId, tId) {
+  const lk = {
+    id: 'l'+(lid++), from:fId, to:tId,
+    type: v('lt'), desc: v('ld'), date: v('ldate'),
+    strength: v('lstr'), source: v('lsrc'),
+  };
+  links.push(lk);
+  drawLinks(); closeModal(); updateStatus(); saveLocal();
+  document.getElementById('modalFt').style.display = '';
+  toast('Conexión creada');
+}
+
+// ─── Draw Links ───
+function drawLinks() {
+  linksG.innerHTML = '';
+  links.forEach(lk => {
+    const fn = nodes.find(n => n.id === lk.from);
+    const tn = nodes.find(n => n.id === lk.to);
+    if (!fn || !tn) return;
+
+    const fw = 110, fh = 90;
+    const fx = fn.x * zoom + panX + fw/2;
+    const fy = fn.y * zoom + panY + fh/2;
+    const tx = tn.x * zoom + panX + fw/2;
+    const ty = tn.y * zoom + panY + fh/2;
+
+    const fc = TYPES[fn.type]?.color || '#2a4060';
+    const sw = lk.strength === 'strong' ? 2 : lk.strength === 'medium' ? 1.5 : 1;
+    const op = lk.strength === 'weak' ? '.35' : '.65';
+    const da = lk.strength === 'weak' ? '5,4' : lk.strength === 'medium' ? '8,4' : '';
+    const mk = TYPES[fn.type]?.marker || 'arr';
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',fx); line.setAttribute('y1',fy);
+    line.setAttribute('x2',tx); line.setAttribute('y2',ty);
+    line.setAttribute('stroke', fc);
+    line.setAttribute('stroke-width', sw);
+    line.setAttribute('stroke-opacity', op);
+    if (da) line.setAttribute('stroke-dasharray', da);
+    line.setAttribute('marker-end','url(#'+mk+')');
+
+    const mx=(fx+tx)/2, my=(fy+ty)/2;
+    const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+    lbl.setAttribute('x',mx); lbl.setAttribute('y',my-5);
+    lbl.setAttribute('text-anchor','middle');
+    lbl.setAttribute('fill','#2a4060');
+    lbl.setAttribute('font-size','9');
+    lbl.setAttribute('font-family','Barlow Condensed,sans-serif');
+    lbl.setAttribute('letter-spacing','1');
+    lbl.textContent = (LINK_TYPES[lk.type]||'').toUpperCase();
+
+    linksG.appendChild(line);
+    linksG.appendChild(lbl);
+  });
+}
+
+// ─── Inspector ───
+function showInspEmpty() {
+  document.getElementById('rpInspector').innerHTML = `<div class="insp-empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>Selecciona un nodo</p></div>`;
+}
+
+function renderInspector(n) {
+  if (!n) return showInspEmpty();
+  const cfg = TYPES[n.type] || TYPES.note;
+
+  const conns = links.filter(l => l.from===n.id||l.to===n.id).map(l => {
+    const other = nodes.find(x => x.id===(l.from===n.id?l.to:l.from));
+    const oc = other ? (TYPES[other.type]?.color||'#fff') : '#fff';
+    return `<div class="conn-row">
+      <div class="conn-dot" style="background:${oc}"></div>
+      <div><div class="conn-txt">${esc(other?.name||'?')}</div><div class="conn-meta">${LINK_TYPES[l.type]||l.type} ${l.strength?'· '+l.strength:''}</div></div>
+      <button class="conn-x" onclick="delLink('${l.id}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>`;
+  }).join('') || '<div style="color:var(--text3);font-size:11px;letter-spacing:1px">Sin conexiones</div>';
+
+  const tl = (n.timeline||[]).map(t =>
+    `<div class="tl-item"><div class="tl-date">${esc(t.date||'')}</div><div class="tl-txt">${esc(t.text)}</div></div>`
+  ).join('');
+
+  const mediaHtml = (n.media||[]).slice(0,6).map(m =>
+    m.mediaType==='image'
+      ? `<div class="media-cell"><img src="${m.url}" loading="lazy"><button class="media-del-btn" onclick="rmMedia('${n.id}','${m.url}')"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`
+      : `<div class="media-cell"><video src="${m.url}" muted></video><button class="media-del-btn" onclick="rmMedia('${n.id}','${m.url}')"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`
+  ).join('');
+
+  document.getElementById('rpInspector').innerHTML = `
+    <div class="sec" style="border-bottom:2px solid ${cfg.color}22;padding-bottom:12px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:38px;height:38px;background:${cfg.color}15;border:1px solid ${cfg.color}40;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${nodeIcon(n.type,cfg.color)}</div>
+        <div style="flex:1;overflow:hidden">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:${cfg.color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(n.name)}</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:1px">${cfg.label}</div>
+        </div>
+        <button class="btn-p" onclick="openModal('${n.id}')" style="width:auto;padding:5px 10px;font-size:10px;margin-top:0;flex-shrink:0">Editar</button>
+      </div>
+      ${n.description?`<div style="margin-top:8px;font-size:11px;color:var(--text2);line-height:1.5">${esc(n.description)}</div>`:''}
+    </div>
+    ${mediaHtml?`<div class="sec"><div class="sec-title">Medios</div><div class="media-grid">${mediaHtml}</div></div>`:''}
+    <div class="sec"><div class="sec-title">Conexiones</div>${conns}</div>
+    ${tl?`<div class="sec"><div class="sec-title">Línea de tiempo</div>${tl}</div>`:''}
+  `;
+}
+
+function delLink(id) {
+  links = links.filter(l => l.id !== id);
+  drawLinks(); updateStatus(); saveLocal();
+  if (selNode) renderInspector(selNode);
+}
+
+function rmMedia(nodeId, url) {
+  const n = nodes.find(x => x.id === nodeId);
+  if (!n) return;
+  n.media = n.media.filter(m => m.url !== url);
+  reRender(n); saveLocal();
+  if (selNode?.id === nodeId) renderInspector(n);
+}
+
+// ─── MODAL (full editor) ───
+function openModal(id) {
+  editId = id;
+  const n = nodes.find(x => x.id === id);
+  if (!n) return;
+  const cfg = TYPES[n.type] || TYPES.note;
+
+  document.getElementById('modalIcon').innerHTML = nodeIcon(n.type, cfg.color);
+  document.getElementById('modalIcon').style.cssText = `background:${cfg.color}15;border:1px solid ${cfg.color}40;border-radius:5px;width:34px;height:34px;display:flex;align-items:center;justify-content:center`;
+  document.getElementById('modalTitle').textContent = esc(n.name) || cfg.label;
+  document.getElementById('modalBadge').textContent = cfg.label.toUpperCase();
+  document.getElementById('modalBadge').style.cssText = `background:${cfg.color}15;color:${cfg.color};border:1px solid ${cfg.color}30`;
+  document.getElementById('modalFt').style.display = '';
+
+  const tagsHtml = (n.tags||[]).map((t,i)=>
+    `<span class="tag">${esc(t)}<button onclick="rmTag('${id}',${i})"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>`
+  ).join('');
+
+  const tlHtml = (n.timeline||[]).map((t,i)=>
+    `<div class="tl-item" style="margin-bottom:6px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px">
+        <div><div class="tl-date">${esc(t.date||'')}</div><div class="tl-txt">${esc(t.text)}</div></div>
+        <button onclick="rmTl('${id}',${i})" style="background:none;border:none;color:var(--text3);cursor:pointer;flex-shrink:0"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>`
+  ).join('');
+
+  const mediaHtml = (n.media||[]).map((m)=>
+    `<div class="conn-row">
+      <div style="color:var(--text2)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+      <div style="flex:1;overflow:hidden"><div style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name||'Archivo')}</div><div style="font-size:9px;color:var(--text3)">${m.mediaType}</div></div>
+      <button class="conn-x" onclick="rmMedia('${id}','${m.url}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>`
+  ).join('');
+
+  const isPerson = ['suspect','victim','witness','family'].includes(n.type);
+
+  document.getElementById('modalBody').innerHTML = `
+  <div class="sec">
+    <div class="sec-title">Información básica</div>
+    <div class="g2">
+      <div class="fg"><label>Nombre / Identificador *</label><input class="fi" id="f-name" value="${esc(n.name||'')}"></div>
+      <div class="fg"><label>Alias / Apodo</label><input class="fi" id="f-alias" value="${esc(n.alias||'')}"></div>
+    </div>
+    <div class="fg"><label>Descripción</label><textarea class="fi" id="f-desc" rows="3">${esc(n.description||'')}</textarea></div>
+    <div class="fg"><label>Notas internas (confidencial)</label><textarea class="fi" id="f-notes" rows="2">${esc(n.notes||'')}</textarea></div>
+    <div class="fg"><label>Etiquetas</label>
+      <div class="tags-wrap" onclick="document.getElementById('f-tag').focus()">
+        <span id="tags-display-${id}">${tagsHtml}</span>
+        <input class="tag-in" id="f-tag" placeholder="Agregar y presionar Enter..." onkeydown="addTag(event,'${id}')">
+      </div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>Nivel de riesgo</label>
+        <select class="fi" id="f-risk">
+          <option value="none" ${n.riskLevel==='none'?'selected':''}>Sin riesgo</option>
+          <option value="low" ${n.riskLevel==='low'?'selected':''}>Bajo</option>
+          <option value="medium" ${n.riskLevel==='medium'?'selected':''}>Medio</option>
+          <option value="high" ${n.riskLevel==='high'?'selected':''}>Alto</option>
+          <option value="extreme" ${n.riskLevel==='extreme'?'selected':''}>Extremo</option>
+        </select>
+      </div>
+      <div class="fg"><label>Prioridad de investigación</label>
+        <select class="fi" id="f-prio">
+          <option value="low" ${n.priority==='low'?'selected':''}>Baja</option>
+          <option value="normal" ${n.priority==='normal'?'selected':''}>Normal</option>
+          <option value="high" ${n.priority==='high'?'selected':''}>Alta</option>
+          <option value="critical" ${n.priority==='critical'?'selected':''}>Crítica</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  ${isPerson?`
+  <div class="sec">
+    <div class="sec-title">Datos personales</div>
+    <div class="g3">
+      <div class="fg"><label>Nombres</label><input class="fi" id="f-fn" value="${esc(n.firstName||'')}"></div>
+      <div class="fg"><label>Apellidos</label><input class="fi" id="f-ln" value="${esc(n.lastName||'')}"></div>
+      <div class="fg"><label>Fecha de nac.</label><input class="fi" type="date" id="f-dob" value="${n.dob||''}"></div>
+    </div>
+    <div class="g3">
+      <div class="fg"><label>Sexo</label>
+        <select class="fi" id="f-gender">
+          <option value="">—</option>
+          <option value="M" ${n.gender==='M'?'selected':''}>Masculino</option>
+          <option value="F" ${n.gender==='F'?'selected':''}>Femenino</option>
+          <option value="O" ${n.gender==='O'?'selected':''}>Otro</option>
+        </select>
+      </div>
+      <div class="fg"><label>Nacionalidad</label><input class="fi" id="f-nat" value="${esc(n.nationality||'')}"></div>
+      <div class="fg"><label>DNI / Cédula</label><input class="fi" id="f-dni" value="${esc(n.dni||'')}"></div>
+    </div>
+    <div class="g3">
+      <div class="fg"><label>Pasaporte</label><input class="fi" id="f-pp" value="${esc(n.passport||'')}"></div>
+      <div class="fg"><label>Teléfono</label><input class="fi" id="f-ph" value="${esc(n.phone||'')}"></div>
+      <div class="fg"><label>Correo</label><input class="fi" id="f-email" value="${esc(n.email||'')}"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>Ocupación</label><input class="fi" id="f-occ" value="${esc(n.occupation||'')}"></div>
+      <div class="fg"><label>Estado actual</label>
+        <select class="fi" id="f-status">
+          <option value="">—</option>
+          <option value="alive" ${n.status==='alive'?'selected':''}>Vivo</option>
+          <option value="dead" ${n.status==='dead'?'selected':''}>Fallecido</option>
+          <option value="missing" ${n.status==='missing'?'selected':''}>Desaparecido</option>
+          <option value="arrested" ${n.status==='arrested'?'selected':''}>Detenido</option>
+          <option value="fugitive" ${n.status==='fugitive'?'selected':''}>Prófugo</option>
+          <option value="unknown" ${n.status==='unknown'?'selected':''}>Desconocido</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Dirección / Domicilio</label><input class="fi" id="f-addr" value="${esc(n.address||'')}"></div>
+  </div>
+  <div class="sec">
+    <div class="sec-title">Árbol genealógico</div>
+    <div class="g3">
+      <div class="fg"><label>Rol familiar</label>
+        <select class="fi" id="f-frole">
+          <option value="">—</option>
+          ${['Padre','Madre','Hijo','Hija','Hermano','Hermana','Cónyuge/Esposo','Cónyuge/Esposa','Abuelo','Abuela','Tío','Tía','Primo','Prima','Sobrino','Sobrina','Otro'].map(r=>`<option ${n.familyRole===r?'selected':''}>${r}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><label>Cónyuge / Pareja</label><input class="fi" id="f-spouse" value="${esc(n.spouse||'')}"></div>
+      <div class="fg"><label>Hijos</label><input class="fi" id="f-children" value="${esc(n.children||'')}"></div>
+    </div>
+    <div class="fg"><label>Padres</label><input class="fi" id="f-parents" value="${esc(n.parents||'')}"></div>
+  </div>
+  ${['suspect','witness'].includes(n.type)?`
+  <div class="sec">
+    <div class="sec-title">Perfil criminal</div>
+    <div class="fg"><label>Antecedentes penales</label><textarea class="fi" id="f-prior" rows="2">${esc(n.priorRecord||'')}</textarea></div>
+    <div class="fg"><label>Motivo / Móvil</label><textarea class="fi" id="f-motive" rows="2">${esc(n.motive||'')}</textarea></div>
+    <div class="fg"><label>Coartada declarada</label><textarea class="fi" id="f-alibi" rows="2">${esc(n.alibi||'')}</textarea></div>
+    <div class="g2">
+      <div class="fg"><label>Último avistamiento</label><input class="fi" type="datetime-local" id="f-seen" value="${n.lastSeen||''}"></div>
+      <div class="fg"><label>Último lugar conocido</label><input class="fi" id="f-seenloc" value="${esc(n.lastKnownLocation||'')}"></div>
+    </div>
+    <div class="fg"><label>Nivel de amenaza</label>
+      <select class="fi" id="f-threat">
+        <option value="none" ${n.threatLevel==='none'?'selected':''}>Sin amenaza</option>
+        <option value="low" ${n.threatLevel==='low'?'selected':''}>Baja</option>
+        <option value="medium" ${n.threatLevel==='medium'?'selected':''}>Media</option>
+        <option value="high" ${n.threatLevel==='high'?'selected':''}>Alta</option>
+        <option value="extreme" ${n.threatLevel==='extreme'?'selected':''}>Extrema — Peligroso</option>
+      </select>
+    </div>
+  </div>`:''}`:''}
+
+  ${n.type==='place'?`
+  <div class="sec">
+    <div class="sec-title">Datos del lugar</div>
+    <div class="g2">
+      <div class="fg"><label>Tipo de lugar</label>
+        <select class="fi" id="f-pt">
+          ${['Residencia','Departamento','Local comercial','Almacén','Espacio público','Parque','Vía pública','Terreno baldío','Institución pública','Zona industrial','Zona rural','Otro'].map(r=>`<option ${n.placeType===r?'selected':''}>${r}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><label>Coordenadas GPS</label><input class="fi" id="f-coords" value="${esc(n.coordinates||'')}" placeholder="-12.0453,-77.0311"></div>
+    </div>
+    <div class="fg"><label>Descripción del acceso</label><textarea class="fi" id="f-access" rows="2">${esc(n.accessPoints||'')}</textarea></div>
+    <div class="fg"><label>Cámaras CCTV</label><textarea class="fi" id="f-cctv" rows="2">${esc(n.cctv||'')}</textarea></div>
+  </div>`:''}
+
+  ${n.type==='vehicle'?`
+  <div class="sec">
+    <div class="sec-title">Datos del vehículo</div>
+    <div class="g3">
+      <div class="fg"><label>Placa</label><input class="fi" id="f-plate" value="${esc(n.plate||'')}"></div>
+      <div class="fg"><label>Marca</label><input class="fi" id="f-brand" value="${esc(n.brand||'')}"></div>
+      <div class="fg"><label>Modelo</label><input class="fi" id="f-model" value="${esc(n.model||'')}"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>Color</label><input class="fi" id="f-vcolor" value="${esc(n.vColor||'')}"></div>
+      <div class="fg"><label>N° de serie / VIN</label><input class="fi" id="f-vin" value="${esc(n.vin||'')}"></div>
+    </div>
+  </div>`:''}
+
+  ${['phone','social'].includes(n.type)?`
+  <div class="sec">
+    <div class="sec-title">Datos digitales</div>
+    <div class="g2">
+      <div class="fg"><label>Número / Usuario</label><input class="fi" id="f-user" value="${esc(n.username||'')}"></div>
+      <div class="fg"><label>Plataforma / Operador</label><input class="fi" id="f-plat" value="${esc(n.platform||'')}"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>Dirección IP</label><input class="fi" id="f-ip" value="${esc(n.ip||'')}"></div>
+      <div class="fg"><label>ID de dispositivo / IMEI</label><input class="fi" id="f-dev" value="${esc(n.deviceId||'')}"></div>
+    </div>
+  </div>`:''}
+
+  ${n.type==='finance'?`
+  <div class="sec">
+    <div class="sec-title">Datos financieros</div>
+    <div class="g2">
+      <div class="fg"><label>Monto</label><input class="fi" id="f-amt" value="${esc(n.amount||'')}"></div>
+      <div class="fg"><label>Fecha de transacción</label><input class="fi" type="date" id="f-tdate" value="${n.transDate||''}"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>Banco / Entidad</label><input class="fi" id="f-bank" value="${esc(n.bank||'')}"></div>
+      <div class="fg"><label>N° de cuenta</label><input class="fi" id="f-acc" value="${esc(n.account||'')}"></div>
+    </div>
+  </div>`:''}
+
+  ${n.type==='org'?`
+  <div class="sec">
+    <div class="sec-title">Datos de organización</div>
+    <div class="fg"><label>Tipo</label>
+      <select class="fi" id="f-otype">
+        ${['Criminal','Cartel','Pandilla','Célula terrorista','Empresa legal','Gobierno / Estado','ONG','Otra'].map(r=>`<option ${n.orgType===r?'selected':''}>${r}</option>`).join('')}
+      </select>
+    </div>
+    <div class="fg"><label>Miembros conocidos</label><textarea class="fi" id="f-members" rows="2">${esc(n.members||'')}</textarea></div>
+    <div class="fg"><label>Jerarquía / Estructura</label><textarea class="fi" id="f-hier" rows="2">${esc(n.hierarchy||'')}</textarea></div>
+  </div>`:''}
+
+  <div class="sec">
+    <div class="sec-title">Cadena de custodia</div>
+    <div class="g2">
+      <div class="fg"><label>Código de evidencia</label><input class="fi" id="f-evc" value="${esc(n.evidCode||'')}" placeholder="EVD-2024-001"></div>
+      <div class="fg"><label>Fecha de recolección</label><input class="fi" type="date" id="f-evd" value="${n.collectedDate||''}"></div>
+    </div>
+    <div class="g2">
+      <div class="fg"><label>Recolectado por</label><input class="fi" id="f-evby" value="${esc(n.collectedBy||'')}"></div>
+      <div class="fg"><label>Cadena de custodia</label><input class="fi" id="f-coc" value="${esc(n.custody||'')}"></div>
+    </div>
+    <div class="fg"><label>Resultados de laboratorio</label><textarea class="fi" id="f-lab" rows="2">${esc(n.labResults||'')}</textarea></div>
+    <div class="fg"><label>Notas forenses</label><textarea class="fi" id="f-fn2" rows="2">${esc(n.forensicNotes||'')}</textarea></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Fotos y videos</div>
+    <div class="upload-area" onclick="trigUpload('${id}')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Subir imagen o video</span>
+      <span style="font-size:9px;color:var(--text3)">JPG · PNG · MP4 · MOV (máx. 10MB)</span>
+    </div>
+    <div id="media-list-${id}" style="margin-top:6px">${mediaHtml}</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">Línea de tiempo</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;align-items:flex-end">
+      <div class="fg" style="margin:0;width:130px"><label>Fecha</label><input class="fi" type="date" id="tl-date"></div>
+      <div class="fg" style="margin:0;flex:1"><label>Descripción del evento</label><input class="fi" id="tl-txt" placeholder="¿Qué ocurrió?"></div>
+      <button onclick="addTl('${id}')" class="btn-p" style="width:auto;padding:5px 10px;margin:0;font-size:11px;height:30px;align-self:flex-end">+</button>
+    </div>
+    <div id="tl-list-${id}">${tlHtml}</div>
+  </div>
+  `;
+
+  openModalEl();
+}
+
+function openModalEl() { document.getElementById('overlay').classList.add('open'); }
+function closeModal()  { document.getElementById('overlay').classList.remove('open'); }
+function overlayClick(e) { if (e.target === document.getElementById('overlay')) closeModal(); }
+
+// ─── Save modal ───
+function saveModal() {
+  const n = nodes.find(x => x.id === editId);
+  if (!n) return;
+  const g = id => { const el=document.getElementById(id); return el?el.value:''; };
+
+  n.name=g('f-name')||n.name; n.alias=g('f-alias'); n.description=g('f-desc');
+  n.notes=g('f-notes'); n.riskLevel=g('f-risk'); n.priority=g('f-prio');
+  n.firstName=g('f-fn'); n.lastName=g('f-ln'); n.dob=g('f-dob');
+  n.gender=g('f-gender'); n.nationality=g('f-nat'); n.dni=g('f-dni');
+  n.passport=g('f-pp'); n.phone=g('f-ph'); n.email=g('f-email');
+  n.occupation=g('f-occ'); n.status=g('f-status'); n.address=g('f-addr');
+  n.familyRole=g('f-frole'); n.spouse=g('f-spouse'); n.children=g('f-children');
+  n.parents=g('f-parents'); n.priorRecord=g('f-prior'); n.motive=g('f-motive');
+  n.alibi=g('f-alibi'); n.lastSeen=g('f-seen'); n.lastKnownLocation=g('f-seenloc');
+  n.threatLevel=g('f-threat'); n.placeType=g('f-pt'); n.coordinates=g('f-coords');
+  n.accessPoints=g('f-access'); n.cctv=g('f-cctv'); n.plate=g('f-plate');
+  n.brand=g('f-brand'); n.model=g('f-model'); n.vColor=g('f-vcolor'); n.vin=g('f-vin');
+  n.username=g('f-user'); n.platform=g('f-plat'); n.ip=g('f-ip'); n.deviceId=g('f-dev');
+  n.amount=g('f-amt'); n.transDate=g('f-tdate'); n.bank=g('f-bank'); n.account=g('f-acc');
+  n.orgType=g('f-otype'); n.members=g('f-members'); n.hierarchy=g('f-hier');
+  n.evidCode=g('f-evc'); n.collectedDate=g('f-evd'); n.collectedBy=g('f-evby');
+  n.custody=g('f-coc'); n.labResults=g('f-lab'); n.forensicNotes=g('f-fn2');
+  n.updatedAt=new Date().toISOString();
+
+  reRender(n);
+  if (selNode?.id === n.id) renderInspector(n);
+  closeModal();
+  updateStatus();
+  updateNodesList();
+  saveLocal();
+  toast('Nodo guardado');
+}
+
+// ─── Tags & Timeline ───
+function addTag(e, id) {
+  if (e.key !== 'Enter' && e.key !== ',') return;
+  e.preventDefault();
+  const inp = document.getElementById('f-tag');
+  const val = inp.value.trim().replace(',','');
+  if (!val) return;
+  const n = nodes.find(x => x.id===id);
+  if (!n) return;
+  if (!n.tags) n.tags=[];
+  if (!n.tags.includes(val)) {
+    n.tags.push(val);
+    const disp = document.getElementById('tags-display-'+id);
+    if (disp) {
+      const span = document.createElement('span');
+      span.className='tag';
+      const idx=n.tags.length-1;
+      span.innerHTML=`${esc(val)}<button onclick="rmTag('${id}',${idx})"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+      disp.appendChild(span);
+    }
+  }
+  inp.value='';
+}
+
+function rmTag(id, idx) {
+  const n = nodes.find(x => x.id===id);
+  if (n?.tags) n.tags.splice(idx,1);
+  openModal(id);
+}
+
+function addTl(id) {
+  const d = document.getElementById('tl-date')?.value;
+  const t = document.getElementById('tl-txt')?.value.trim();
+  if (!t) return;
+  const n = nodes.find(x => x.id===id);
+  if (!n) return;
+  if (!n.timeline) n.timeline=[];
+  n.timeline.push({date:d||'',text:t});
+  n.timeline.sort((a,b)=>a.date.localeCompare(b.date));
+  const c = document.getElementById('tl-list-'+id);
+  if (c) c.innerHTML = n.timeline.map((x,i)=>
+    `<div class="tl-item" style="margin-bottom:6px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div><div class="tl-date">${esc(x.date||'')}</div><div class="tl-txt">${esc(x.text)}</div></div>
+        <button onclick="rmTl('${id}',${i})" style="background:none;border:none;color:var(--text3);cursor:pointer"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    </div>`
+  ).join('');
+  document.getElementById('tl-date').value='';
+  document.getElementById('tl-txt').value='';
+}
+
+function rmTl(id, idx) {
+  const n = nodes.find(x => x.id===id);
+  if (n?.timeline) n.timeline.splice(idx,1);
+  const c = document.getElementById('tl-list-'+id);
+  if (c) c.innerHTML = (n.timeline||[]).map((x,i)=>
+    `<div class="tl-item"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div><div class="tl-date">${esc(x.date||'')}</div><div class="tl-txt">${esc(x.text)}</div></div><button onclick="rmTl('${id}',${i})" style="background:none;border:none;color:var(--text3);cursor:pointer"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>`
+  ).join('');
+}
+
+// ─── Media upload (usa /api/upload del servidor) ───
+function trigUpload(id) {
+  uploadTarget = id;
+  document.getElementById('fileIn').click();
+}
+
+document.getElementById('fileIn').addEventListener('change', async e => {
+  const files = [...e.target.files];
+  e.target.value = '';
+  if (!files.length || !uploadTarget) return;
+  const n = nodes.find(x => x.id === uploadTarget);
+  if (!n) return;
+  if (!n.media) n.media = [];
+
+  for (const file of files) {
+    toast('Subiendo ' + file.name + '...');
+    try {
+      // Intenta subir al servidor (Supabase via /api/upload)
+      const fd = new FormData();
+      fd.append('photoFile', file);
+      const r = await fetch('/api/upload', { method: 'POST', body: fd });
+      if (r.ok) {
+        const d = await r.json();
+        const isV = file.type.startsWith('video/');
+        n.media.push({ url: d.url, mediaType: isV ? 'video' : 'image', name: file.name });
+      } else {
+        // Fallback: URL local temporal (solo esta sesión)
+        const url = URL.createObjectURL(file);
+        const isV = file.type.startsWith('video/');
+        n.media.push({ url, mediaType: isV ? 'video' : 'image', name: file.name });
+        toast('Supabase no configurado — imagen solo en esta sesión');
+      }
+    } catch (err) {
+      // Fallback offline
+      const url = URL.createObjectURL(file);
+      const isV = file.type.startsWith('video/');
+      n.media.push({ url, mediaType: isV ? 'video' : 'image', name: file.name });
+      toast('Sin conexión — imagen solo en esta sesión');
+    }
+  }
+
+  reRender(n);
+  if (selNode?.id === uploadTarget) renderInspector(n);
+  saveLocal();
+  toast('Archivos procesados');
+});
+
+// ─── Pan & Zoom ───
+canvasW.addEventListener('mousedown', e => {
+  const onCanvas = e.target===canvasW || e.target===document.getElementById('canvas') || e.target===document.getElementById('svgLayer');
+  if (!onCanvas && e.button!==1) return;
+  if (tool!=='pan' && e.button!==1) return;
+  panning=true; px0=e.clientX-panX; py0=e.clientY-panY;
+  canvasW.style.cursor='grabbing'; e.preventDefault();
+});
+document.addEventListener('mousemove', e => {
+  if (!panning) return;
+  panX=e.clientX-px0; panY=e.clientY-py0;
+  reposAll(); drawLinks();
+});
+document.addEventListener('mouseup', ()=>{ if(panning){panning=false; canvasW.style.cursor=tool==='pan'?'grab':'default';} });
+
+canvasW.addEventListener('wheel', e => {
+  e.preventDefault();
+  const f = e.deltaY>0 ? 0.9 : 1.11;
+  const nz = Math.max(.15, Math.min(4, zoom*f));
+  const r  = canvasW.getBoundingClientRect();
+  const mx = e.clientX-r.left, my = e.clientY-r.top;
+  panX = mx-(mx-panX)*(nz/zoom);
+  panY = my-(my-panY)*(nz/zoom);
+  zoom = nz;
+  reposAll(); drawLinks();
+  document.getElementById('sb-zoom').textContent = Math.round(zoom*100)+'%';
+}, {passive:false});
+
+function reposAll() {
+  nodes.forEach(n=>{
+    const el=document.getElementById('nd-'+n.id);
+    if (!el) return;
+    el.style.left=(n.x*zoom+panX)+'px';
+    el.style.top=(n.y*zoom+panY)+'px';
+    el.style.transform=`scale(${zoom})`;
+  });
+}
+
+function doZoom(f) {
+  zoom=Math.max(.15,Math.min(4,zoom*f));
+  reposAll(); drawLinks();
+  document.getElementById('sb-zoom').textContent=Math.round(zoom*100)+'%';
+}
+function resetView() { zoom=1;panX=0;panY=0; reposAll(); drawLinks(); document.getElementById('sb-zoom').textContent='100%'; }
+
+// ─── Right panel tabs ───
+function rpSwitch(tab) {
+  const tabs=['inspector','caso','nodos','casos'];
+  document.querySelectorAll('.rp-tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===tab));
+  document.getElementById('rpInspector').style.display=tab==='inspector'?'':'none';
+  document.getElementById('rpCaso').style.display=tab==='caso'?'':'none';
+  document.getElementById('rpNodos').style.display=tab==='nodos'?'':'none';
+  document.getElementById('rpCasos').style.display=tab==='casos'?'':'none';
+  if (tab==='nodos') updateNodesList();
+  if (tab==='casos') loadCasesList();
+}
+
+function updateNodesList() {
+  const el=document.getElementById('nodesList');
+  if (!el) return;
+  if (!nodes.length) { el.innerHTML='<div style="color:var(--text3);font-size:11px;letter-spacing:1px">Sin nodos</div>'; return; }
+  el.innerHTML=nodes.map(n=>{
+    const c=TYPES[n.type]?.color||'#fff';
+    return `<div class="nl-item" onclick="selectNode('${n.id}');rpSwitch('inspector')">
+      <div class="nl-dot" style="background:${c}"></div>
+      <div class="nl-name">${esc(n.name)}</div>
+      <div class="nl-type" style="color:${c}">${(TYPES[n.type]?.label||n.type).substring(0,6)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Cases list (panel Casos) ───
+async function loadCasesList() {
+  const el = document.getElementById('casesList');
+  if (!el) return;
+  el.innerHTML = '<div style="color:var(--text3);font-size:11px">Cargando...</div>';
+  const cases = await apiLoadCases();
+  if (!cases.length) {
+    el.innerHTML = '<div style="color:var(--text3);font-size:11px;letter-spacing:1px">Sin casos guardados</div>';
+    return;
+  }
+  el.innerHTML = cases.map(c => {
+    const isActive = c.id === currentCaseId || c._id === currentCaseId;
+    const name = (c.caseData?.name || c.name || 'Sin nombre').toUpperCase();
+    const date = c.updatedAt ? new Date(c.updatedAt).toLocaleDateString() : '';
+    const nodeCount = (c.nodes||[]).length;
+    return `<div class="case-item ${isActive?'active':''}" onclick="loadCase('${c.id||c._id}')">
+      <div style="flex:1">
+        <div class="case-name">${esc(name)}</div>
+        <div class="case-meta">${nodeCount} nodos · ${date}</div>
+      </div>
+      <button class="case-del" onclick="event.stopPropagation();deleteCase('${c.id||c._id}')" title="Eliminar">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+async function loadCase(id) {
+  const cases = await apiLoadCases();
+  const c = cases.find(x => (x.id||x._id?.toString()) === id);
+  if (!c) return toast('Caso no encontrado');
+  if (!confirm('¿Cargar este caso? Se perderán los cambios no guardados.')) return;
+
+  // Limpiar canvas
+  canvas.querySelectorAll('.inv-node').forEach(el=>el.remove());
+  linksG.innerHTML='';
+
+  nodes = c.nodes || [];
+  links = c.links || [];
+  caseData = c.caseData || {};
+  currentCaseId = c.id || c._id?.toString();
+  nid = Math.max(0, ...nodes.map(n=>parseInt((n.id||'n0').replace('n',''))||0)) + 1;
+  lid = Math.max(0, ...links.map(l=>parseInt((l.id||'l0').replace('l',''))||0)) + 1;
+
+  nodes.forEach(n => renderNode(n));
+  setTimeout(drawLinks, 100);
+  updateStatus();
+  saveLocal();
+  hint.style.opacity = nodes.length ? '0' : '1';
+
+  // Rellenar formulario del caso
+  if (caseData.name) {
+    const el = document.getElementById('c-name');
+    if (el) { el.value = caseData.name; updateCaseLabel(); }
+  }
+  ['c-num','c-date','c-agent','c-status','c-priority','c-crime','c-juris','c-unit','c-summary','c-legal'].forEach(fid => {
+    const key = fid.replace('c-','');
+    const map = {'num':'num','date':'date','agent':'agent','status':'status','priority':'priority','crime':'crime','juris':'jurisdiction','unit':'unit','summary':'summary','legal':'legal'};
+    const val = caseData[map[key]||key];
+    const el = document.getElementById(fid);
+    if (el && val) el.value = val;
+  });
+
+  toast('Caso cargado: ' + (caseData.name || 'Sin nombre'));
+  rpSwitch('inspector');
+}
+
+async function deleteCase(id) {
+  if (!confirm('¿Eliminar este caso permanentemente?')) return;
+  const ok = await apiDeleteCase(id);
+  if (ok) {
+    if (currentCaseId === id) {
+      currentCaseId = null;
+      setSyncState('', 'OFFLINE');
+    }
+    toast('Caso eliminado');
+    loadCasesList();
+  } else {
+    toast('Error al eliminar caso');
+  }
+}
+
+// ─── Status bar ───
+function updateStatus() {
+  document.getElementById('sb-n').textContent=nodes.length;
+  document.getElementById('sb-l').textContent=links.length;
+  document.getElementById('sb-s').textContent=nodes.filter(n=>n.type==='suspect').length;
+  document.getElementById('sb-v').textContent=nodes.filter(n=>n.type==='victim').length;
+  hint.style.opacity=nodes.length?'0':'1';
+}
+
+// ─── Case data ───
+function updateCaseLabel() {
+  const n=document.getElementById('c-name')?.value||'SIN ASIGNAR';
+  document.getElementById('caseLabel').textContent='CASO: '+n.toUpperCase();
+}
+
+function saveCase() {
+  caseData={
+    name:v('c-name'), num:v('c-num'), date:v('c-date'), agent:v('c-agent'),
+    status:v('c-status'), priority:v('c-priority'), crime:v('c-crime'),
+    jurisdiction:v('c-juris'), unit:v('c-unit'), summary:v('c-summary'), legal:v('c-legal')
+  };
+  saveLocal();
+  toast('Datos del caso guardados');
+}
+
+// ─── Toolbar ───
+function newCase() {
+  if (!confirm('¿Crear nuevo caso? Se perderá el trabajo no guardado.')) return;
+  nodes=[]; links=[]; caseData={}; currentCaseId=null;
+  canvas.querySelectorAll('.inv-node').forEach(e=>e.remove());
+  linksG.innerHTML=''; hint.style.opacity='1';
+  updateStatus(); nid=1; lid=1;
+  setSyncState('', 'OFFLINE');
+  toast('Nuevo caso');
+}
+
+async function saveAll() {
+  saveCase();
+  const payload = {
+    caseData,
+    nodes,
+    links,
+    name: caseData.name || 'Sin nombre',
+    updatedAt: new Date().toISOString(),
+  };
+  const saved = await apiSaveCase(payload);
+  if (saved) {
+    saveLocal();
+    toast('Caso guardado en base de datos');
+    if (document.getElementById('rpCasos').style.display !== 'none') loadCasesList();
+  } else {
+    saveLocal();
+    toast('Guardado localmente (sin conexión al servidor)');
+  }
+}
+
+function autoLayout() {
+  if (!nodes.length) return;
+  const cols=Math.ceil(Math.sqrt(nodes.length));
+  nodes.forEach((n,i)=>{ n.x=(i%cols)*170+60; n.y=Math.floor(i/cols)*210+60; });
+  reposAll(); drawLinks(); saveLocal(); toast('Nodos organizados');
+}
+
+function clearCanvas() {
+  if (!confirm('¿Limpiar lienzo?')) return;
+  nodes=[]; links=[];
+  canvas.querySelectorAll('.inv-node').forEach(e=>e.remove());
+  linksG.innerHTML=''; updateStatus(); hint.style.opacity='1'; saveLocal(); toast('Lienzo limpio');
+}
+
+// ─── Persist localStorage (respaldo) ───
+function saveLocal() {
+  try { localStorage.setItem('nx3', JSON.stringify({nodes,links,caseData,nid,lid,currentCaseId})); } catch(e){}
+}
+
+function loadLocal() {
+  try {
+    const d=JSON.parse(localStorage.getItem('nx3')||'{}');
+    nodes=d.nodes||[]; links=d.links||[]; caseData=d.caseData||{};
+    nid=d.nid||1; lid=d.lid||1; currentCaseId=d.currentCaseId||null;
+    nodes.forEach(n=>renderNode(n));
+    setTimeout(drawLinks,100);
+    updateStatus();
+    if (nodes.length) hint.style.opacity='0';
+    if (caseData.name) {
+      const el=document.getElementById('c-name');
+      if(el){el.value=caseData.name;updateCaseLabel();}
+    }
+    if (currentCaseId) setSyncState('synced', 'SINCRONIZADO');
+  } catch(e){}
+}
+
+// ─── Export / Import ───
+function exportData() {
+  const b=new Blob([JSON.stringify({caseData,nodes,links,at:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+  a.download='nexus_'+(caseData.name||'caso').replace(/\s+/g,'_')+'_'+Date.now()+'.json'; a.click();
+  toast('Exportado');
+}
+
+function doImport() {
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
+  inp.onchange=async e=>{
+    const file=e.target.files[0]; if(!file) return;
+    try {
+      const d=JSON.parse(await file.text());
+      if(!confirm('¿Importar? Se reemplazará el caso actual.')) return;
+      nodes=d.nodes||[]; links=d.links||[]; caseData=d.caseData||{};
+      nid=Math.max(0,...nodes.map(n=>parseInt((n.id||'n0').replace('n',''))||0))+1;
+      lid=Math.max(0,...links.map(l=>parseInt((l.id||'l0').replace('l',''))||0))+1;
+      canvas.querySelectorAll('.inv-node').forEach(el=>el.remove()); linksG.innerHTML='';
+      nodes.forEach(n=>renderNode(n)); setTimeout(drawLinks,100);
+      updateStatus(); saveLocal();
+      if(caseData.name){document.getElementById('c-name').value=caseData.name;updateCaseLabel();}
+      toast('Importado');
+    } catch(err){alert('Error: '+err.message);}
+  };
+  inp.click();
+}
+
+// ─── Utils ───
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);}
+function v(id){const el=document.getElementById(id);return el?el.value:'';}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('in');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('in'),2400);}
+
+// ─── Keyboard shortcuts ───
+document.addEventListener('keydown', e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if(e.key==='Escape'){closeModal();setTool('select');connFrom=null;clearHighlight();}
+  if(e.key==='Delete'&&selNode) delNode(selNode.id);
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveAll();}
+  if(e.key==='v') setTool('select');
+  if(e.key==='c') setTool('connect');
+  if(e.key==='h') setTool('pan');
+  if(e.key==='d') setTool('delete');
+  if(e.key==='+'||e.key==='=') doZoom(1.2);
+  if(e.key==='-') doZoom(0.83);
+  if(e.key==='0') resetView();
+});
+
+// ─── Init ───
+window.addEventListener('load', loadLocal);
+</script>
+</body>
+</html>

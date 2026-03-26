@@ -61,10 +61,6 @@
             transform: translateY(-2px);
         }
 
-        /* Sidebar único a la izquierda */
-        /* Desktop: make sidebar part of the layout flow so it does not overlap content
-           and each layout column respects document order. On small screens the sidebar
-           reverts to overlay behavior. */
         .avatar-section {
             display: flex;
             align-items: flex-start;
@@ -73,10 +69,10 @@
 
         .sidebar {
             position: relative;
-            width: 16px; /* collapsed width - narrow but visible stripe */
+            width: 16px;
             min-width: 16px;
             height: calc(100vh - 80px);
-            max-height: calc(100vh - 80px); /* Respect max height, leave room for header */
+            max-height: calc(100vh - 80px);
             background: transparent;
             box-shadow: none;
             transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
@@ -90,14 +86,13 @@
             margin-right: 0;
         }
 
-        /* Expanded state on hover only */
         .sidebar:hover {
             width: 280px;
             min-width: 280px;
             overflow: visible;
             background: linear-gradient(180deg, #1a3a5c 0%, #0f2847 100%);
             box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
-            max-height: calc(100vh - 80px); /* Keep max-height when expanded */
+            max-height: calc(100vh - 80px);
         }
 
         .avatar-container {
@@ -106,7 +101,6 @@
             padding: 20px;
         }
 
-        /* On mobile: overlay behavior */
         @media (max-width: 900px) {
             .sidebar {
                 position: absolute;
@@ -119,8 +113,6 @@
             }
             .sidebar:hover { left: 0; }
         }
-
-        /* Hide all interactive content when sidebar is collapsed (not hovered) - via opacity in elements above */
 
         .sidebar-header {
             text-align: center;
@@ -218,7 +210,6 @@
             opacity: 1;
         }
 
-        /* Cabeza - círculo pequeño */
         .sidebar-person-widget::before {
             content: '';
             position: absolute;
@@ -232,7 +223,6 @@
             z-index: 2;
         }
 
-        /* Cuerpo - rectángulo redondeado */
         .sidebar-person-widget::after {
             content: '';
             position: absolute;
@@ -282,31 +272,18 @@
             overflow-x: hidden;
             opacity: 0;
             transition: opacity 0.3s 0.1s ease;
-            max-height: calc(100vh - 220px); /* Leave room for header + avatar section */
+            max-height: calc(100vh - 220px);
         }
 
         .sidebar:hover .sidebar-content {
             opacity: 1;
         }
 
-        .sidebar-content::-webkit-scrollbar {
-            width: 6px;
-        }
+        .sidebar-content::-webkit-scrollbar { width: 6px; }
+        .sidebar-content::-webkit-scrollbar-track { background: rgba(212, 175, 55, 0.1); }
+        .sidebar-content::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; }
+        .sidebar-content::-webkit-scrollbar-thumb:hover { background: #e4c961; }
 
-        .sidebar-content::-webkit-scrollbar-track {
-            background: rgba(212, 175, 55, 0.1);
-        }
-
-        .sidebar-content::-webkit-scrollbar-thumb {
-            background: #d4af37;
-            border-radius: 3px;
-        }
-
-        .sidebar-content::-webkit-scrollbar-thumb:hover {
-            background: #e4c961;
-        }
-
-        /* === NUEVO LAYOUT DE MENÚ DE SESIÓN === */
         .sidebar-menu-layout {
             flex: 1;
             display: flex;
@@ -345,25 +322,10 @@
             opacity: 1;
         }
 
-        .sidebar-menu-body::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar-menu-body::-webkit-scrollbar-track {
-            background: rgba(212, 175, 55, 0.05);
-            margin: 10px 0;
-        }
-
-        .sidebar-menu-body::-webkit-scrollbar-thumb {
-            background: #d4af37;
-            border-radius: 3px;
-            min-height: 30px;
-        }
-
-        .sidebar-menu-body::-webkit-scrollbar-thumb:hover {
-            background: #e4c961;
-            box-shadow: 0 0 6px rgba(212, 175, 55, 0.4);
-        }
+        .sidebar-menu-body::-webkit-scrollbar { width: 6px; }
+        .sidebar-menu-body::-webkit-scrollbar-track { background: rgba(212, 175, 55, 0.05); margin: 10px 0; }
+        .sidebar-menu-body::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; min-height: 30px; }
+        .sidebar-menu-body::-webkit-scrollbar-thumb:hover { background: #e4c961; box-shadow: 0 0 6px rgba(212, 175, 55, 0.4); }
 
         .sidebar-menu-footer {
             flex-shrink: 0;
@@ -376,54 +338,15 @@
             gap: 10px;
         }
 
-        .sidebar:hover .sidebar-menu-footer {
-            opacity: 1;
-        }
+        .modal-body::-webkit-scrollbar { width: 6px; }
+        .modal-body::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+        .modal-body::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; }
+        .modal-body::-webkit-scrollbar-thumb:hover { background: #e4c961; }
 
-        .sidebar-menu-footer {
-            flex-shrink: 0;
-            padding: 15px 20px;
-            border-top: 2px solid rgba(212, 175, 55, 0.3);
-            background: linear-gradient(180deg, rgba(26, 58, 92, 0.3) 0%, rgba(15, 40, 71, 0.5) 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .modal-body::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .modal-body::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-body::-webkit-scrollbar-thumb {
-            background: #d4af37;
-            border-radius: 3px;
-        }
-
-        .modal-body::-webkit-scrollbar-thumb:hover {
-            background: #e4c961;
-        }
-        /* === FIN NUEVO LAYOUT === */
-        .sidebar-login-message::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar-login-message::-webkit-scrollbar-track {
-            background: rgba(212, 175, 55, 0.1);
-        }
-
-        .sidebar-login-message::-webkit-scrollbar-thumb {
-            background: #d4af37;
-            border-radius: 3px;
-        }
-
-        .sidebar-login-message::-webkit-scrollbar-thumb:hover {
-            background: #e4c961;
-        }
+        .sidebar-login-message::-webkit-scrollbar { width: 6px; }
+        .sidebar-login-message::-webkit-scrollbar-track { background: rgba(212, 175, 55, 0.1); }
+        .sidebar-login-message::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; }
+        .sidebar-login-message::-webkit-scrollbar-thumb:hover { background: #e4c961; }
 
         .sidebar-menu {
             margin: 10px 0;
@@ -693,7 +616,7 @@
                 font-size: 22px;
             }
         }
-        /* Toast notification (bottom-right) */
+
         #toastContainer {
             position: fixed;
             right: 20px;
@@ -748,7 +671,6 @@
             opacity: 0.9;
         }
 
-        /* === ESTILOS PARA VENTANAS FLOTANTES (MODALES) === */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -768,12 +690,8 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .modal-content {
@@ -789,14 +707,8 @@
         }
 
         @keyframes slideUp {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .modal-header {
@@ -890,7 +802,6 @@
             background: linear-gradient(135deg, #e4c961 0%, #f0d960 100%);
             box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5);
         }
-        /* === FIN ESTILOS MODALES === */
     </style>
 </head>
 <body>
@@ -902,14 +813,12 @@
                 <p style="font-size: 13px; margin: 0; color: #e0e0e0;">Plataforma especializada en análisis estadístico y seguimiento personalizado del desempeño estudiantil con fines educativos</p>
             </div>
 
-            <!-- Contenedor para botón de Google (solo si no hay sesión) -->
             <div id="loginContainer" style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px;"></div>
         </div>
     </header>
 
     <!-- Sección de Avatar con Navegación -->
     <div class="avatar-section">
-        <!-- Sidebar único a la izquierda - DENTRO DE AVATAR-SECTION -->
         <div id="sidebar" class="sidebar">
             <!-- Contenido cuando NO hay sesión -->
             <div id="sidebarLoginContent" class="sidebar-login-message" style="display: flex;">
@@ -998,6 +907,12 @@
                         <p>Sube un archivo PDF para extraer su contenido y realizar búsquedas de texto. Herramienta educativa para análisis de documentos.</p>
                         <a href="pdf.html" class="sub-button">Herramientas PDF</a>
                     </div>
+
+                    <div class="subsection">
+                        <h4>Tablero de Investigación NEXUS</h4>
+                        <p>Crea mapas de vínculos entre sospechosos, víctimas, lugares y evidencias. Conecta nodos, agrega fotos y construye la línea del tiempo del caso.</p>
+                        <a href="investigation.html" class="sub-button">Abrir NEXUS</a>
+                    </div>
                 </div>
 
                 <div style="background: #e8f1f8; padding: 15px; border-radius: 4px; margin-top: 20px;">
@@ -1020,7 +935,6 @@
     </div>
 
     <!-- MODALES FLOTANTES -->
-    <!-- Modal: Términos de Servicio -->
     <div id="termsModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -1063,7 +977,6 @@
         </div>
     </div>
 
-    <!-- Modal: Políticas de Privacidad -->
     <div id="privacyModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -1119,18 +1032,14 @@
     </div>
 
     <script>
-        // NOTE: Email sending moved to backend; no client-side EmailJS initialization.
-
-        // Variable para controlar retraso en notificaciones de administrador
         let lastAdminNotification = 0;
-        const ADMIN_NOTIFICATION_DELAY = 3000; // 3 segundos de retraso
+        const ADMIN_NOTIFICATION_DELAY = 3000;
 
-        // === FUNCIONES PARA MODALES ===
         function openModal(modalId) {
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.classList.add('active');
-                document.body.style.overflow = 'hidden'; // Prevenir scroll de página
+                document.body.style.overflow = 'hidden';
             }
         }
 
@@ -1138,25 +1047,21 @@
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.classList.remove('active');
-                document.body.style.overflow = 'auto'; // Restaurar scroll
+                document.body.style.overflow = 'auto';
             }
         }
 
-        // Cerrar modal al hacer clic en el overlay
         document.addEventListener('DOMContentLoaded', () => {
             const modals = document.querySelectorAll('.modal-overlay');
             modals.forEach(modal => {
                 modal.addEventListener('click', (e) => {
                     if (e.target === modal) {
-                        const modalId = modal.id;
-                        closeModal(modalId);
+                        closeModal(modal.id);
                     }
                 });
             });
         });
-        // === FIN FUNCIONES MODALES ===
 
-        // Floating toast notification
         function showToast(message, duration = 4000) {
             let container = document.getElementById('toastContainer');
             if (!container) {
@@ -1172,7 +1077,6 @@
             toast.innerHTML = `<div class="toast-message">${message}</div><button class="toast-close" aria-label="Cerrar">&times;</button>`;
             container.appendChild(toast);
 
-            // Force reflow then show
             requestAnimationFrame(() => toast.classList.add('show'));
 
             const hide = () => {
@@ -1187,32 +1091,21 @@
             setTimeout(hide, duration);
         }
 
-        // Función global para navegar a admin panel
         function notifyAdmin() {
             const now = Date.now();
-            
-            // Verificar si han pasado suficientes segundos desde la última notificación
             if (now - lastAdminNotification < ADMIN_NOTIFICATION_DELAY) {
                 console.log('Esperando antes de mostrar otra notificación (Retraso antiabuso)');
-                return; // Ignorar clics rápidos
+                return;
             }
-            
-            lastAdminNotification = now; // Actualizar timestamp
-            
+            lastAdminNotification = now;
+
             const userRole = localStorage.getItem('userRole');
             const userApproved = localStorage.getItem('userApproved');
-            
-            // DEBUG: Exponer valores a window para inspeccionarlos en consola
+
             window.DEBUG_userRole = userRole;
             window.DEBUG_userApproved = userApproved;
-            console.log('DEBUG notifyAdmin():', {
-                userRole: userRole,
-                userRole_type: typeof userRole,
-                userApproved: userApproved,
-                userApproved_type: typeof userApproved,
-                condition: (userRole === 'admin' && userApproved === 'true')
-            });
-            
+            console.log('DEBUG notifyAdmin():', { userRole, userApproved });
+
             if (userRole === 'admin' && userApproved === 'true') {
                 window.location.href = 'admin.html';
             } else {
@@ -1220,10 +1113,8 @@
             }
         }
 
-        // Mostrar perfil del usuario
         function showUserProfile(userName, userEmail) {
             const loginContainer = document.getElementById('loginContainer');
-            const sidebar = document.getElementById('sidebar');
             const logoutBtn = document.getElementById('logoutBtn');
             const sidebarLoginContent = document.getElementById('sidebarLoginContent');
             const sidebarSessionContent = document.getElementById('sidebarSessionContent');
@@ -1231,16 +1122,13 @@
             if (loginContainer) loginContainer.style.display = 'none';
             if (logoutBtn) logoutBtn.style.display = 'block';
 
-            // Ocultar login, mostrar sesión
             if (sidebarLoginContent) sidebarLoginContent.style.display = 'none';
             if (sidebarSessionContent) sidebarSessionContent.style.display = 'flex';
 
-            // Rellenar datos en la sidebar
             document.getElementById('sidebarName').textContent = userName || 'Usuario';
             document.getElementById('sidebarEmail').textContent = userEmail || '';
             document.getElementById('sidebarAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || userEmail)}&background=random`;
 
-            // Llenar el menú de navegación (SIN EMOJIS)
             const menuContainer = document.getElementById('sidebarMenuContainer');
             if (menuContainer) {
                 menuContainer.innerHTML = `
@@ -1311,85 +1199,71 @@
                     <div class="sidebar-menu">
                         <div class="sidebar-menu-title">Opciones</div>
                         <a href="#" class="sidebar-menu-item" onclick="notifyAdmin(); return false;">
-                             <span class="sidebar-menu-icon">
-                                 <svg viewBox="0 0 24 24" style="width:20px;height:20px" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
-                                     <polygon points="12,2 19,7 19,17 12,22 5,17 5,7"></polygon>
-                                 </svg>
-                             </span>
-                             <span>Ir a Admin</span>
-                         </a>
-                     </div>
-                 `;
-             }
+                            <span class="sidebar-menu-icon">
+                                <svg viewBox="0 0 24 24" style="width:20px;height:20px" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                                    <polygon points="12,2 19,7 19,17 12,22 5,17 5,7"></polygon>
+                                </svg>
+                            </span>
+                            <span>Ir a Admin</span>
+                        </a>
+                    </div>
+                `;
+            }
+        }
 
-             // Mostrar sidebar abierta automáticamente
-             if (sidebar) {
-                 sidebar.classList.add('active');
-                 setTimeout(() => {
-                     // La barra ahora se comporta normalmente con hover
-                 }, 5000);
-             }
-         }
-
-         // Logout
-         function handleLogout() {
+        function handleLogout() {
             localStorage.removeItem('userEmail');
             localStorage.removeItem('userName');
             localStorage.removeItem('userApproved');
             localStorage.removeItem('userRole');
             location.reload();
-         }
+        }
 
-         // Inicializar Google Sign-In
-         function initializeGoogleSignIn() {
-             if (!window.google || !google.accounts || !google.accounts.id) {
-                 console.error('Google Sign-In script not loaded');
-                 return;
-             }
-             
-             google.accounts.id.initialize({
-                 client_id: '903625348841-j9ed7i8hb3me77lvhp7gai175c4rr68i.apps.googleusercontent.com',
-                 callback: handleCredentialResponse
-             });
+        function initializeGoogleSignIn() {
+            if (!window.google || !google.accounts || !google.accounts.id) {
+                console.error('Google Sign-In script not loaded');
+                return;
+            }
 
-             google.accounts.id.renderButton(
-                 document.getElementById('loginContainer'),
-                 { 
-                     type: 'standard',
-                     theme: 'outline', 
-                     size: 'large',
-                     text: 'signin_with'
-                 }
-             );
-         }
+            google.accounts.id.initialize({
+                client_id: '903625348841-j9ed7i8hb3me77lvhp7gai175c4rr68i.apps.googleusercontent.com',
+                callback: handleCredentialResponse
+            });
 
-         // Iniciar Google Sign-In
-         function startGoogleSignIn() {
-             if (!window.google || !google.accounts || !google.accounts.id) {
-                 initializeGoogleSignIn();
-                 setTimeout(() => {
-                     if (window.google && google.accounts && google.accounts.id) {
-                         google.accounts.id.prompt();
-                     }
-                 }, 300);
-                 return;
-             }
-             google.accounts.id.prompt();
-         }
+            google.accounts.id.renderButton(
+                document.getElementById('loginContainer'),
+                {
+                    type: 'standard',
+                    theme: 'outline',
+                    size: 'large',
+                    text: 'signin_with'
+                }
+            );
+        }
 
-         // Abrir/cerrar sidebar solo con hover (sin click)
-         (function enableSidebarHover() {
-             const sidebar = document.getElementById('sidebar');
-             if (!sidebar) return;
-             
-             sidebar.addEventListener('mouseenter', () => sidebar.classList.add('active'));
-             sidebar.addEventListener('mouseleave', () => sidebar.classList.remove('active'));
-         })();
+        function startGoogleSignIn() {
+            if (!window.google || !google.accounts || !google.accounts.id) {
+                initializeGoogleSignIn();
+                setTimeout(() => {
+                    if (window.google && google.accounts && google.accounts.id) {
+                        google.accounts.id.prompt();
+                    }
+                }, 300);
+                return;
+            }
+            google.accounts.id.prompt();
+        }
 
-        // Verificar sesión al cargar — consultar al backend para status
+        (function enableSidebarHover() {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+            sidebar.addEventListener('mouseenter', () => sidebar.classList.add('active'));
+            sidebar.addEventListener('mouseleave', () => sidebar.classList.remove('active'));
+        })();
+
         document.addEventListener('DOMContentLoaded', async function() {
             const userEmail = localStorage.getItem('userEmail');
-            const userName = localStorage.getItem('userName');
+            const userName  = localStorage.getItem('userName');
 
             if (userEmail) {
                 try {
@@ -1402,9 +1276,8 @@
                         return;
                     }
                     const data = await resp.json();
-                    // Guardar approved y role en localStorage para que admin.html pueda leerlos
                     localStorage.setItem('userApproved', String(data.approved || false));
-                    localStorage.setItem('userRole', String(data.role || 'user'));
+                    localStorage.setItem('userRole',     String(data.role || 'user'));
                     if (data && data.approved) {
                         if (data.role === 'admin') {
                             window.location.href = 'admin.html';
@@ -1425,14 +1298,10 @@
             }
         });
 
-         // Email sending moved to server; frontend will request approval via POST /request-approval
-
-        // Callback de autenticación — el id_token se verifica en el BACKEND
         async function handleCredentialResponse(response) {
             try {
                 const id_token = response.credential;
 
-                // 1. Registrar/actualizar usuario en backend (backend verifica el token con Google)
                 const regResp = await fetch('/request-approval', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1444,7 +1313,6 @@
                     return;
                 }
 
-                // 2. Verificar token y obtener rol real desde backend
                 const verifyResp = await fetch('/verify-token', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1458,15 +1326,12 @@
 
                 const data = await verifyResp.json();
 
-                // 3. Guardar en localStorage solo lo que el backend confirmó
                 localStorage.setItem('userEmail',    data.email);
                 localStorage.setItem('userName',     data.name);
                 localStorage.setItem('userApproved', String(data.approved || false));
                 localStorage.setItem('userRole',     String(data.role || 'user'));
-                // Guardar token para futuras verificaciones
                 localStorage.setItem('id_token', id_token);
 
-                // 4. Redirigir si es admin
                 if (data.approved && data.role === 'admin') {
                     window.location.href = 'admin.html';
                     return;
@@ -1480,15 +1345,12 @@
             }
         }
 
-        // The frontend never grants roles or approval via URL. Approval and role checks
-        // are performed by querying the server's /status endpoint.
-
-        // Función para resaltar texto
         function highlightText(text, query) {
             if (!query) return text;
             const regex = new RegExp(`(${query})`, 'gi');
             return text.replace(regex, '<mark>$1</mark>');
         }
+
         async function uploadPDF() {
             const fileInput = document.getElementById('pdfFile');
             const file = fileInput.files[0];
@@ -1508,7 +1370,6 @@
                 const result = await response.json();
                 if (response.ok) {
                     alert('PDF subido y procesado exitosamente.');
-                    // Mostrar el PDF en el viewer
                     const pdfUrl = URL.createObjectURL(file);
                     document.getElementById('pdfFrame').src = pdfUrl;
                     document.getElementById('pdfViewer').style.display = 'block';
@@ -1521,7 +1382,6 @@
             }
         }
 
-        // Función para buscar en PDF
         async function searchPDF() {
             const query = document.getElementById('searchQuery').value;
             if (!query) {
@@ -1556,7 +1416,6 @@
                                 return `<p><strong>${r.filename}</strong>: ${highlightText(r.content, query)}</p>`;
                             }
                         }).join('');
-                        // Opcional: guardar en sessionStorage
                         sessionStorage.setItem('searchResults', JSON.stringify(result.results));
                     } else {
                         resultsDiv.innerHTML = '<p>No se encontraron resultados.</p>';
@@ -1570,6 +1429,6 @@
                 alert('Error al buscar en el PDF.');
             }
         }
-     </script>
+    </script>
 </body>
 </html>

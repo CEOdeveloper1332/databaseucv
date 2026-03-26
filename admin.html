@@ -13,9 +13,6 @@
             padding: 0;
         }
 
-        /* =============================================
-           SIDEBAR — igual al index.html, adaptado admin
-           ============================================= */
         .avatar-section {
             display: flex;
             align-items: flex-start;
@@ -126,7 +123,6 @@
         }
         .sidebar:hover .sidebar-email { opacity: 1; }
 
-        /* Menú layout */
         .sidebar-menu-layout {
             flex: 1;
             display: flex;
@@ -275,9 +271,6 @@
             transform: translateY(-2px);
         }
 
-        /* =============================================
-           CONTENIDO PRINCIPAL
-           ============================================= */
         .admin-content {
             flex: 1;
             padding: 20px;
@@ -371,9 +364,8 @@
     <!-- Layout principal -->
     <div class="avatar-section">
 
-        <!-- SIDEBAR (mismo del index.html) -->
+        <!-- SIDEBAR -->
         <div id="sidebar" class="sidebar">
-            <!-- Contenido de sesión admin -->
             <div id="sidebarSessionContent" style="display:flex;flex-direction:column;height:100%;overflow:hidden;gap:0;">
                 <div class="sidebar-header">
                     <img id="sidebarAvatar" class="sidebar-avatar" alt="Avatar Admin">
@@ -485,6 +477,14 @@
                             <a href="pdf.html" class="sub-button">Herramientas PDF</a>
                         </div>
                     </div>
+
+                    <div class="subsection">
+                        <h4>Tablero de Investigación NEXUS</h4>
+                        <p>Crea mapas de vínculos entre sospechosos, víctimas, lugares y evidencias. Conecta nodos, agrega fotos y construye la línea del tiempo del caso.</p>
+                        <div class="subsection-buttons">
+                            <a href="investigation.html" class="sub-button">Abrir NEXUS</a>
+                        </div>
+                    </div>
                 </div>
 
                 <div style="background:#e8f1f8;padding:15px;border-radius:4px;margin-top:20px;">
@@ -508,9 +508,6 @@
     </div>
 
     <script>
-        // =============================================
-        // Poblar menú admin en sidebar
-        // =============================================
         function buildAdminMenu(userName, userEmail) {
             const menuContainer = document.getElementById('sidebarMenuContainer');
             if (!menuContainer) return;
@@ -633,9 +630,6 @@
             `;
         }
 
-        // =============================================
-        // Inicialización
-        // =============================================
         document.addEventListener('DOMContentLoaded', function () {
             const userEmail    = localStorage.getItem('userEmail');
             const userName     = localStorage.getItem('userName');
@@ -643,7 +637,6 @@
             const userRole     = localStorage.getItem('userRole');
 
             if (userRole === 'admin' && userApproved === 'true') {
-                // Rellenar sidebar
                 const nameEl   = document.getElementById('sidebarName');
                 const emailEl  = document.getElementById('sidebarEmail');
                 const avatarEl = document.getElementById('sidebarAvatar');
@@ -658,7 +651,6 @@
             }
         });
 
-        // Logout
         function handleAdminLogout() {
             localStorage.removeItem('userEmail');
             localStorage.removeItem('userName');

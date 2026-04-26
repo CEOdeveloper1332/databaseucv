@@ -5,18 +5,67 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Base de Datos - A1 Analytics</title>
 	<link rel="stylesheet" href="styles.css">
+	<style>
+		.birthday-badge {
+			display: inline-flex;
+			align-items: center;
+			gap: 5px;
+			background: linear-gradient(135deg, #fff3cd, #ffe69c);
+			border: 1px solid #ffc107;
+			color: #856404;
+			font-size: 11px;
+			font-weight: bold;
+			padding: 3px 9px;
+			border-radius: 12px;
+			margin-top: 4px;
+		}
+		.birthday-soon {
+			background: linear-gradient(135deg, #d1ecf1, #b8daff);
+			border: 1px solid #0dcaf0;
+			color: #0a58ca;
+		}
+		.birthday-today {
+			background: linear-gradient(135deg, #d4edda, #b8f0c8);
+			border: 1px solid #28a745;
+			color: #155724;
+			animation: pulse 1.5s infinite;
+		}
+		@keyframes pulse {
+			0%,100% { transform: scale(1); }
+			50%      { transform: scale(1.04); }
+		}
+		.age-chip {
+			display: inline-block;
+			background: var(--primary, #1a3a5c);
+			color: white;
+			font-size: 10px;
+			font-weight: bold;
+			padding: 2px 7px;
+			border-radius: 10px;
+			margin-left: 6px;
+			vertical-align: middle;
+		}
+		.loading-state {
+			text-align: center;
+			padding: 30px;
+			color: #888;
+			font-size: 13px;
+		}
+	</style>
 </head>
 <body>
 	<header>
 		<nav class="navbar">
 			<div class="nav-buttons">
-				<a href="index.html" class="nav-btn" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">Inicio</a>
+				<a href="index.html" class="nav-btn"
+				   style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
+					Inicio
+				</a>
 			</div>
 		</nav>
 	</header>
 
 	<div class="container">
-		<!-- Panel completo: Visualización de datos -->
 		<section class="data-panel" style="grid-column: 1 / -1; padding: 20px;">
 			<div style="margin-bottom: 20px;">
 				<h2 style="color: var(--primary); margin-bottom: 15px;">Base de Datos de Perfiles</h2>
@@ -25,118 +74,154 @@
 					<button type="button" id="searchBtn">Buscar</button>
 				</div>
 			</div>
-
 			<div class="profiles-container" id="profilesList">
-				<div class="empty-state">
-					<p>No hay perfiles registrados.</p>
-					<p style="font-size: 11px;">Los datos aparecerán aquí cuando se agreguen nuevos perfiles.</p>
-				</div>
+				<div class="loading-state">Cargando perfiles...</div>
 			</div>
 		</section>
 	</div>
 
 	<script src="main.js"></script>
 	<script>
-		// Cargar y mostrar los perfiles al iniciar la página
-		document.addEventListener('DOMContentLoaded', function() {
-			const profiles = JSON.parse(localStorage.getItem('profiles')) || [];
-			displayProfiles(profiles);
+		// ── Utilidades de cumpleaños ─────────────────────────────────────
+		function getBirthdayInfo(birthdayStr) {
+			if (!birthdayStr) return null;
+			const today = new Date();
+			const bday  = new Date(birthdayStr);
+			if (isNaN(bday)) return null;
 
-			// Función de búsqueda
-			document.getElementById('searchBtn').addEventListener('click', searchProfiles);
-			document.getElementById('searchInput').addEventListener('keypress', function(e) {
-				if (e.key === 'Enter') searchProfiles();
-			});
-		});
+			let age = today.getFullYear() - bday.getFullYear();
+			const hasPassed =
+				today.getMonth() > bday.getMonth() ||
+				(today.getMonth() === bday.getMonth() && today.getDate() >= bday.getDate());
+			if (!hasPassed) age--;
+
+			const nextBday = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
+			if (nextBday < today) nextBday.setFullYear(today.getFullYear() + 1);
+
+			const diffDays  = Math.ceil((nextBday - today) / 86400000);
+			const formatted = bday.toLocaleDateString('es-PE', { day: '2-digit', month: 'long' });
+			return { age, diffDays, formatted };
+		}
+
+		function birthdayBadge(birthdayStr) {
+			const info = getBirthdayInfo(birthdayStr);
+			if (!info) return '';
+			let cls = 'birthday-badge', icon = '🎂', text;
+			if (info.diffDays === 0) {
+				cls += ' birthday-today'; icon = '🎉';
+				text = `¡Hoy cumple ${info.age + 1} años!`;
+			} else if (info.diffDays <= 7) {
+				cls += ' birthday-soon';
+				text = `Cumple en ${info.diffDays} día${info.diffDays > 1 ? 's' : ''} (${info.formatted})`;
+			} else {
+				text = `Cumple el ${info.formatted}`;
+			}
+			return `<span class="${cls}">${icon} ${text}</span>`;
+		}
+
+		// ── Cargar desde MongoDB via API ─────────────────────────────────
+		let allProfiles = [];
+
+		async function loadProfiles() {
+			try {
+				const res = await fetch('/api/profiles');
+				if (!res.ok) throw new Error('Error ' + res.status);
+				allProfiles = await res.json();
+				displayProfiles(allProfiles);
+			} catch (err) {
+				console.error('Error cargando perfiles:', err);
+				document.getElementById('profilesList').innerHTML = `
+					<div class="empty-state">
+						<p>No se pudieron cargar los perfiles.</p>
+						<p style="font-size:11px;">Verifica que el servidor este activo.</p>
+					</div>`;
+			}
+		}
 
 		function displayProfiles(profiles) {
-			const profilesList = document.getElementById('profilesList');
-			
-			if (profiles.length === 0) {
-				profilesList.innerHTML = `
-					<div class="empty-state">
-						<p>No hay perfiles registrados.</p>
-						<p style="font-size: 11px;">Los datos aparecerán aquí cuando se agreguen nuevos perfiles.</p>
-					</div>
-				`;
+			const list = document.getElementById('profilesList');
+			if (!profiles || profiles.length === 0) {
+				list.innerHTML = `<div class="empty-state">
+					<p>No hay perfiles registrados.</p>
+					<p style="font-size:11px;">Los datos apareceran aqui cuando se agreguen nuevos perfiles.</p>
+				</div>`;
 				return;
 			}
 
-			profilesList.innerHTML = profiles.map((profile, index) => `
-				<div class="profile-card" style="border: 1px solid var(--border); padding: 15px; margin-bottom: 15px; border-radius: 6px; background: #fafafa;">
-					<div style="display: grid; grid-template-columns: 80px 1fr; gap: 15px; align-items: start;">
-						<div style="text-align: center;">
-							${profile.photo ? `<img src="${profile.photo}" alt="Foto" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">` : `<div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px;">${(profile.firstName?.charAt(0) || 'P').toUpperCase()}</div>`}
-						</div>
+			list.innerHTML = profiles.map(profile => {
+				const bdInfo  = getBirthdayInfo(profile.birthday);
+				const ageChip = bdInfo ? `<span class="age-chip">${bdInfo.age} anos</span>` : '';
+				const bdBadge = profile.birthday ? birthdayBadge(profile.birthday) : '';
+
+				const skill      = profile.stats?.skill       ?? profile.skill       ?? 50;
+				const intel      = profile.stats?.intelligence ?? profile.intelligence ?? 50;
+				const perf       = profile.stats?.performance  ?? profile.performance  ?? 50;
+				const jobs       = profile.stats?.jobs         ?? profile.jobs         ?? 50;
+				const occupation = profile.stats?.occupation   ?? profile.occupation   ?? 50;
+
+				const photo = profile.photo
+					? `<img src="${profile.photo}" alt="Foto" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">`
+					: `<div style="width:80px;height:80px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:24px;">${(profile.firstName?.charAt(0)||'P').toUpperCase()}</div>`;
+
+				const bdFecha = profile.birthday
+					? new Date(profile.birthday).toLocaleDateString('es-PE', { day:'2-digit', month:'long', year:'numeric' })
+					: 'N/A';
+
+				return `<div class="profile-card" style="border:1px solid var(--border);padding:15px;margin-bottom:15px;border-radius:6px;background:#fafafa;">
+					<div style="display:grid;grid-template-columns:80px 1fr;gap:15px;align-items:start;">
+						<div style="text-align:center;">${photo}</div>
 						<div>
-							<h3 style="color: var(--primary); margin-bottom: 8px; font-size: 16px;">${profile.firstName} ${profile.lastName}</h3>
-							<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; color: #666;">
-								<p><strong>DNI:</strong> ${profile.dni || 'N/A'}</p>
-								<p><strong>Email:</strong> ${profile.email || 'N/A'}</p>
-								<p><strong>Teléfono:</strong> ${profile.phone || 'N/A'}</p>
-								<p><strong>Ubicación:</strong> ${profile.location || profile.locality || 'N/A'}</p>
-								<p><strong>Padres:</strong> ${profile.parents || 'N/A'}</p>
-								<p><strong>Hermanos:</strong> ${profile.siblings || 'N/A'}</p>
+							<h3 style="color:var(--primary);margin-bottom:4px;font-size:16px;">
+								${profile.firstName||''} ${profile.lastName||''} ${ageChip}
+							</h3>
+							${bdBadge ? `<div style="margin-bottom:8px;">${bdBadge}</div>` : ''}
+							<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:#666;">
+								<p><strong>DNI:</strong> ${profile.dni||'N/A'}</p>
+								<p><strong>Email:</strong> ${profile.email||'N/A'}</p>
+								<p><strong>Telefono:</strong> ${profile.phone||'N/A'}</p>
+								<p><strong>Ubicacion:</strong> ${profile.location||profile.locality||'N/A'}</p>
+								<p><strong>Padres:</strong> ${profile.parents||'N/A'}</p>
+								<p><strong>Hermanos:</strong> ${profile.siblings||'N/A'}</p>
+								<p><strong>🎂 Cumpleanos:</strong> ${bdFecha}</p>
 							</div>
-							
-							<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #ddd;">
-								<p style="font-weight: bold; color: var(--primary); margin-bottom: 8px; font-size: 12px;">Estadísticas</p>
-								<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; font-size: 11px;">
-									<div style="background: white; padding: 8px; border-radius: 4px; text-align: center; border: 1px solid #ddd;">
-										<div style="font-weight: bold; color: var(--primary);">${profile.skill || 50}%</div>
-										<div>Habilidad</div>
-									</div>
-									<div style="background: white; padding: 8px; border-radius: 4px; text-align: center; border: 1px solid #ddd;">
-										<div style="font-weight: bold; color: var(--primary);">${profile.intelligence || 50}%</div>
-										<div>Inteligencia</div>
-									</div>
-									<div style="background: white; padding: 8px; border-radius: 4px; text-align: center; border: 1px solid #ddd;">
-										<div style="font-weight: bold; color: var(--primary);">${profile.performance || 50}%</div>
-										<div>Desempeño</div>
-									</div>
-									<div style="background: white; padding: 8px; border-radius: 4px; text-align: center; border: 1px solid #ddd;">
-										<div style="font-weight: bold; color: var(--primary);">${profile.jobs || 50}%</div>
-										<div>Trabajos</div>
-									</div>
-									<div style="background: white; padding: 8px; border-radius: 4px; text-align: center; border: 1px solid #ddd;">
-										<div style="font-weight: bold; color: var(--primary);">${profile.occupation || 50}%</div>
-										<div>Ocupación</div>
-									</div>
+							<div style="margin-top:12px;padding-top:12px;border-top:1px solid #ddd;">
+								<p style="font-weight:bold;color:var(--primary);margin-bottom:8px;font-size:12px;">Estadisticas</p>
+								<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;font-size:11px;">
+									${[['Habilidad',skill],['Inteligencia',intel],['Desempeno',perf],['Trabajos',jobs],['Ocupacion',occupation]].map(([l,v])=>`
+									<div style="background:white;padding:8px;border-radius:4px;text-align:center;border:1px solid #ddd;">
+										<div style="font-weight:bold;color:var(--primary);">${v}%</div>
+										<div>${l}</div>
+									</div>`).join('')}
 								</div>
 							</div>
 						</div>
 					</div>
-				</div>
-			`).join('');
+				</div>`;
+			}).join('');
 		}
 
 		function searchProfiles() {
-			const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-			const profiles = JSON.parse(localStorage.getItem('profiles')) || [];
-			
-			const filtered = profiles.filter(profile => {
-				const fullName = `${profile.firstName} ${profile.lastName}`.toLowerCase();
-				const email = (profile.email || '').toLowerCase();
-				const dni = (profile.dni || '').toLowerCase();
-				const location = (profile.location || '').toLowerCase();
-				
-				return fullName.includes(searchTerm) || 
-					   email.includes(searchTerm) || 
-					   dni.includes(searchTerm) ||
-					   location.includes(searchTerm);
-			});
-
+			const q = document.getElementById('searchInput').value.toLowerCase().trim();
+			if (!q) { displayProfiles(allProfiles); return; }
+			const filtered = allProfiles.filter(p =>
+				[`${p.firstName} ${p.lastName}`, p.email||'', p.dni||'', p.location||'', p.locality||'']
+				.some(f => f.toLowerCase().includes(q))
+			);
 			if (filtered.length === 0) {
-				document.getElementById('profilesList').innerHTML = `
-					<div class="empty-state">
-						<p>No se encontraron resultados para "${searchTerm}".</p>
-						<p style="font-size: 11px;">Intenta con otro término de búsqueda.</p>
-					</div>
-				`;
-			} else {
-				displayProfiles(filtered);
-			}
+				document.getElementById('profilesList').innerHTML = `<div class="empty-state">
+					<p>No se encontraron resultados para "<strong>${q}</strong>".</p>
+					<p style="font-size:11px;">Intenta con otro termino.</p>
+				</div>`;
+			} else { displayProfiles(filtered); }
 		}
+
+		document.addEventListener('DOMContentLoaded', function () {
+			loadProfiles();
+			document.getElementById('searchBtn').addEventListener('click', searchProfiles);
+			document.getElementById('searchInput').addEventListener('keypress', e => {
+				if (e.key === 'Enter') searchProfiles();
+			});
+		});
 	</script>
 </body>
 </html>

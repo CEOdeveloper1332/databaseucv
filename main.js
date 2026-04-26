@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 				<span class="profile-field-value">${escapeHtml(profile.location || 'N/A')}</span>
 			</div>
 			<div class="profile-field">
-				<span class="profile-field-label">🎂 Cumpleaños:</span>
+				<span class="profile-field-label">Cumpleaños:</span>
 				<span class="profile-field-value">${profile.birthday ? new Date(profile.birthday).toLocaleDateString('es-PE', {day:'2-digit', month:'long', year:'numeric'}) : 'N/A'}</span>
 			</div>
 		`;

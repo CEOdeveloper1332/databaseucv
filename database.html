@@ -82,19 +82,31 @@
 
 	<script src="main.js"></script>
 	<script>
-		// ── Utilidades de cumpleaños ─────────────────────────────────────
-		function parseDateLocal(str) {
-			// Evita desfase de zona horaria: trata la fecha como local, no UTC
-			const [y, m, d] = str.split('-').map(Number);
-			return new Date(y, m - 1, d);
+		// ── Utilidades de fecha ───────────────────────────────────────────
+		// Funciona tanto con '2000-03-03' como con '2000-03-03T00:00:00.000Z'
+		function parseParts(str) {
+			const clean = str.split('T')[0];
+			const [y, m, d] = clean.split('-').map(Number);
+			return { y, m, d };
+		}
+
+		// Arma la fecha como texto sin depender de toLocaleDateString (evita bugs de zona horaria)
+		function formatBirthday(str, withYear = true) {
+			if (!str) return 'N/A';
+			const meses = ['enero','febrero','marzo','abril','mayo','junio',
+			               'julio','agosto','septiembre','octubre','noviembre','diciembre'];
+			const { y, m, d } = parseParts(str);
+			return withYear ? `${d} de ${meses[m-1]} de ${y}` : `${d} de ${meses[m-1]}`;
 		}
 
 		function getBirthdayInfo(birthdayStr) {
 			if (!birthdayStr) return null;
+			const { y, m, d } = parseParts(birthdayStr);
+			const bday = new Date(y, m - 1, d);
+			if (isNaN(bday)) return null;
+
 			const today = new Date();
 			today.setHours(0, 0, 0, 0);
-			const bday = parseDateLocal(birthdayStr);
-			if (isNaN(bday)) return null;
 
 			let age = today.getFullYear() - bday.getFullYear();
 			const hasPassed =
@@ -106,16 +118,16 @@
 			if (nextBday < today) nextBday.setFullYear(today.getFullYear() + 1);
 
 			const diffDays  = Math.ceil((nextBday - today) / 86400000);
-			const formatted = bday.toLocaleDateString('es-PE', { day: '2-digit', month: 'long' });
+			const formatted = formatBirthday(birthdayStr, false); // sin año para el badge
 			return { age, diffDays, formatted };
 		}
 
 		function birthdayBadge(birthdayStr) {
 			const info = getBirthdayInfo(birthdayStr);
 			if (!info) return '';
-			let cls = 'birthday-badge', icon = '', text;
+			let cls = 'birthday-badge', icon = '🎂', text;
 			if (info.diffDays === 0) {
-				cls += ' birthday-today'; icon = '';
+				cls += ' birthday-today'; icon = '🎉';
 				text = `¡Hoy cumple ${info.age + 1} años!`;
 			} else if (info.diffDays <= 7) {
 				cls += ' birthday-soon';
@@ -140,7 +152,7 @@
 				document.getElementById('profilesList').innerHTML = `
 					<div class="empty-state">
 						<p>No se pudieron cargar los perfiles.</p>
-						<p style="font-size:11px;">Verifica que el servidor este activo.</p>
+						<p style="font-size:11px;">Verifica que el servidor esté activo.</p>
 					</div>`;
 			}
 		}
@@ -150,7 +162,7 @@
 			if (!profiles || profiles.length === 0) {
 				list.innerHTML = `<div class="empty-state">
 					<p>No hay perfiles registrados.</p>
-					<p style="font-size:11px;">Los datos apareceran aqui cuando se agreguen nuevos perfiles.</p>
+					<p style="font-size:11px;">Los datos aparecerán aquí cuando se agreguen nuevos perfiles.</p>
 				</div>`;
 				return;
 			}
@@ -170,10 +182,6 @@
 					? `<img src="${profile.photo}" alt="Foto" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">`
 					: `<div style="width:80px;height:80px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:24px;">${(profile.firstName?.charAt(0)||'P').toUpperCase()}</div>`;
 
-				const bdFecha = profile.birthday
-					? parseDateLocal(profile.birthday).toLocaleDateString('es-PE', { day:'2-digit', month:'long', year:'numeric' })
-					: 'N/A';
-
 				return `<div class="profile-card" style="border:1px solid var(--border);padding:15px;margin-bottom:15px;border-radius:6px;background:#fafafa;">
 					<div style="display:grid;grid-template-columns:80px 1fr;gap:15px;align-items:start;">
 						<div style="text-align:center;">${photo}</div>
@@ -189,7 +197,7 @@
 								<p><strong>Ubicación:</strong> ${profile.location||profile.locality||'N/A'}</p>
 								<p><strong>Padres:</strong> ${profile.parents||'N/A'}</p>
 								<p><strong>Hermanos:</strong> ${profile.siblings||'N/A'}</p>
-								<p><strong>Cumpleaños:</strong> ${bdFecha}</p>
+								<p><strong>🎂 Cumpleaños:</strong> ${formatBirthday(profile.birthday)}</p>
 							</div>
 							<div style="margin-top:12px;padding-top:12px;border-top:1px solid #ddd;">
 								<p style="font-weight:bold;color:var(--primary);margin-bottom:8px;font-size:12px;">Estadísticas</p>
@@ -217,7 +225,7 @@
 			if (filtered.length === 0) {
 				document.getElementById('profilesList').innerHTML = `<div class="empty-state">
 					<p>No se encontraron resultados para "<strong>${q}</strong>".</p>
-					<p style="font-size:11px;">Intenta con otro termino.</p>
+					<p style="font-size:11px;">Intenta con otro término.</p>
 				</div>`;
 			} else { displayProfiles(filtered); }
 		}

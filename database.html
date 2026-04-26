@@ -80,23 +80,24 @@
 		</section>
 	</div>
 
-	<script src="main.js"></script>
+	<!-- NO se carga main.js aqui: esta pagina es completamente independiente -->
 	<script>
 		// ── Utilidades de fecha ───────────────────────────────────────────
-		// Funciona tanto con '2000-03-03' como con '2000-03-03T00:00:00.000Z'
+		// Funciona con '2000-03-03' y con '2000-03-03T00:00:00.000Z'
 		function parseParts(str) {
 			const clean = str.split('T')[0];
 			const [y, m, d] = clean.split('-').map(Number);
 			return { y, m, d };
 		}
 
-		// Arma la fecha como texto sin depender de toLocaleDateString (evita bugs de zona horaria)
-		function formatBirthday(str, withYear = true) {
+		// Formato manual: evita bugs de zona horaria con toLocaleDateString
+		function formatBirthday(str, withYear) {
 			if (!str) return 'N/A';
 			const meses = ['enero','febrero','marzo','abril','mayo','junio',
 			               'julio','agosto','septiembre','octubre','noviembre','diciembre'];
 			const { y, m, d } = parseParts(str);
-			return withYear ? `${d} de ${meses[m-1]} de ${y}` : `${d} de ${meses[m-1]}`;
+			if (isNaN(y) || isNaN(m) || isNaN(d)) return 'N/A';
+			return withYear === false ? `${d} de ${meses[m-1]}` : `${d} de ${meses[m-1]} de ${y}`;
 		}
 
 		function getBirthdayInfo(birthdayStr) {
@@ -157,6 +158,54 @@
 			}
 		}
 
+		function buildCard(profile) {
+			const bdInfo  = getBirthdayInfo(profile.birthday);
+			const ageChip = bdInfo ? `<span class="age-chip">${bdInfo.age} años</span>` : '';
+			const bdBadge = profile.birthday ? birthdayBadge(profile.birthday) : '';
+
+			const skill      = profile.stats?.skill       ?? profile.skill       ?? 50;
+			const intel      = profile.stats?.intelligence ?? profile.intelligence ?? 50;
+			const perf       = profile.stats?.performance  ?? profile.performance  ?? 50;
+			const jobs       = profile.stats?.jobs         ?? profile.jobs         ?? 50;
+			const occupation = profile.stats?.occupation   ?? profile.occupation   ?? 50;
+
+			const photo = profile.photo
+				? `<img src="${profile.photo}" alt="Foto" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">`
+				: `<div style="width:80px;height:80px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:24px;">${(profile.firstName?.charAt(0)||'P').toUpperCase()}</div>`;
+
+			return `
+			<div class="profile-card" style="border:1px solid var(--border);padding:15px;margin-bottom:15px;border-radius:6px;background:#fafafa;">
+				<div style="display:grid;grid-template-columns:80px 1fr;gap:15px;align-items:start;">
+					<div style="text-align:center;">${photo}</div>
+					<div>
+						<h3 style="color:var(--primary);margin-bottom:4px;font-size:16px;">
+							${profile.firstName||''} ${profile.lastName||''} ${ageChip}
+						</h3>
+						${bdBadge ? `<div style="margin-bottom:8px;">${bdBadge}</div>` : ''}
+						<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:#666;">
+							<p><strong>DNI:</strong> ${profile.dni||'N/A'}</p>
+							<p><strong>Email:</strong> ${profile.email||'N/A'}</p>
+							<p><strong>Teléfono:</strong> ${profile.phone||'N/A'}</p>
+							<p><strong>Ubicación:</strong> ${profile.location||profile.locality||'N/A'}</p>
+							<p><strong>Padres:</strong> ${profile.parents||'N/A'}</p>
+							<p><strong>Hermanos:</strong> ${profile.siblings||'N/A'}</p>
+							<p><strong>🎂 Cumpleaños:</strong> ${formatBirthday(profile.birthday)}</p>
+						</div>
+						<div style="margin-top:12px;padding-top:12px;border-top:1px solid #ddd;">
+							<p style="font-weight:bold;color:var(--primary);margin-bottom:8px;font-size:12px;">Estadísticas</p>
+							<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;font-size:11px;">
+								${[['Habilidad',skill],['Inteligencia',intel],['Desempeño',perf],['Trabajos',jobs],['Ocupación',occupation]].map(([l,v])=>`
+								<div style="background:white;padding:8px;border-radius:4px;text-align:center;border:1px solid #ddd;">
+									<div style="font-weight:bold;color:var(--primary);">${v}%</div>
+									<div>${l}</div>
+								</div>`).join('')}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>`;
+		}
+
 		function displayProfiles(profiles) {
 			const list = document.getElementById('profilesList');
 			if (!profiles || profiles.length === 0) {
@@ -166,53 +215,7 @@
 				</div>`;
 				return;
 			}
-
-			list.innerHTML = profiles.map(profile => {
-				const bdInfo  = getBirthdayInfo(profile.birthday);
-				const ageChip = bdInfo ? `<span class="age-chip">${bdInfo.age} años</span>` : '';
-				const bdBadge = profile.birthday ? birthdayBadge(profile.birthday) : '';
-
-				const skill      = profile.stats?.skill       ?? profile.skill       ?? 50;
-				const intel      = profile.stats?.intelligence ?? profile.intelligence ?? 50;
-				const perf       = profile.stats?.performance  ?? profile.performance  ?? 50;
-				const jobs       = profile.stats?.jobs         ?? profile.jobs         ?? 50;
-				const occupation = profile.stats?.occupation   ?? profile.occupation   ?? 50;
-
-				const photo = profile.photo
-					? `<img src="${profile.photo}" alt="Foto" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--primary);">`
-					: `<div style="width:80px;height:80px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:24px;">${(profile.firstName?.charAt(0)||'P').toUpperCase()}</div>`;
-
-				return `<div class="profile-card" style="border:1px solid var(--border);padding:15px;margin-bottom:15px;border-radius:6px;background:#fafafa;">
-					<div style="display:grid;grid-template-columns:80px 1fr;gap:15px;align-items:start;">
-						<div style="text-align:center;">${photo}</div>
-						<div>
-							<h3 style="color:var(--primary);margin-bottom:4px;font-size:16px;">
-								${profile.firstName||''} ${profile.lastName||''} ${ageChip}
-							</h3>
-							${bdBadge ? `<div style="margin-bottom:8px;">${bdBadge}</div>` : ''}
-							<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:#666;">
-								<p><strong>DNI:</strong> ${profile.dni||'N/A'}</p>
-								<p><strong>Email:</strong> ${profile.email||'N/A'}</p>
-								<p><strong>Teléfono:</strong> ${profile.phone||'N/A'}</p>
-								<p><strong>Ubicación:</strong> ${profile.location||profile.locality||'N/A'}</p>
-								<p><strong>Padres:</strong> ${profile.parents||'N/A'}</p>
-								<p><strong>Hermanos:</strong> ${profile.siblings||'N/A'}</p>
-								<p><strong>🎂 Cumpleaños:</strong> ${formatBirthday(profile.birthday)}</p>
-							</div>
-							<div style="margin-top:12px;padding-top:12px;border-top:1px solid #ddd;">
-								<p style="font-weight:bold;color:var(--primary);margin-bottom:8px;font-size:12px;">Estadísticas</p>
-								<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;font-size:11px;">
-									${[['Habilidad',skill],['Inteligencia',intel],['Desempeño',perf],['Trabajos',jobs],['Ocupación',occupation]].map(([l,v])=>`
-									<div style="background:white;padding:8px;border-radius:4px;text-align:center;border:1px solid #ddd;">
-										<div style="font-weight:bold;color:var(--primary);">${v}%</div>
-										<div>${l}</div>
-									</div>`).join('')}
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>`;
-			}).join('');
+			list.innerHTML = profiles.map(buildCard).join('');
 		}
 
 		function searchProfiles() {
@@ -227,7 +230,9 @@
 					<p>No se encontraron resultados para "<strong>${q}</strong>".</p>
 					<p style="font-size:11px;">Intenta con otro término.</p>
 				</div>`;
-			} else { displayProfiles(filtered); }
+			} else {
+				displayProfiles(filtered);
+			}
 		}
 
 		document.addEventListener('DOMContentLoaded', function () {

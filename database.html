@@ -83,10 +83,17 @@
 	<script src="main.js"></script>
 	<script>
 		// ── Utilidades de cumpleaños ─────────────────────────────────────
+		function parseDateLocal(str) {
+			// Evita desfase de zona horaria: trata la fecha como local, no UTC
+			const [y, m, d] = str.split('-').map(Number);
+			return new Date(y, m - 1, d);
+		}
+
 		function getBirthdayInfo(birthdayStr) {
 			if (!birthdayStr) return null;
 			const today = new Date();
-			const bday  = new Date(birthdayStr);
+			today.setHours(0, 0, 0, 0);
+			const bday = parseDateLocal(birthdayStr);
 			if (isNaN(bday)) return null;
 
 			let age = today.getFullYear() - bday.getFullYear();
@@ -150,7 +157,7 @@
 
 			list.innerHTML = profiles.map(profile => {
 				const bdInfo  = getBirthdayInfo(profile.birthday);
-				const ageChip = bdInfo ? `<span class="age-chip">${bdInfo.age} anos</span>` : '';
+				const ageChip = bdInfo ? `<span class="age-chip">${bdInfo.age} años</span>` : '';
 				const bdBadge = profile.birthday ? birthdayBadge(profile.birthday) : '';
 
 				const skill      = profile.stats?.skill       ?? profile.skill       ?? 50;
@@ -164,7 +171,7 @@
 					: `<div style="width:80px;height:80px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:24px;">${(profile.firstName?.charAt(0)||'P').toUpperCase()}</div>`;
 
 				const bdFecha = profile.birthday
-					? new Date(profile.birthday).toLocaleDateString('es-PE', { day:'2-digit', month:'long', year:'numeric' })
+					? parseDateLocal(profile.birthday).toLocaleDateString('es-PE', { day:'2-digit', month:'long', year:'numeric' })
 					: 'N/A';
 
 				return `<div class="profile-card" style="border:1px solid var(--border);padding:15px;margin-bottom:15px;border-radius:6px;background:#fafafa;">
@@ -178,16 +185,16 @@
 							<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:#666;">
 								<p><strong>DNI:</strong> ${profile.dni||'N/A'}</p>
 								<p><strong>Email:</strong> ${profile.email||'N/A'}</p>
-								<p><strong>Telefono:</strong> ${profile.phone||'N/A'}</p>
-								<p><strong>Ubicacion:</strong> ${profile.location||profile.locality||'N/A'}</p>
+								<p><strong>Teléfono:</strong> ${profile.phone||'N/A'}</p>
+								<p><strong>Ubicación:</strong> ${profile.location||profile.locality||'N/A'}</p>
 								<p><strong>Padres:</strong> ${profile.parents||'N/A'}</p>
 								<p><strong>Hermanos:</strong> ${profile.siblings||'N/A'}</p>
-								<p><strong>Cumpleanos:</strong> ${bdFecha}</p>
+								<p><strong>Cumpleaños:</strong> ${bdFecha}</p>
 							</div>
 							<div style="margin-top:12px;padding-top:12px;border-top:1px solid #ddd;">
-								<p style="font-weight:bold;color:var(--primary);margin-bottom:8px;font-size:12px;">Estadisticas</p>
+								<p style="font-weight:bold;color:var(--primary);margin-bottom:8px;font-size:12px;">Estadísticas</p>
 								<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;font-size:11px;">
-									${[['Habilidad',skill],['Inteligencia',intel],['Desempeno',perf],['Trabajos',jobs],['Ocupacion',occupation]].map(([l,v])=>`
+									${[['Habilidad',skill],['Inteligencia',intel],['Desempeño',perf],['Trabajos',jobs],['Ocupación',occupation]].map(([l,v])=>`
 									<div style="background:white;padding:8px;border-radius:4px;text-align:center;border:1px solid #ddd;">
 										<div style="font-weight:bold;color:var(--primary);">${v}%</div>
 										<div>${l}</div>

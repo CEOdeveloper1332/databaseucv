@@ -126,9 +126,9 @@
 		function birthdayBadge(birthdayStr) {
 			const info = getBirthdayInfo(birthdayStr);
 			if (!info) return '';
-			let cls = 'birthday-badge', icon = '🎂', text;
+			let cls = 'birthday-badge', icon = '', text;
 			if (info.diffDays === 0) {
-				cls += ' birthday-today'; icon = '🎉';
+				cls += ' birthday-today'; icon = '';
 				text = `¡Hoy cumple ${info.age + 1} años!`;
 			} else if (info.diffDays <= 7) {
 				cls += ' birthday-soon';
@@ -189,7 +189,7 @@
 							<p><strong>Ubicación:</strong> ${profile.location||profile.locality||'N/A'}</p>
 							<p><strong>Padres:</strong> ${profile.parents||'N/A'}</p>
 							<p><strong>Hermanos:</strong> ${profile.siblings||'N/A'}</p>
-							<p><strong>🎂 Cumpleaños:</strong> ${formatBirthday(profile.birthday)}</p>
+							<p><strong>Cumpleaños:</strong> ${formatBirthday(profile.birthday)}</p>
 						</div>
 						<div style="margin-top:12px;padding-top:12px;border-top:1px solid #ddd;">
 							<p style="font-weight:bold;color:var(--primary);margin-bottom:8px;font-size:12px;">Estadísticas</p>

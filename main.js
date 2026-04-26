@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 			</div>
 			<div class="profile-field">
 				<span class="profile-field-label">Cumpleaños:</span>
-				<span class="profile-field-value">${profile.birthday ? new Date(profile.birthday).toLocaleDateString('es-PE', {day:'2-digit', month:'long', year:'numeric'}) : 'N/A'}</span>
+				<span class="profile-field-value">${profile.birthday ? (function(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d).toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'}); })(profile.birthday) : 'N/A'}</span>
 			</div>
 		`;
 

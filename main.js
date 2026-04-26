@@ -133,6 +133,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 				<span class="profile-field-label">Ubicación:</span>
 				<span class="profile-field-value">${escapeHtml(profile.location || 'N/A')}</span>
 			</div>
+			<div class="profile-field">
+				<span class="profile-field-label">🎂 Cumpleaños:</span>
+				<span class="profile-field-value">${profile.birthday ? new Date(profile.birthday).toLocaleDateString('es-PE', {day:'2-digit', month:'long', year:'numeric'}) : 'N/A'}</span>
+			</div>
 		`;
 
 		const stats = document.createElement('div');
@@ -231,6 +235,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 			createForm.location.value = p.location || '';
 			createForm.parents.value = p.parents || '';
 			createForm.siblings.value = p.siblings || '';
+			if (createForm.birthday) createForm.birthday.value = p.birthday || '';
 			createForm.skill.value = p.stats?.skill ?? 50;
 			createForm.intelligence.value = p.stats?.intelligence ?? 50;
 			createForm.performance.value = p.stats?.performance ?? 50;
@@ -278,6 +283,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 					location: formData.get('location') || '',
 					parents: formData.get('parents') || '',
 					siblings: formData.get('siblings') || '',
+					birthday: formData.get('birthday') || '',
 					stats: {
 						skill: Number(formData.get('skill')) || 50,
 						intelligence: Number(formData.get('intelligence')) || 50,

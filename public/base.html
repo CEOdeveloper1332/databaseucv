@@ -710,7 +710,19 @@ function validateImgUrl(url){return typeof url==='string'&&/^https?:\/\//i.test(
 async function fetchTimeout(url,opts={},ms=15000){
   const ctrl=new AbortController();
   const t=setTimeout(()=>ctrl.abort(),ms);
-  return fetch(url,{...opts,signal:ctrl.signal}).finally(()=>clearTimeout(t));
+  
+  // Agregar Bearer token para peticiones protegidas
+  const finalOpts = { ...opts, signal: ctrl.signal };
+  if (url.includes('/api/') || url.includes('/status')) {
+    const token = localStorage.getItem('sessionToken');
+    if (token && token !== 'undefined' && token !== 'null') {
+      const headers = finalOpts.headers || {};
+      headers['Authorization'] = 'Bearer ' + token;
+      finalOpts.headers = headers;
+    }
+  }
+  
+  return fetch(url, finalOpts).finally(()=>clearTimeout(t));
 }
 
 function toast(msg,type='info'){

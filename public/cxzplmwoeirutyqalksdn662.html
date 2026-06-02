@@ -902,9 +902,11 @@ select#profilesSelect:focus { border-color: var(--v3); background: var(--blanco)
     async function init(){
         let isAdmin = false;
         try{
+            const token = localStorage.getItem('sessionToken');
             const email = localStorage.getItem('userEmail');
-            if(email){
-                const r = await fetch('/status?email=' + encodeURIComponent(email));
+            if(email && token){
+                const headers = { 'Authorization': 'Bearer ' + token };
+                const r = await fetch('/status?email=' + encodeURIComponent(email), { headers });
                 if(r.ok){
                     const d = await r.json();
                     isAdmin = !!(d.approved && d.role === 'admin');

@@ -907,13 +907,50 @@
         let allProfiles = [];
         let activeDniFilter = '';
 
+        function normalizeProfile(profile) {
+            return {
+                ...profile,
+                id: profile.id || profile._id,
+                firstName: profile.firstName ?? profile.first_name ?? '',
+                lastName: profile.lastName ?? profile.last_name ?? '',
+                fullName: profile.fullName ?? profile.full_name ?? '',
+                photo: profile.photo ?? profile.avatar ?? profile.picture ?? '',
+                phone: profile.phone ?? profile.telefono ?? '',
+                birthday: profile.birthday ?? profile.birthdate ?? profile.birth_date ?? '',
+                location: profile.location ?? profile.locality ?? profile.district ?? '',
+                locality: profile.locality ?? profile.location ?? profile.district ?? '',
+                parents: profile.parents ?? profile.parent_names ?? '',
+                siblings: profile.siblings ?? profile.sibling_names ?? '',
+                stats: profile.stats || {}
+            };
+        }
+
+        function clearSessionAndReturnToLogin() {
+            localStorage.removeItem('sessionToken');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userApproved');
+            window.location.href = 'index.html';
+        }
+
         async function loadProfiles() {
             try {
                 const token = localStorage.getItem('sessionToken');
+                if (!token || token === 'undefined' || token === 'null' || token.trim() === '') {
+                    clearSessionAndReturnToLogin();
+                    return;
+                }
+
                 const headers = token ? { Authorization: 'Bearer ' + token } : {};
                 const res = await fetch('/api/profiles', { headers });
+                if (res.status === 401) {
+                    clearSessionAndReturnToLogin();
+                    return;
+                }
                 if (!res.ok) throw new Error('Error ' + res.status);
-                allProfiles = await res.json();
+                const rows = await res.json();
+                allProfiles = Array.isArray(rows) ? rows.map(normalizeProfile) : [];
                 updateStats(allProfiles, allProfiles);
                 displayProfiles(allProfiles);
             } catch (err) {

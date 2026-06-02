@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consulta Padron RUC / DNI</title>
+<link rel="icon" type="image/png" href="INTELIGENCIAJG.png">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --v1:#0f3010;--v2:#1d4f1d;--v3:#2e6b2e;--v4:#4a8c3a;--v7:#d4ead0;--v8:#eaf4e8;--v9:#f4faf3;
+  --blanco:#fff;--gris1:#f2f4f2;--gris2:#e4e8e4;--gris3:#c8cec8;--gris4:#7b857b;--gris5:#485248;--texto:#1a201a;--borde:#d0d8d0;
+}
+body{margin:0;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;background:var(--gris1);color:var(--texto);font-size:14px}
+.topbar{background:var(--v1);color:var(--v7);font-size:11.5px;padding:6px 24px;display:flex;justify-content:space-between;gap:12px;border-bottom:2px solid var(--v4)}
+.header{background:var(--blanco);border-bottom:3px solid var(--v2);box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 24px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}
+.brand img{width:52px;height:52px;object-fit:contain;border-radius:8px}
+.brand-title{font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;letter-spacing:.12em;color:var(--v2)}
+.brand-subtitle{font-size:10.5px;color:var(--gris4);text-transform:uppercase;letter-spacing:.06em}
+.nav{display:flex;align-items:center;gap:1px;flex-wrap:wrap}
+.nav a{padding:8px 12px;font-size:12.5px;font-weight:600;color:var(--v2);text-decoration:none;border-radius:3px;border-bottom:3px solid transparent}
+.nav a:hover,.nav a.active{background:var(--v8);border-bottom-color:var(--v2)}
+.shell{max-width:1080px;margin:22px auto;padding:0 18px;display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:18px}
+.panel{background:var(--blanco);border:1px solid var(--borde);border-radius:8px;box-shadow:0 2px 12px rgba(15,48,16,.06)}
+.panel-head{padding:16px 18px;border-bottom:1px solid var(--gris2);background:var(--v9)}
+.panel-head h1,.panel-head h2{margin:0;color:var(--v1);font-size:18px}
+.panel-head p{margin:6px 0 0;color:var(--gris5);font-size:12.5px;line-height:1.45}
+.form{padding:18px;display:flex;flex-direction:column;gap:14px}
+.segmented{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--borde);border-radius:6px;overflow:hidden}
+.segmented button{border:0;background:var(--blanco);padding:10px;font-family:inherit;font-weight:700;color:var(--v2);cursor:pointer}
+.segmented button.active{background:var(--v2);color:#fff}
+.field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--gris5);margin-bottom:6px}
+.field input{width:100%;padding:12px;border:1px solid var(--borde);border-radius:6px;font:inherit;outline:none;background:#fff;color:var(--texto)}
+.field input:focus{border-color:var(--v4);box-shadow:0 0 0 3px rgba(74,140,58,.12)}
+.hint{font-size:12px;color:var(--gris4);line-height:1.45}
+.actions{display:flex;gap:10px;align-items:center}
+.btn{border:1px solid var(--v2);background:var(--v2);color:#fff;border-radius:6px;padding:11px 14px;font-family:inherit;font-weight:800;cursor:pointer}
+.btn.secondary{background:#fff;color:var(--v2)}
+.btn:disabled{opacity:.6;cursor:wait}
+.status{font-size:12.5px;color:var(--gris5);min-height:18px}
+.results{padding:12px}
+.empty{padding:34px 18px;text-align:center;color:var(--gris4);border:1px dashed var(--gris3);border-radius:6px;background:var(--v9)}
+.result-row{display:grid;grid-template-columns:110px 120px 1fr;gap:10px;align-items:center;padding:12px;border-bottom:1px solid var(--gris2)}
+.result-row:last-child{border-bottom:0}
+.chip{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border-radius:999px;border:1px solid var(--v7);background:var(--v9);font-weight:800;color:var(--v2);font-size:12px}
+.name{font-weight:700;color:var(--texto)}
+.muted{color:var(--gris4);font-size:12px;margin-top:2px}
+.breakdown{margin-top:10px;padding:10px;border:1px solid var(--gris2);border-radius:6px;background:#fff;font-size:12.5px;color:var(--gris5);line-height:1.6}
+@media(max-width:800px){.shell{grid-template-columns:1fr}.nav{display:none}.result-row{grid-template-columns:1fr}.topbar{flex-direction:column}.header-inner{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<script src="auth-guard.js"></script>
+<div class="topbar">
+  <span>Padron SUNAT reducido conectado por servidor</span>
+  <span id="userEmail"></span>
+</div>
+<header class="header">
+  <div class="header-inner">
+    <a href="index.html" class="brand">
+      <img src="INTELIGENCIAJG.png" alt="Inteligencia Juan Guerra">
+      <div>
+        <div class="brand-title">INTELIGENCIA</div>
+        <div class="brand-subtitle">Consulta RUC persona natural / DNI</div>
+      </div>
+    </a>
+    <nav class="nav">
+      <a href="index.html">Inicio</a>
+      <a href="vnxoqwieuryplmzncbakd551.html">Base de Datos</a>
+      <a href="wqmnzxpalkdjqowieuryt771.html">Consultas</a>
+      <a href="padron.html" class="active">Padron DNI</a>
+    </nav>
+  </div>
+</header>
+
+<main class="shell">
+  <section class="panel">
+    <div class="panel-head">
+      <h1>Buscar nombre = DNI</h1>
+      <p>Usa solo el padron SUNAT del servidor. Para personas naturales, el RUC viene como 10 + DNI + digito final.</p>
+    </div>
+    <form class="form" id="searchForm">
+      <div class="segmented" role="tablist" aria-label="Tipo de busqueda">
+        <button type="button" id="modeName" class="active">Por nombre</button>
+        <button type="button" id="modeDni">Por DNI</button>
+      </div>
+      <div class="field">
+        <label id="queryLabel" for="queryInput">Nombre o apellido</label>
+        <input id="queryInput" name="q" autocomplete="off" placeholder="Ej. PEREZ JUAN" required>
+      </div>
+      <div class="hint" id="hintText">Escribe minimo 3 letras. Devuelve RUC, DNI extraido y nombre.</div>
+      <div class="breakdown">
+        Ejemplo: <strong>10123456783</strong><br>
+        10 = persona natural, <strong>12345678</strong> = DNI, 3 = digito final/verificador del RUC.
+      </div>
+      <div class="actions">
+        <button class="btn" id="submitBtn" type="submit">Buscar</button>
+        <button class="btn secondary" type="button" id="clearBtn">Limpiar</button>
+      </div>
+      <div class="status" id="statusText"></div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Resultados</h2>
+      <p id="resultSummary">Todavia no hay busqueda.</p>
+    </div>
+    <div class="results" id="results">
+      <div class="empty">Busca un nombre o un DNI para consultar el padron.</div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  const form = document.getElementById('searchForm');
+  const input = document.getElementById('queryInput');
+  const statusText = document.getElementById('statusText');
+  const resultSummary = document.getElementById('resultSummary');
+  const results = document.getElementById('results');
+  const submitBtn = document.getElementById('submitBtn');
+  const modeName = document.getElementById('modeName');
+  const modeDni = document.getElementById('modeDni');
+  const queryLabel = document.getElementById('queryLabel');
+  const hintText = document.getElementById('hintText');
+  const userEmail = document.getElementById('userEmail');
+  let mode = 'nombre';
+
+  userEmail.textContent = window.getUserEmail ? (window.getUserEmail() || '') : '';
+
+  function esc(value) {
+    return String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+
+  function extractDni(ruc) {
+    const value = String(ruc || '');
+    return /^10\d{9}$/.test(value) ? value.slice(2, 10) : '';
+  }
+
+  function setMode(nextMode) {
+    mode = nextMode;
+    modeName.classList.toggle('active', mode === 'nombre');
+    modeDni.classList.toggle('active', mode === 'dni');
+    input.value = '';
+    queryLabel.textContent = mode === 'nombre' ? 'Nombre o apellido' : 'DNI';
+    input.placeholder = mode === 'nombre' ? 'Ej. PEREZ JUAN' : 'Ej. 12345678';
+    input.inputMode = mode === 'dni' ? 'numeric' : 'text';
+    input.maxLength = mode === 'dni' ? 8 : 80;
+    hintText.textContent = mode === 'nombre'
+      ? 'Escribe minimo 3 letras. Devuelve RUC, DNI extraido y nombre.'
+      : 'Escribe exactamente 8 digitos. Se busca como RUC 10 + DNI + digito final.';
+    input.focus();
+  }
+
+  function setLoading(isLoading) {
+    submitBtn.disabled = isLoading;
+    submitBtn.textContent = isLoading ? 'Buscando...' : 'Buscar';
+  }
+
+  function renderRows(rows) {
+    if (!rows.length) {
+      results.innerHTML = '<div class="empty">No se encontraron coincidencias en el padron.</div>';
+      return;
+    }
+    results.innerHTML = rows.map(row => {
+      const dni = row.dni || extractDni(row.ruc);
+      const checkDigit = String(row.ruc || '').slice(10, 11);
+      return `<div class="result-row">
+        <div><span class="chip">${esc(dni || 'Sin DNI')}</span></div>
+        <div>
+          <div><strong>${esc(row.ruc)}</strong></div>
+          <div class="muted">Digito: ${esc(checkDigit || '-')}</div>
+        </div>
+        <div>
+          <div class="name">${esc(row.nombre)}</div>
+          <div class="muted">RUC persona natural: 10 + DNI + digito</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  async function searchByName(q) {
+    const response = await authFetch('/api/lookup-nombre?q=' + encodeURIComponent(q) + '&tipo=persona');
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'No se pudo consultar el padron');
+    return payload.data || [];
+  }
+
+  async function searchByDni(dni) {
+    const response = await authFetch('/api/lookup-dni/' + encodeURIComponent(dni));
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      if (response.status === 404) return [];
+      throw new Error(payload.error || 'No se pudo consultar el padron');
+    }
+    return payload.data ? [payload.data] : [];
+  }
+
+  modeName.addEventListener('click', () => setMode('nombre'));
+  modeDni.addEventListener('click', () => setMode('dni'));
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    input.value = '';
+    statusText.textContent = '';
+    resultSummary.textContent = 'Todavia no hay busqueda.';
+    results.innerHTML = '<div class="empty">Busca un nombre o un DNI para consultar el padron.</div>';
+    input.focus();
+  });
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    const raw = input.value.trim();
+    const q = mode === 'dni' ? raw.replace(/\D/g, '') : raw.toUpperCase();
+    statusText.textContent = '';
+    if (mode === 'nombre' && q.length < 3) {
+      statusText.textContent = 'Escribe al menos 3 caracteres.';
+      return;
+    }
+    if (mode === 'dni' && !/^\d{8}$/.test(q)) {
+      statusText.textContent = 'El DNI debe tener exactamente 8 digitos.';
+      return;
+    }
+    setLoading(true);
+    try {
+      const rows = mode === 'nombre' ? await searchByName(q) : await searchByDni(q);
+      renderRows(rows);
+      resultSummary.textContent = rows.length === 1 ? '1 resultado encontrado.' : rows.length + ' resultados encontrados.';
+    } catch (error) {
+      results.innerHTML = '<div class="empty">' + esc(error.message) + '</div>';
+      resultSummary.textContent = 'Error en la consulta.';
+    } finally {
+      setLoading(false);
+    }
+  });
+})();
+</script>
+</body>
+</html>

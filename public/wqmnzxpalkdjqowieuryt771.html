@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base de Datos - A1 Analytics</title>
+    <link rel="icon" type="image/png" href="INTELIGENCIAJG.png">
+    <link rel="apple-touch-icon" href="INTELIGENCIAJG.png">
+    <meta name="theme-color" content="#1d4f1d">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --v1: #0f3010; --v2: #1d4f1d; --v3: #2e6b2e; --v4: #4a8c3a;
+            --v5: #6faa5a; --v6: #a8cc96; --v7: #d4ead0; --v8: #eaf4e8;
+            --v9: #f4faf3; --blanco: #ffffff;
+            --gris1: #f2f4f2; --gris2: #e4e8e4; --gris3: #c8cec8;
+            --gris4: #8a948a; --gris5: #555d55;
+            --texto: #1a201a; --borde: #d0d8d0;
+        }
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--gris1);
+    color: var(--texto);
+    font-size: 13px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+        /* TOPBAR */
+        .topbar {
+            flex-shrink: 0;
+            background: var(--v1); color: var(--v7); font-size: 11.5px;
+            padding: 5px 24px; display: flex; align-items: center;
+            justify-content: space-between; gap: 16px; flex-wrap: wrap;
+            border-bottom: 2px solid var(--v4);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+        .topbar-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .topbar-right { display: flex; align-items: center; gap: 8px; }
+        .topbar-pill {
+            background: var(--v3); color: var(--v7); font-size: 10.5px; font-weight: 700;
+            padding: 3px 10px; border-radius: 2px; text-transform: uppercase;
+            letter-spacing: 0.05em; border: 1px solid var(--v4);
+        }
+        .topbar-pill.accent { background: var(--blanco); color: var(--v2); }
+
+        /* HEADER */
+        .site-header {
+            flex-shrink: 0;
+            background: var(--blanco); border-bottom: 3px solid var(--v2);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+        }
+        .header-inner {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 24px; gap: 20px;
+        }
+        .brand { display: flex; align-items: center; gap: 13px; text-decoration: none; flex-shrink: 0; }
+        .brand-img { width: 56px; height: 56px; object-fit: contain; border-radius: 8px; }
+        .brand-text { display: flex; flex-direction: column; gap: 2px; }
+        .brand-title {
+            font-family: Georgia, serif; font-weight: bold; font-size: 22px;
+            color: var(--v2); text-transform: uppercase; letter-spacing: 0.13em; line-height: 1;
+        }
+        .brand-subtitle { font-size: 10.5px; color: var(--gris4); text-transform: uppercase; letter-spacing: 0.07em; }
+        .main-nav { display: flex; align-items: center; gap: 1px; flex-wrap: wrap; }
+        .nav-link {
+            padding: 8px 13px; font-size: 12.5px; font-weight: 600; color: var(--v2);
+            text-decoration: none; border-radius: 3px; transition: background 0.18s, color 0.18s;
+            white-space: nowrap; border-bottom: 3px solid transparent;
+        }
+        .nav-link:hover { background: var(--v8); color: var(--v1); border-bottom-color: var(--v3); }
+        .nav-link.active { background: var(--v8); color: var(--v1); border-bottom: 3px solid var(--v2); }
+        .nav-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+        /* BREADCRUMB */
+        .breadcrumb {
+            flex-shrink: 0;
+            background: var(--blanco); border-bottom: 1px solid var(--borde);
+            padding: 7px 24px; font-size: 11.5px; color: var(--gris4);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .breadcrumb a { color: var(--v3); text-decoration: none; font-weight: 600; }
+        .breadcrumb-sep { color: var(--gris3); }
+
+        /* ══ LAYOUT ══ */
+        .page-body {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* SIDEBAR */
+        .left-sidebar {
+            width: 230px;
+            min-width: 230px;
+            background: var(--blanco);
+            border-right: 2px solid var(--borde);
+            flex-shrink: 0;
+        }
+
+        /* MAIN */
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            padding: 24px 28px 48px;
+        }
+
+        /* FOOTER */
+        .site-footer {
+            flex-shrink: 0;
+            background: var(--v1);
+            color: var(--v7);
+            padding: 22px 24px;
+            text-align: center;
+            border-top: 3px solid var(--v4);
+        }
+        .site-footer p { font-size: 12px; margin: 4px 0; }
+        .site-footer strong { color: var(--blanco); }
+
+        .sidebar-section-hdr {
+            background: var(--v2); color: var(--blanco); font-size: 12px; font-weight: 700;
+            padding: 11px 16px; text-transform: uppercase; letter-spacing: 0.07em;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .sidebar-cat-label { font-size: 10px; font-weight: 700; color: var(--gris4); text-transform: uppercase; letter-spacing: 0.09em; padding: 10px 16px 4px; }
+        .sidebar-divider { height: 1px; background: var(--gris2); margin: 4px 0; }
+        .sidebar-nav-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+            font-size: 12.5px; color: var(--gris5); text-decoration: none;
+            border-bottom: 1px solid var(--gris1); transition: background 0.15s, color 0.15s;
+            border-left: 3px solid transparent; cursor: pointer;
+        }
+        .sidebar-nav-item:hover, .sidebar-nav-item.active { background: var(--v8); color: var(--v2); border-left-color: var(--v3); font-weight: 600; }
+        .sidebar-nav-item.active { background: var(--v7); border-left-color: var(--v2); }
+        .sidebar-nav-item svg { color: var(--v4); flex-shrink: 0; }
+
+        /* PAGE TITLE */
+        .page-title-bar {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            margin-bottom: 22px; padding-bottom: 16px;
+            border-bottom: 2px solid var(--v2); gap: 16px; flex-wrap: wrap;
+        }
+        .page-title {
+            font-family: Georgia, serif; font-size: 24px; font-weight: bold; color: var(--v1);
+            display: flex; align-items: center; gap: 12px; line-height: 1.1;
+        }
+        .page-title-icon {
+            width: 38px; height: 38px; background: var(--v2); border-radius: 6px;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .page-title-icon svg { color: var(--v7); }
+        .page-desc { font-size: 12.5px; color: var(--gris4); line-height: 1.65; margin-top: 7px; }
+
+        /* ══ SEARCH AUTOCOMPLETE ══ */
+        .search-container {
+            position: relative; margin-bottom: 32px;
+        }
+        .search-label {
+            font-size: 11.5px; font-weight: 700; color: var(--v2); text-transform: uppercase;
+            letter-spacing: 0.07em; margin-bottom: 10px; display: flex; align-items: center; gap: 7px;
+        }
+        .search-label svg { color: var(--v4); }
+        .search-wrap {
+            display: flex; align-items: center; background: var(--blanco);
+            border: 2px solid var(--v3); border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(15,48,16,0.12);
+            overflow: visible; position: relative;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-wrap:focus-within {
+            border-color: var(--v2);
+            box-shadow: 0 6px 28px rgba(15,48,16,0.18);
+        }
+        .search-icon-left {
+            padding: 0 14px 0 16px; color: var(--v3); flex-shrink: 0;
+            display: flex; align-items: center;
+        }
+        #searchInput {
+            flex: 1; border: none; outline: none; font-size: 15px;
+            padding: 14px 0; background: transparent; color: var(--texto);
+            font-family: inherit; letter-spacing: 0.01em;
+        }
+        #searchInput::placeholder { color: var(--gris3); font-style: italic; }
+        .search-clear-btn {
+            padding: 0 14px; background: none; border: none; cursor: pointer;
+            color: var(--gris3); display: none; align-items: center;
+            transition: color 0.2s;
+        }
+        .search-clear-btn:hover { color: var(--v2); }
+        .search-clear-btn.visible { display: flex; }
+        .search-kbd {
+            padding: 0 16px; font-size: 11px; color: var(--gris3);
+            border-left: 1px solid var(--gris2); height: 100%; display: flex;
+            align-items: center; white-space: nowrap; font-style: italic;
+        }
+
+        /* DROPDOWN */
+        .autocomplete-dropdown {
+            position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+            background: var(--blanco); border: 1.5px solid var(--v3);
+            border-radius: 8px; box-shadow: 0 12px 40px rgba(15,48,16,0.18);
+            z-index: 500; overflow: hidden;
+            max-height: 420px; overflow-y: auto;
+            display: none;
+            animation: dropDown 0.18s ease;
+        }
+        .autocomplete-dropdown.open { display: block; }
+        @keyframes dropDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .dropdown-header {
+            padding: 8px 16px 6px; font-size: 10.5px; font-weight: 700;
+            color: var(--gris4); text-transform: uppercase; letter-spacing: 0.08em;
+            background: var(--v9); border-bottom: 1px solid var(--gris2);
+        }
+        .dropdown-item {
+            display: flex; align-items: center; gap: 12px; padding: 11px 16px;
+            cursor: pointer; border-bottom: 1px solid var(--gris1);
+            transition: background 0.12s;
+        }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover, .dropdown-item.focused { background: var(--v8); }
+        .dropdown-avatar {
+            width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+            border: 2px solid var(--v6); object-fit: cover;
+        }
+        .dropdown-avatar-placeholder {
+            width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+            background: var(--v2); display: flex; align-items: center; justify-content: center;
+            color: var(--blanco); font-weight: bold; font-size: 14px; font-family: Georgia, serif;
+            border: 2px solid var(--v4);
+        }
+        .dropdown-info { flex: 1; min-width: 0; }
+        .dropdown-name {
+            font-size: 13px; font-weight: 700; color: var(--v1);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .dropdown-name em { color: var(--v3); font-style: normal; background: var(--v8); padding: 0 2px; border-radius: 2px; }
+        .dropdown-meta { font-size: 11px; color: var(--gris4); margin-top: 2px; }
+        .dropdown-dni-badge {
+            font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+            border: 1px solid transparent; white-space: nowrap; flex-shrink: 0;
+        }
+        .dropdown-dni-badge.vigente   { background: #ecfdf5; border-color: #86efac; color: #064e3b; }
+        .dropdown-dni-badge.proximo   { background: #fef3c7; border-color: #d97706; color: #92400e; }
+        .dropdown-dni-badge.vencido   { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+        .dropdown-dni-badge.no-caduca { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
+        .dropdown-dni-badge.sin-fecha { background: #f3f4f6; border-color: #d1d5db; color: #6b7280; }
+
+        .dropdown-empty { padding: 24px 16px; text-align: center; color: var(--gris4); font-size: 12.5px; }
+        .dropdown-loading { padding: 18px 16px; text-align: center; color: var(--gris4); font-size: 12px; }
+
+        /* ══ PROFILE PANEL ══ */
+        .profile-panel-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.35); z-index: 900;
+            animation: fadeIn 0.2s ease;
+        }
+        .profile-panel-overlay.open { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .profile-panel {
+            position: fixed; top: 0; right: 0; bottom: 0; width: min(680px, 100vw);
+            background: var(--blanco); z-index: 901; overflow-y: auto;
+            box-shadow: -8px 0 40px rgba(10,30,10,0.22);
+            transform: translateX(100%); transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+        }
+        .profile-panel.open { transform: translateX(0); }
+
+        /* PANEL HEADER */
+        .panel-header {
+            background: linear-gradient(135deg, var(--v1) 0%, var(--v2) 60%, var(--v3) 100%);
+            padding: 28px 28px 24px; position: relative;
+        }
+        .panel-close {
+            position: absolute; top: 18px; right: 20px;
+            background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3);
+            color: var(--blanco); width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: background 0.18s;
+        }
+        .panel-close:hover { background: rgba(255,255,255,0.28); }
+        .panel-print-btn {
+            position: absolute; top: 18px; right: 64px;
+            background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3);
+            color: var(--blanco); padding: 6px 14px; border-radius: 20px;
+            display: flex; align-items: center; gap: 6px; cursor: pointer;
+            font-size: 12px; font-weight: 700; transition: background 0.18s;
+            font-family: inherit;
+        }
+        .panel-print-btn:hover { background: rgba(255,255,255,0.28); }
+
+        .panel-hero { display: flex; align-items: flex-end; gap: 20px; }
+        .panel-photo {
+            width: 88px; height: 88px; border-radius: 50%; object-fit: cover;
+            border: 3px solid rgba(255,255,255,0.5); flex-shrink: 0;
+        }
+        .panel-photo-placeholder {
+            width: 88px; height: 88px; border-radius: 50%; flex-shrink: 0;
+            background: rgba(255,255,255,0.18); display: flex; align-items: center;
+            justify-content: center; color: var(--blanco); font-weight: bold;
+            font-size: 32px; font-family: Georgia, serif;
+            border: 3px solid rgba(255,255,255,0.4);
+        }
+        .panel-name-block { flex: 1; min-width: 0; }
+        .panel-name {
+            font-family: Georgia, serif; font-size: 22px; font-weight: bold;
+            color: var(--blanco); line-height: 1.1; margin-bottom: 6px;
+        }
+        .panel-age-chip {
+            display: inline-block; background: rgba(255,255,255,0.2);
+            color: var(--blanco); font-size: 11px; font-weight: 700;
+            padding: 3px 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.35);
+        }
+        .panel-dni-number {
+            font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 5px;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        /* PANEL BODY */
+        .panel-body { padding: 24px 28px; }
+
+        .panel-section {
+            margin-bottom: 22px; padding-bottom: 22px;
+            border-bottom: 1px solid var(--gris2);
+        }
+        .panel-section:last-child { border-bottom: none; margin-bottom: 0; }
+
+        .panel-section-title {
+            font-size: 11px; font-weight: 700; color: var(--v2);
+            text-transform: uppercase; letter-spacing: 0.09em;
+            margin-bottom: 14px; display: flex; align-items: center; gap: 7px;
+            padding-bottom: 7px; border-bottom: 2px solid var(--v7);
+        }
+        .panel-section-title svg { color: var(--v4); }
+
+        .panel-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 20px;
+        }
+        .panel-field { font-size: 12.5px; }
+        .panel-field-label { font-size: 10.5px; font-weight: 700; color: var(--gris4); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+        .panel-field-val { color: var(--texto); font-weight: 500; word-break: break-word; }
+        .panel-field-val.na { color: var(--gris3); font-style: italic; }
+
+        /* Map placeholder */
+        .map-placeholder {
+            background: linear-gradient(135deg, var(--v9) 0%, var(--v8) 100%);
+            border: 1px solid var(--v7); border-radius: 8px;
+            padding: 20px; text-align: center; color: var(--gris4); font-size: 12px;
+        }
+        .map-coords {
+            font-family: 'Courier New', monospace; font-size: 13px; font-weight: 600;
+            color: var(--v2); margin-top: 8px;
+        }
+        .map-link {
+            display: inline-flex; align-items: center; gap: 5px;
+            margin-top: 10px; padding: 7px 14px; border-radius: 20px;
+            background: var(--v2); color: var(--blanco);
+            font-size: 12px; font-weight: 700; text-decoration: none;
+            transition: background 0.18s;
+        }
+        .map-link:hover { background: var(--v1); }
+
+        /* DNI SECTION */
+        .dni-card {
+            border-radius: 8px; padding: 14px 16px;
+            display: flex; align-items: flex-start; gap: 14px;
+        }
+        .dni-card.vigente   { background: #ecfdf5; border: 1.5px solid #86efac; }
+        .dni-card.proximo   { background: #fef3c7; border: 1.5px solid #d97706; }
+        .dni-card.vencido   { background: #fee2e2; border: 1.5px solid #fca5a5; }
+        .dni-card.no-caduca { background: #dbeafe; border: 1.5px solid #93c5fd; }
+        .dni-card.sin-fecha { background: #f3f4f6; border: 1.5px solid #d1d5db; }
+        .dni-card-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgba(255,255,255,0.6); }
+        .dni-card-body { flex: 1; }
+        .dni-card-status { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+        .dni-card.vigente   .dni-card-status { color: #064e3b; }
+        .dni-card.proximo   .dni-card-status { color: #92400e; }
+        .dni-card.vencido   .dni-card-status { color: #991b1b; }
+        .dni-card.no-caduca .dni-card-status { color: #1e40af; }
+        .dni-card.sin-fecha .dni-card-status { color: #6b7280; }
+        .dni-card-detail { font-size: 12px; color: var(--gris5); margin-top: 2px; }
+        .dni-card-rule { font-size: 11px; color: var(--gris4); margin-top: 5px; font-style: italic; }
+
+        /* STATS */
+        .stats-grid-panel { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .stat-pill {
+            background: var(--gris1); border: 1px solid var(--gris2);
+            border-radius: 6px; padding: 10px 6px; text-align: center;
+        }
+        .stat-pill-val { font-size: 18px; font-weight: 700; color: var(--v2); line-height: 1; }
+        .stat-bar-wrap { height: 3px; background: var(--gris2); border-radius: 2px; margin-top: 5px; }
+        .stat-bar-fill { height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--v4), var(--v3)); }
+        .stat-pill-lbl { font-size: 10px; color: var(--gris4); margin-top: 4px; line-height: 1.3; }
+
+        /* BIRTHDAY BADGE */
+        .birthday-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: var(--v8); border: 1px solid var(--v6);
+            color: var(--v2); font-size: 11px; font-weight: 700;
+            padding: 4px 10px; border-radius: 12px; margin-top: 6px;
+        }
+        .birthday-today { background: #e8f5e9; border-color: #66bb6a; color: #1b5e20; }
+        .birthday-soon  { background: #e8f4fd; border-color: #90caf9; color: #1565c0; }
+
+        /* ══ EMPTY / INTRO STATE ══ */
+        .intro-state {
+            text-align: center; padding: 60px 20px 40px;
+        }
+        .intro-icon {
+            width: 80px; height: 80px; background: var(--v8);
+            border-radius: 20px; display: flex; align-items: center;
+            justify-content: center; margin: 0 auto 20px;
+            border: 2px solid var(--v7);
+        }
+        .intro-icon svg { color: var(--v3); }
+        .intro-title { font-family: Georgia, serif; font-size: 20px; font-weight: bold; color: var(--v1); margin-bottom: 10px; }
+        .intro-desc { font-size: 13px; color: var(--gris4); line-height: 1.7; max-width: 420px; margin: 0 auto; }
+
+        /* STATS BAR MINI */
+        .stats-bar {
+            display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap;
+        }
+        .stat-chip {
+            background: var(--blanco); border: 1px solid var(--borde);
+            border-left: 3px solid var(--v3); border-radius: 4px;
+            padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+            flex: 1; min-width: 120px;
+        }
+        .stat-chip-icon {
+            width: 30px; height: 30px; border-radius: 5px; background: var(--v8);
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .stat-chip-icon svg { color: var(--v3); }
+        .stat-chip-val { font-size: 18px; font-weight: 700; color: var(--v1); line-height: 1; }
+        .stat-chip-lbl { font-size: 10.5px; color: var(--gris4); margin-top: 2px; }
+
+        /* ══ PRINT STYLES ══ */
+        @media print {
+            body { background: white; font-size: 11pt; }
+            .topbar, .site-header, .breadcrumb, .page-body, .site-footer,
+            .profile-panel-overlay, .panel-close, .panel-print-btn { display: none !important; }
+            .print-sheet { display: block !important; }
+        }
+        .print-sheet { display: none; }
+
+        /* ══ RESPONSIVE ══ */
+        @media (max-width: 900px) {
+            .left-sidebar { display: none; }
+            .main-nav { display: none; }
+            .stats-grid-panel { grid-template-columns: repeat(3, 1fr); }
+            .panel-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 560px) {
+            .stats-grid-panel { grid-template-columns: repeat(2, 1fr); }
+            .profile-panel { width: 100vw; }
+        }
+
+        /* FIX HEADER FLOTANTE */
+        .topbar,
+        .site-header,
+        .breadcrumb {
+            position: static !important;
+            top: auto !important;
+            z-index: auto !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Distrito de Juan Guerra, San Martín
+            </div>
+            <div class="topbar-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                Plataforma Segura — HTTPS
+            </div>
+        </div>
+        <div class="topbar-right">
+            <div class="topbar-pill">Comunidad Juan Guerra</div>
+            <div class="topbar-pill accent">A1 Analytics</div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="index.html" class="brand">
+                <img src="INTELIGENCIAJG.png" alt="Inteligencia Juan Guerra" class="brand-img">
+                <div class="brand-text">
+                    <span class="brand-title">INTELIGENCIA</span>
+                    <span class="brand-subtitle">Juan Guerra &nbsp;·&nbsp; Sistema Social y Analítico Comunitario</span>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-link">Inicio</a>
+                <a href="calendar.html" class="nav-link">Calendario</a>
+                <a href="database.html" class="nav-link active">Base de Datos</a>
+                <a href="neural.html" class="nav-link">Predicciones IA</a>
+                <a href="biblioteca.html" class="nav-link">Biblioteca</a>
+                <a href="cycle.html" class="nav-link">Ciclos</a>
+            </nav>
+            <div class="nav-right">
+                <div id="loginContainer"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- BREADCRUMB -->
+    <div class="breadcrumb">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <a href="index.html">Inicio A1</a>
+        <span class="breadcrumb-sep">/</span>
+        Base de Datos de Perfiles
+    </div>
+
+    <!-- PAGE BODY -->
+    <div class="page-body">
+
+        <!-- SIDEBAR -->
+        <aside class="left-sidebar">
+            <div class="sidebar-section-hdr">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                Menú Principal
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-cat-label">Herramientas</div>
+            <a href="calendar.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                Calendario Académico
+            </a>
+            <a href="neural.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                Predicciones IA
+            </a>
+            <a href="cycle.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                Ciclos Educativos
+            </a>
+            <a href="locations.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Ubicaciones y Sedes
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-cat-label">Base de Datos</div>
+            <a href="database.html" class="sidebar-nav-item active">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3S3 13.66 3 12"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg>
+                Ver Base de Datos
+            </a>
+            <a href="base.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Editar Perfiles
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-cat-label">Recursos</div>
+            <a href="biblioteca.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                Biblioteca Digital [LIB]
+            </a>
+            <a href="pdf.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Herramientas PDF
+            </a>
+            <a href="investigation.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Tablero NEXUS
+            </a>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main-content">
+
+            <div class="page-title-bar">
+                <div>
+                    <div class="page-title">
+                        <div class="page-title-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3S3 13.66 3 12"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg>
+                        </div>
+                        Base de Datos de Perfiles
+                    </div>
+                    <p class="page-desc">Busca un perfil por nombre, DNI o número de teléfono. Selecciónalo para ver toda su información.</p>
+                </div>
+            </div>
+
+            <!-- MINI STATS -->
+            <div class="stats-bar">
+                <div class="stat-chip">
+                    <div class="stat-chip-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                    <div><div class="stat-chip-val" id="statTotal">—</div><div class="stat-chip-lbl">Total perfiles</div></div>
+                </div>
+                <div class="stat-chip" style="border-left-color:#991b1b;">
+                    <div class="stat-chip-icon" style="background:#fee2e2;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+                    <div><div class="stat-chip-val" id="statVencidos" style="color:#991b1b;">—</div><div class="stat-chip-lbl">DNI vencidos</div></div>
+                </div>
+                <div class="stat-chip" style="border-left-color:#b8860b;">
+                    <div class="stat-chip-icon" style="background:#fef3c7;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#b8860b" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+                    <div><div class="stat-chip-val" id="statProximos" style="color:#b8860b;">—</div><div class="stat-chip-lbl">Próximos a vencer</div></div>
+                </div>
+                <div class="stat-chip" style="border-left-color:#1a4a8a;">
+                    <div class="stat-chip-icon" style="background:#eef2ff;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#1a4a8a" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                    <div><div class="stat-chip-val" id="statBirthdays" style="color:#1a4a8a;">—</div><div class="stat-chip-lbl">Cumplen esta semana</div></div>
+                </div>
+            </div>
+
+            <!-- SEARCH AUTOCOMPLETE -->
+            <div class="search-container" id="searchContainer">
+                <div class="search-label">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Buscar Perfil
+                </div>
+                <div class="search-wrap">
+                    <div class="search-icon-left">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </div>
+                    <input type="text" id="searchInput" placeholder="Escribe nombre, DNI o teléfono…" autocomplete="off" spellcheck="false">
+                    <button class="search-clear-btn" id="clearBtn" type="button" title="Limpiar">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                    <span class="search-kbd">↵ seleccionar</span>
+                </div>
+                <div class="autocomplete-dropdown" id="dropdown"></div>
+            </div>
+
+            <!-- INTRO STATE -->
+            <div class="intro-state" id="introState">
+                <div class="intro-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <div class="intro-title">Busca un perfil para empezar</div>
+                <p class="intro-desc">Escribe el nombre, DNI o número de teléfono en la barra de arriba. Aparecerán sugerencias en tiempo real. Selecciona uno para ver el perfil completo.</p>
+            </div>
+
+            <!-- FOOTER — dentro de .page-body -->
+            <footer class="site-footer">
+                <p><strong>A1 Analytics</strong> — Sistema Integral de Análisis de la Comunidad de Juan Guerra</p>
+                <p>© 2026 &nbsp;·&nbsp; Distrito de Juan Guerra, San Martín</p>
+            </footer>
+        </main>
+    </div><!-- /.page-body -->
+
+    <!-- PROFILE PANEL OVERLAY -->
+    <div class="profile-panel-overlay" id="panelOverlay"></div>
+
+    <!-- PROFILE PANEL -->
+    <div class="profile-panel" id="profilePanel">
+        <div class="panel-header" id="panelHeader"></div>
+        <div class="panel-body" id="panelBody"></div>
+    </div>
+
+    <script>
+    /* ═══════════════════════════════════════════
+       DNI / CADUCIDAD ESTIMADA — RENIEC (Ley 32237/2024)
+    ═══════════════════════════════════════════ */
+    const HOY = new Date(); HOY.setHours(0,0,0,0);
+
+    function calcEdad(nac, ref) {
+        let e = ref.getFullYear() - nac.getFullYear();
+        const m = ref.getMonth() - nac.getMonth();
+        if (m < 0 || (m === 0 && ref.getDate() < nac.getDate())) e--;
+        return e;
+    }
+
+    function calcularDNI(fechaNacStr) {
+        if (!fechaNacStr) return { renovacion: null, regla: 'Sin fecha', estado: 'sin_fecha', diasRestantes: null };
+        const nac = new Date(fechaNacStr.split('T')[0] + 'T00:00:00');
+        if (isNaN(nac)) return { renovacion: null, regla: 'Fecha inválida', estado: 'sin_fecha', diasRestantes: null };
+        const edadHoy = calcEdad(nac, HOY);
+        if (edadHoy >= 60) return { renovacion: null, regla: 'Adulto mayor ≥60 años', estado: 'no_caduca', diasRestantes: null };
+        let renovacion, regla;
+        if (edadHoy < 12) {
+            renovacion = new Date(nac); renovacion.setFullYear(renovacion.getFullYear() + 3);
+            while (renovacion < HOY) { renovacion.setFullYear(renovacion.getFullYear() + 3); if (calcEdad(nac, renovacion) >= 12) break; }
+            regla = 'Menor <12 años · vigencia 3 años';
+        } else if (edadHoy < 17) {
+            renovacion = new Date(nac); renovacion.setFullYear(nac.getFullYear() + 17);
+            regla = 'Menor 12–16 años · hasta los 17';
+        } else {
+            const em18 = new Date(nac); em18.setFullYear(nac.getFullYear() + 18);
+            renovacion = new Date(em18); renovacion.setFullYear(renovacion.getFullYear() + 10);
+            while (renovacion < HOY) renovacion.setFullYear(renovacion.getFullYear() + 10);
+            regla = 'Adulto 17–59 años · vigencia 10 años';
+        }
+        const diasRestantes = Math.ceil((renovacion - HOY) / 86400000);
+        const estado = diasRestantes < 0 ? 'vencido' : diasRestantes <= 60 ? 'proximo' : 'vigente';
+        return { renovacion, regla, estado, diasRestantes };
+    }
+
+    /* ═══════════════════════════════════════════
+       FECHA / EDAD
+    ═══════════════════════════════════════════ */
+    const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+    function parseParts(str) {
+        const c = str.split('T')[0]; const [y,m,d] = c.split('-').map(Number); return {y,m,d};
+    }
+    function formatFecha(str) {
+        if (!str) return null;
+        const {y,m,d} = parseParts(str);
+        if (isNaN(y)) return null;
+        return `${d} de ${MESES[m-1]} de ${y}`;
+    }
+    function getBdInfo(str) {
+        if (!str) return null;
+        const {y,m,d} = parseParts(str);
+        const bday = new Date(y, m-1, d);
+        if (isNaN(bday)) return null;
+        const today = new Date(); today.setHours(0,0,0,0);
+        let age = today.getFullYear() - bday.getFullYear();
+        const passed = today.getMonth() > bday.getMonth() || (today.getMonth() === bday.getMonth() && today.getDate() >= bday.getDate());
+        if (!passed) age--;
+        const nextBday = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
+        if (nextBday < today) nextBday.setFullYear(today.getFullYear() + 1);
+        const diffDays = Math.ceil((nextBday - today) / 86400000);
+        return { age, diffDays, formatted: `${d} de ${MESES[m-1]}` };
+    }
+
+    /* ═══════════════════════════════════════════
+       ESTADO GLOBAL
+    ═══════════════════════════════════════════ */
+    let allProfiles = [];
+    let focusedIndex = -1;
+    let currentDropdownItems = [];
+
+    /* ═══════════════════════════════════════════
+       CARGA INICIAL
+    ═══════════════════════════════════════════ */
+    async function loadProfiles() {
+        try {
+            const res = await fetch('/api/profiles');
+            if (!res.ok) throw new Error(res.status);
+            allProfiles = await res.json();
+            updateStats();
+        } catch(e) {
+            console.error('Error cargando perfiles:', e);
+            allProfiles = [];
+            updateStats();
+        }
+    }
+
+    function updateStats() {
+        document.getElementById('statTotal').textContent = allProfiles.length;
+        document.getElementById('statVencidos').textContent = allProfiles.filter(p => calcularDNI(p.birthday).estado === 'vencido').length;
+        document.getElementById('statProximos').textContent = allProfiles.filter(p => calcularDNI(p.birthday).estado === 'proximo').length;
+        document.getElementById('statBirthdays').textContent = allProfiles.filter(p => { const i = getBdInfo(p.birthday); return i && i.diffDays <= 7; }).length;
+    }
+
+    /* ═══════════════════════════════════════════
+       AUTOCOMPLETE
+    ═══════════════════════════════════════════ */
+    function highlight(text, query) {
+        if (!query) return escHtml(text);
+        const idx = text.toLowerCase().indexOf(query.toLowerCase());
+        if (idx === -1) return escHtml(text);
+        return escHtml(text.slice(0, idx)) + '<em>' + escHtml(text.slice(idx, idx + query.length)) + '</em>' + escHtml(text.slice(idx + query.length));
+    }
+    function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function searchProfiles(q) {
+        if (!q || q.length < 1) return [];
+        const ql = q.toLowerCase().trim();
+        return allProfiles.filter(p => {
+            const fullName = `${p.firstName||''} ${p.lastName||''}`.toLowerCase();
+            return fullName.includes(ql) || (p.dni||'').includes(ql) || (p.phone||'').includes(ql);
+        }).slice(0, 12);
+    }
+
+    function renderDropdown(results, query) {
+        const dd = document.getElementById('dropdown');
+        focusedIndex = -1;
+        currentDropdownItems = results;
+
+        if (!query) { dd.classList.remove('open'); return; }
+        if (results.length === 0) {
+            dd.innerHTML = `<div class="dropdown-empty">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 8px;color:var(--gris3)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                No se encontraron perfiles para "<strong>${escHtml(query)}</strong>"
+            </div>`;
+            dd.classList.add('open'); return;
+        }
+
+        const dniEstadoLabel = { vigente:'Vigente', proximo:'Próx. vencer', vencido:'Vencido', no_caduca:'No caduca', sin_fecha:'Sin fecha' };
+        const rows = results.map((p, i) => {
+            const fullName = `${p.firstName||''} ${p.lastName||''}`.trim();
+            const dniInfo = calcularDNI(p.birthday);
+            const cls = dniInfo.estado.replace('_','-');
+            const photoEl = p.photo
+                ? `<img src="${escHtml(p.photo)}" class="dropdown-avatar" alt="">`
+                : `<div class="dropdown-avatar-placeholder">${(p.firstName?.charAt(0)||'?').toUpperCase()}</div>`;
+            const bdInfo = getBdInfo(p.birthday);
+            const ageStr = bdInfo ? `${bdInfo.age} años` : '';
+            return `<div class="dropdown-item" data-idx="${i}" tabindex="-1">
+                ${photoEl}
+                <div class="dropdown-info">
+                    <div class="dropdown-name">${highlight(fullName, query)}</div>
+                    <div class="dropdown-meta">${p.dni ? 'DNI: ' + p.dni : ''} ${ageStr ? '· '+ageStr : ''} ${p.location||p.locality ? '· '+(p.location||p.locality) : ''}</div>
+                </div>
+                <span class="dropdown-dni-badge ${cls}">${dniEstadoLabel[dniInfo.estado]||'—'}</span>
+            </div>`;
+        }).join('');
+
+        dd.innerHTML = `<div class="dropdown-header">Perfiles encontrados (${results.length})</div>` + rows;
+        dd.classList.add('open');
+
+        dd.querySelectorAll('.dropdown-item').forEach(el => {
+            el.addEventListener('mousedown', e => {
+                e.preventDefault();
+                openProfile(results[parseInt(el.dataset.idx)]);
+            });
+        });
+    }
+
+    function moveFocus(dir) {
+        const items = document.querySelectorAll('.dropdown-item');
+        if (!items.length) return;
+        items[focusedIndex]?.classList.remove('focused');
+        focusedIndex = (focusedIndex + dir + items.length) % items.length;
+        items[focusedIndex]?.classList.add('focused');
+        items[focusedIndex]?.scrollIntoView({ block: 'nearest' });
+    }
+
+    /* ═══════════════════════════════════════════
+       PANEL DE PERFIL
+    ═══════════════════════════════════════════ */
+    function val(v) {
+        return v ? String(v).trim() : null;
+    }
+    function fieldHtml(label, value, full) {
+        const v = val(value);
+        const cls = full ? 'panel-field' : 'panel-field';
+        return `<div class="${cls}">
+            <div class="panel-field-label">${label}</div>
+            <div class="panel-field-val${v ? '' : ' na'}">${v ? escHtml(v) : 'No disponible'}</div>
+        </div>`;
+    }
+
+    function dniSectionHtml(birthday) {
+        const info = calcularDNI(birthday);
+        const cls = info.estado.replace('_','-');
+        const labels = { vigente:'✓ Vigente', proximo:'⚠ Próximo a vencer', vencido:'✕ Vencido', no_caduca:'∞ No caduca', sin_fecha:'— Sin fecha' };
+        let detail = '';
+        if (info.estado === 'no_caduca') detail = 'El DNI de adultos mayores ≥60 años no caduca.';
+        else if (info.estado === 'sin_fecha') detail = 'No se puede calcular sin fecha de nacimiento.';
+        else if (info.diasRestantes < 0) detail = `Venció hace ${Math.abs(info.diasRestantes)} días (renovar urgente).`;
+        else if (info.diasRestantes <= 60) detail = `Vence en ${info.diasRestantes} días — Renovar pronto.`;
+        else { const d = info.renovacion; detail = `Vence el ${d.toLocaleDateString('es-PE', {day:'2-digit',month:'long',year:'numeric'})}`; }
+        const icons = {
+            vigente: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#064e3b" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+            proximo: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+            vencido: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+            'no-caduca': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`,
+            'sin-fecha': `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+        };
+        return `<div class="dni-card ${cls}">
+            <div class="dni-card-icon">${icons[cls] || icons['sin-fecha']}</div>
+            <div class="dni-card-body">
+                <div class="dni-card-status">${labels[info.estado]||'—'}</div>
+                <div class="dni-card-detail">${detail}</div>
+                <div class="dni-card-rule">${info.regla} · Ley 32237/2024 RENIEC</div>
+            </div>
+        </div>`;
+    }
+
+    function coordsHtml(profile) {
+        const lat = val(profile.lat || profile.latitude || profile.coords?.lat);
+        const lng = val(profile.lng || profile.longitude || profile.coords?.lng);
+        if (!lat && !lng) return `<div style="font-size:12px;color:var(--gris3);font-style:italic;">Coordenadas no disponibles</div>`;
+        const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+        return `<div class="map-placeholder">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--v4);margin-bottom:6px"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div style="font-size:11.5px;color:var(--gris5);">Coordenadas GPS registradas</div>
+            <div class="map-coords">${lat}, ${lng}</div>
+            <a href="${mapsUrl}" target="_blank" rel="noopener" class="map-link">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Ver en Google Maps
+            </a>
+        </div>`;
+    }
+
+    function openProfile(profile) {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('dropdown').classList.remove('open');
+        document.getElementById('clearBtn').classList.remove('visible');
+
+        const bdInfo = getBdInfo(profile.birthday);
+        const photoEl = profile.photo
+            ? `<img src="${escHtml(profile.photo)}" class="panel-photo" alt="Foto de ${escHtml(profile.firstName||'')}">` 
+            : `<div class="panel-photo-placeholder">${(profile.firstName?.charAt(0)||'?').toUpperCase()}</div>`;
+
+        let bdBadge = '';
+        if (bdInfo) {
+            let cls = 'birthday-badge';
+            let txt = '';
+            if (bdInfo.diffDays === 0) { cls += ' birthday-today'; txt = `🎂 ¡Hoy cumple ${bdInfo.age+1} años!`; }
+            else if (bdInfo.diffDays <= 7) { cls += ' birthday-soon'; txt = `🎉 Cumple en ${bdInfo.diffDays} día${bdInfo.diffDays>1?'s':''} (${bdInfo.formatted})`; }
+            if (txt) bdBadge = `<span class="${cls}">${txt}</span>`;
+        }
+
+        document.getElementById('panelHeader').innerHTML = `
+            <button class="panel-print-btn" id="printBtn" type="button">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Imprimir / PDF
+            </button>
+            <button class="panel-close" id="panelClose" type="button" title="Cerrar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="panel-hero">
+                ${photoEl}
+                <div class="panel-name-block">
+                    <div class="panel-name">${escHtml((profile.firstName||'') + ' ' + (profile.lastName||'')).trim()}</div>
+                    ${bdInfo ? `<span class="panel-age-chip">${bdInfo.age} años</span>` : ''}
+                    ${profile.dni ? `<div class="panel-dni-number"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>DNI: ${escHtml(profile.dni)}</div>` : ''}
+                    ${bdBadge}
+                </div>
+            </div>`;
+
+        const skill  = profile.stats?.skill        ?? profile.skill        ?? null;
+        const intel  = profile.stats?.intelligence ?? profile.intelligence  ?? null;
+        const perf   = profile.stats?.performance  ?? profile.performance   ?? null;
+        const jobs   = profile.stats?.jobs         ?? profile.jobs          ?? null;
+        const occup  = profile.stats?.occupation   ?? profile.occupation    ?? null;
+        const statsBlock = [skill,intel,perf,jobs,occup].some(v => v !== null) ? `
+            <div class="panel-section">
+                <div class="panel-section-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    Estadísticas
+                </div>
+                <div class="stats-grid-panel">
+                    ${[['Habilidad',skill],['Inteligencia',intel],['Desempeño',perf],['Trabajos',jobs],['Ocupación',occup]].map(([lbl,v]) => v!==null?`
+                    <div class="stat-pill">
+                        <div class="stat-pill-val">${v}%</div>
+                        <div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:${v}%"></div></div>
+                        <div class="stat-pill-lbl">${lbl}</div>
+                    </div>`:'').join('')}
+                </div>
+            </div>` : '';
+
+        document.getElementById('panelBody').innerHTML = `
+            <div class="panel-section">
+                <div class="panel-section-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    Estado del DNI (RENIEC)
+                </div>
+                ${dniSectionHtml(profile.birthday)}
+            </div>
+            <div class="panel-section">
+                <div class="panel-section-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Datos Personales
+                </div>
+                <div class="panel-grid">
+                    ${fieldHtml('Nombres', profile.firstName)}
+                    ${fieldHtml('Apellidos', profile.lastName)}
+                    ${fieldHtml('DNI', profile.dni)}
+                    ${fieldHtml('Fecha de nacimiento', formatFecha(profile.birthday))}
+                    ${fieldHtml('Edad', bdInfo ? bdInfo.age + ' años' : null)}
+                    ${fieldHtml('Teléfono', profile.phone)}
+                    ${fieldHtml('Correo electrónico', profile.email)}
+                    ${fieldHtml('Padres', profile.parents)}
+                    ${fieldHtml('Hermanos / Familiares', profile.siblings)}
+                </div>
+            </div>
+            <div class="panel-section">
+                <div class="panel-section-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Ubicación
+                </div>
+                <div class="panel-grid" style="margin-bottom:14px;">
+                    ${fieldHtml('Localidad / Sector', profile.location || profile.locality)}
+                    ${fieldHtml('Dirección', profile.address)}
+                    ${fieldHtml('Distrito', profile.district)}
+                    ${fieldHtml('Provincia', profile.province)}
+                    ${fieldHtml('Región', profile.region)}
+                </div>
+                ${coordsHtml(profile)}
+            </div>
+            ${statsBlock}
+            ${(profile.notes || profile.observations || profile.extra) ? `
+            <div class="panel-section">
+                <div class="panel-section-title">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Notas / Observaciones
+                </div>
+                <div class="panel-grid">
+                    ${fieldHtml('Notas', profile.notes || profile.observations || profile.extra)}
+                </div>
+            </div>` : ''}
+        `;
+
+        document.getElementById('panelOverlay').classList.add('open');
+        document.getElementById('profilePanel').classList.add('open');
+        document.getElementById('panelClose').addEventListener('click', closePanel);
+        document.getElementById('printBtn').addEventListener('click', () => printProfile(profile));
+    }
+
+    function closePanel() {
+        document.getElementById('panelOverlay').classList.remove('open');
+        document.getElementById('profilePanel').classList.remove('open');
+    }
+
+    /* ═══════════════════════════════════════════
+       IMPRESIÓN FORMATO RENIEC
+    ═══════════════════════════════════════════ */
+    function printProfile(profile) {
+        const bdInfo = getBdInfo(profile.birthday);
+        const dniInfo = calcularDNI(profile.birthday);
+        const dniLabels = { vigente:'Vigente', proximo:'Próximo a vencer', vencido:'Vencido (Renovar)', no_caduca:'No caduca', sin_fecha:'Sin datos' };
+        const dniColors = { vigente:'#064e3b', proximo:'#92400e', vencido:'#991b1b', no_caduca:'#1e40af', sin_fecha:'#6b7280' };
+        const dniEstadoCls = dniInfo.estado;
+
+        let renovStr = '—';
+        if (dniInfo.estado === 'no_caduca') renovStr = '∞ No caduca';
+        else if (dniInfo.renovacion) renovStr = dniInfo.renovacion.toLocaleDateString('es-PE', {day:'2-digit',month:'2-digit',year:'numeric'});
+
+        function row(label, value) {
+            if (!val(value)) return '';
+            return `<tr>
+                <td style="font-weight:600;color:#555;font-size:10.5pt;padding:5px 8px;width:38%;border-bottom:1px solid #eee;white-space:nowrap;">${label}</td>
+                <td style="font-size:10.5pt;color:#1a201a;padding:5px 8px;border-bottom:1px solid #eee;">${escHtml(String(value))}</td>
+            </tr>`;
+        }
+
+        const photoHtml = profile.photo
+            ? `<img src="${escHtml(profile.photo)}" style="width:90px;height:110px;object-fit:cover;border:2px solid #ccc;border-radius:4px;" alt="Foto">`
+            : `<div style="width:90px;height:110px;background:#e8f4e8;border:2px solid #aac;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:bold;color:#1d4f1d;font-family:Georgia,serif;">${(profile.firstName?.charAt(0)||'?').toUpperCase()}</div>`;
+
+        const lat = val(profile.lat || profile.latitude);
+        const lng = val(profile.lng || profile.longitude);
+        const coordsRow = lat && lng ? row('Coordenadas GPS', `${lat}, ${lng}`) : '';
+
+        const printWin = window.open('', '_blank', 'width=820,height=1050');
+        printWin.document.write(`<!DOCTYPE html><html lang="es"><head>
+        <meta charset="UTF-8">
+        <title>Perfil — ${escHtml((profile.firstName||'')+' '+(profile.lastName||'')).trim()}</title>
+        <style>
+            @page { size: A4; margin: 18mm 15mm; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; color: #1a201a; background: white; margin: 0; padding: 0; }
+            .page { max-width: 740px; margin: 0 auto; }
+            .doc-header { background: #0f3010; color: white; padding: 16px 22px; display: flex; align-items: center; gap: 14px; border-radius: 4px 4px 0 0; }
+            .doc-logo-placeholder { width: 52px; height: 52px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11pt; color: white; font-family: Georgia, serif; border: 1.5px solid rgba(255,255,255,0.3); text-align:center; line-height:1.1; }
+            .doc-header-text { flex: 1; }
+            .doc-title { font-size: 14pt; font-weight: bold; font-family: Georgia, serif; text-transform: uppercase; letter-spacing: 0.08em; }
+            .doc-subtitle { font-size: 9pt; color: rgba(255,255,255,0.7); margin-top: 3px; }
+            .doc-date { font-size: 8.5pt; color: rgba(255,255,255,0.6); margin-top: 2px; }
+            .profile-top { border: 1.5px solid #1d4f1d; border-top: none; padding: 16px 22px; display: flex; align-items: flex-start; gap: 18px; background: #f4faf3; }
+            .profile-top-info { flex: 1; }
+            .full-name { font-size: 18pt; font-weight: bold; font-family: Georgia, serif; color: #0f3010; line-height: 1.1; margin-bottom: 6px; }
+            .dni-tag { display: inline-block; background: #1d4f1d; color: white; font-size: 9.5pt; font-weight: bold; padding: 3px 12px; border-radius: 12px; margin-bottom: 6px; }
+            .age-tag { display: inline-block; background: #e8f4e8; border: 1px solid #a8cc96; color: #1d4f1d; font-size: 9pt; font-weight: 600; padding: 2px 10px; border-radius: 12px; margin-left: 6px; }
+            .dni-status-tag { display: inline-block; font-size: 9pt; font-weight: 700; padding: 3px 12px; border-radius: 12px; margin-top: 6px; color: white; }
+            .section { margin-top: 14px; }
+            .section-title { background: #1d4f1d; color: white; font-size: 9pt; font-weight: 700; padding: 5px 10px; text-transform: uppercase; letter-spacing: 0.07em; border-radius: 3px 3px 0 0; }
+            table { width: 100%; border-collapse: collapse; border: 1px solid #d0d8d0; border-top: none; }
+            .dni-box { border: 1.5px solid; border-radius: 4px; padding: 10px 14px; margin-top: 14px; }
+            .doc-footer { margin-top: 22px; padding-top: 10px; border-top: 2px solid #1d4f1d; display: flex; justify-content: space-between; align-items: flex-end; font-size: 8.5pt; color: #8a948a; }
+            .doc-seal { width: 70px; height: 70px; border: 2px solid #c8cec8; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 7.5pt; color: #8a948a; }
+            @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none; } }
+        </style>
+        </head><body>
+        <div class="page">
+            <div class="no-print" style="text-align:right;margin-bottom:10px;">
+                <button onclick="window.print()" style="background:#1d4f1d;color:white;border:none;padding:8px 20px;border-radius:4px;font-size:11pt;cursor:pointer;font-family:inherit;">🖨 Imprimir / Guardar PDF</button>
+            </div>
+            <div class="doc-header">
+                <div class="doc-logo-placeholder">A1<br>JG</div>
+                <div class="doc-header-text">
+                    <div class="doc-title">Ficha de Perfil Comunitario</div>
+                    <div class="doc-subtitle">Sistema A1 Analytics · Comunidad de Juan Guerra, San Martín</div>
+                    <div class="doc-date">Emitido: ${new Date().toLocaleDateString('es-PE',{day:'2-digit',month:'long',year:'numeric'})} · ${new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'})}</div>
+                </div>
+            </div>
+            <div class="profile-top">
+                <div class="profile-top-info">
+                    <div class="full-name">${escHtml(((profile.firstName||'')+' '+(profile.lastName||'')).trim()||'Sin nombre')}</div>
+                    ${profile.dni ? `<span class="dni-tag">DNI: ${escHtml(profile.dni)}</span>` : ''}
+                    ${bdInfo ? `<span class="age-tag">${bdInfo.age} años</span>` : ''}
+                    ${profile.birthday ? `<div style="font-size:9.5pt;color:#555;margin-top:5px;">Nacido el ${escHtml(formatFecha(profile.birthday)||'—')}</div>` : ''}
+                    <div><span class="dni-status-tag" style="background:${dniColors[dniEstadoCls]||'#6b7280'};">${dniLabels[dniEstadoCls]||'—'}</span></div>
+                </div>
+                ${photoHtml}
+            </div>
+            <div class="dni-box" style="border-color:${dniColors[dniEstadoCls]||'#6b7280'};background:${dniEstadoCls==='vigente'?'#ecfdf5':dniEstadoCls==='proximo'?'#fef3c7':dniEstadoCls==='vencido'?'#fee2e2':dniEstadoCls==='no_caduca'?'#dbeafe':'#f3f4f6'};">
+                <div style="font-weight:700;font-size:10pt;color:${dniColors[dniEstadoCls]||'#6b7280'};margin-bottom:3px;">Caducidad estimada DNI — RENIEC (Ley 32237/2024)</div>
+                <div style="font-size:9.5pt;color:#555;">${dniInfo.regla} · Renovación estimada: <strong>${renovStr}</strong></div>
+                ${dniInfo.diasRestantes !== null ? `<div style="font-size:9pt;color:#888;margin-top:2px;">${dniInfo.diasRestantes < 0 ? 'Venció hace '+Math.abs(dniInfo.diasRestantes)+' días' : dniInfo.diasRestantes+' días restantes'}</div>` : ''}
+            </div>
+            <div class="section">
+                <div class="section-title">Datos Personales</div>
+                <table>
+                    ${row('Nombres', profile.firstName)}
+                    ${row('Apellidos', profile.lastName)}
+                    ${row('DNI', profile.dni)}
+                    ${row('Fecha de nacimiento', formatFecha(profile.birthday))}
+                    ${row('Edad', bdInfo ? bdInfo.age + ' años' : null)}
+                    ${row('Teléfono', profile.phone)}
+                    ${row('Correo electrónico', profile.email)}
+                    ${row('Padres', profile.parents)}
+                    ${row('Hermanos / Familiares', profile.siblings)}
+                </table>
+            </div>
+            <div class="section">
+                <div class="section-title">Ubicación</div>
+                <table>
+                    ${row('Localidad / Sector', profile.location || profile.locality)}
+                    ${row('Dirección', profile.address)}
+                    ${row('Distrito', profile.district)}
+                    ${row('Provincia', profile.province)}
+                    ${row('Región', profile.region)}
+                    ${coordsRow}
+                </table>
+            </div>
+            ${(profile.notes || profile.observations) ? `
+            <div class="section">
+                <div class="section-title">Notas / Observaciones</div>
+                <table>${row('Notas', profile.notes || profile.observations)}</table>
+            </div>` : ''}
+            <div class="doc-footer">
+                <div>
+                    <div style="font-weight:600;color:#1d4f1d;">A1 Analytics — Sistema Integral de la Comunidad de Juan Guerra</div>
+                    <div>Distrito de Juan Guerra · Provincia de San Martín · Región San Martín, Perú</div>
+                    <div style="margin-top:3px;color:#bbb;">Documento generado automáticamente. Solo para uso interno.</div>
+                </div>
+                <div class="doc-seal">SELLO<br>OFICIAL<br>A1</div>
+            </div>
+        </div>
+        </body></html>`);
+        printWin.document.close();
+        setTimeout(() => printWin.focus(), 300);
+    }
+
+    /* ═══════════════════════════════════════════
+       EVENT LISTENERS
+    ═══════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', function() {
+        loadProfiles();
+
+        const input = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const dropdown = document.getElementById('dropdown');
+
+        input.addEventListener('input', function() {
+            const q = this.value.trim();
+            clearBtn.classList.toggle('visible', q.length > 0);
+            const results = searchProfiles(q);
+            renderDropdown(results, q);
+        });
+
+        input.addEventListener('keydown', function(e) {
+            if (!dropdown.classList.contains('open')) return;
+            if (e.key === 'ArrowDown') { e.preventDefault(); moveFocus(1); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); moveFocus(-1); }
+            else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (focusedIndex >= 0 && currentDropdownItems[focusedIndex]) {
+                    openProfile(currentDropdownItems[focusedIndex]);
+                } else if (currentDropdownItems.length === 1) {
+                    openProfile(currentDropdownItems[0]);
+                }
+            }
+            else if (e.key === 'Escape') {
+                dropdown.classList.remove('open');
+            }
+        });
+
+        input.addEventListener('blur', function() {
+            setTimeout(() => dropdown.classList.remove('open'), 180);
+        });
+
+        clearBtn.addEventListener('click', function() {
+            input.value = '';
+            this.classList.remove('visible');
+            dropdown.classList.remove('open');
+            input.focus();
+        });
+
+        document.getElementById('panelOverlay').addEventListener('click', closePanel);
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closePanel();
+        });
+    });
+    </script>
+</body>
+</html>

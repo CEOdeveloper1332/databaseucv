@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca Digital - A1 Analytics</title>
+    <link rel="icon" type="image/png" href="INTELIGENCIAJG.png">
+    <link rel="apple-touch-icon" href="INTELIGENCIAJG.png">
+    <meta name="theme-color" content="#1d4f1d">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --v1: #0f3010; --v2: #1d4f1d; --v3: #2e6b2e;
+            --v4: #4a8c3a; --v5: #6faa5a; --v6: #a8cc96;
+            --v7: #d4ead0; --v8: #eaf4e8; --v9: #f4faf3;
+            --blanco: #ffffff;
+            --gris1: #f2f4f2; --gris2: #e4e8e4;
+            --gris3: #c8cec8; --gris4: #8a948a; --gris5: #555d55;
+            --texto: #1a201a; --borde: #d0d8d0;
+            --primary: #1d4f1d; --accent: #4a8c3a;
+            --muted: #8a948a; --danger: #8a1818;
+            --white: #ffffff; --text: #1a201a; --border: #d0d8d0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--gris1); color: var(--texto);
+            font-size: 13px; min-height: 100vh;
+        }
+
+        /* ══ TOPBAR ══ */
+        .topbar {
+            background: var(--v1); color: var(--v7);
+            font-size: 11.5px; padding: 5px 24px;
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 16px;
+            border-bottom: 2px solid var(--v4);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+        .topbar-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .topbar-item svg { color: var(--v5); flex-shrink: 0; }
+        .topbar-right { display: flex; align-items: center; gap: 8px; }
+        .topbar-pill {
+            background: var(--v3); color: var(--v7); font-size: 10.5px;
+            font-weight: 700; padding: 3px 10px; border-radius: 2px;
+            text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--v4);
+        }
+        .topbar-pill.accent { background: var(--blanco); color: var(--v2); }
+
+        /* ══ SITE HEADER ══ */
+        .site-header {
+            background: var(--blanco); border-bottom: 3px solid var(--v2);
+            position: sticky; top: 0; z-index: 300;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+        }
+        .header-inner {
+            display: flex; align-items: center;
+            justify-content: space-between; padding: 10px 24px; gap: 20px;
+        }
+        .brand { display: flex; align-items: center; gap: 13px; text-decoration: none; flex-shrink: 0; }
+        .brand-img { width: 56px; height: 56px; object-fit: contain; border-radius: 8px; }
+        .brand-text { display: flex; flex-direction: column; gap: 2px; }
+        .brand-title {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-weight: bold; font-size: 22px; color: var(--v2);
+            text-transform: uppercase; letter-spacing: 0.13em; line-height: 1;
+        }
+        .brand-subtitle { font-size: 10.5px; color: var(--gris4); text-transform: uppercase; letter-spacing: 0.07em; }
+        .main-nav { display: flex; align-items: center; gap: 1px; flex-wrap: wrap; }
+        .nav-link {
+            padding: 8px 13px; font-size: 12.5px; font-weight: 600;
+            color: var(--v2); text-decoration: none; border-radius: 3px;
+            transition: background 0.18s; white-space: nowrap;
+            border-bottom: 3px solid transparent;
+        }
+        .nav-link:hover { background: var(--v8); color: var(--v1); border-bottom-color: var(--v3); }
+        .nav-link.active { background: var(--v8); color: var(--v1); border-bottom: 3px solid var(--v2); }
+
+        /* ══ BREADCRUMB ══ */
+        .breadcrumb {
+            background: var(--blanco); border-bottom: 1px solid var(--borde);
+            padding: 7px 24px; font-size: 11.5px; color: var(--gris4);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .breadcrumb a { color: var(--v3); text-decoration: none; font-weight: 600; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb-sep { color: var(--gris3); }
+
+        /* ══ PAGE LAYOUT ══ */
+        .page-body { display: flex; align-items: stretch; }
+
+        /* ══ LEFT SIDEBAR (NAV) ══ */
+        .left-sidebar {
+            width: 200px; min-width: 200px; background: var(--blanco);
+            border-right: 2px solid var(--borde); flex-shrink: 0;
+            align-self: flex-start; position: sticky; top: 0;
+        }
+        .sidebar-section-hdr {
+            background: var(--v2); color: var(--blanco); font-size: 12px;
+            font-weight: 700; padding: 11px 16px; text-transform: uppercase;
+            letter-spacing: 0.07em; display: flex; align-items: center; gap: 8px;
+        }
+        .sidebar-section-hdr svg { color: var(--v6); }
+        .sidebar-cat-label {
+            font-size: 10px; font-weight: 700; color: var(--gris4);
+            text-transform: uppercase; letter-spacing: 0.09em; padding: 10px 16px 4px;
+        }
+        .sidebar-divider { height: 1px; background: var(--gris2); margin: 4px 0; }
+        .sidebar-nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 16px; font-size: 12.5px; color: var(--gris5);
+            text-decoration: none; border-bottom: 1px solid var(--gris1);
+            transition: background 0.15s, border-left 0.15s;
+            border-left: 3px solid transparent; cursor: pointer;
+        }
+        .sidebar-nav-item:hover, .sidebar-nav-item.active {
+            background: var(--v8); color: var(--v2); border-left-color: var(--v3); font-weight: 600;
+        }
+        .sidebar-nav-item.active { background: var(--v7); border-left-color: var(--v2); }
+        .sidebar-nav-item svg { color: var(--v4); flex-shrink: 0; }
+        .sidebar-nav-item:hover svg, .sidebar-nav-item.active svg { color: var(--v2); }
+
+        /* ══ ALPHABET SIDEBAR ══ */
+        .alpha-sidebar {
+            width: 56px; min-width: 56px;
+            background: var(--blanco);
+            border-right: 2px solid var(--borde);
+            flex-shrink: 0;
+            display: flex; flex-direction: column;
+            align-self: stretch;
+        }
+        .alpha-sidebar-hdr {
+            background: var(--v2); color: var(--v7);
+            font-size: 9px; font-weight: 700; padding: 8px 4px;
+            text-align: center; text-transform: uppercase;
+            letter-spacing: 0.08em; border-bottom: 1px solid var(--v3);
+            flex-shrink: 0;
+        }
+        .alpha-items {
+            display: flex; flex-direction: column;
+            overflow-y: auto; flex: 1;
+            scrollbar-width: thin; scrollbar-color: var(--gris2) transparent;
+        }
+        .alpha-items::-webkit-scrollbar { width: 4px; }
+        .alpha-items::-webkit-scrollbar-thumb { background: var(--gris2); border-radius: 2px; }
+        .alpha-item {
+            padding: 7px 4px; border: none; cursor: pointer;
+            color: var(--gris4); font-size: 11.5px; font-weight: 600;
+            text-align: center; background: none; text-transform: uppercase;
+            border-bottom: 1px solid var(--gris1);
+            border-left: 3px solid transparent;
+            transition: all 0.15s;
+        }
+        .alpha-item:hover { background: var(--v8); color: var(--v2); border-left-color: var(--v3); }
+        .alpha-item.active {
+            background: var(--v7); color: var(--v2);
+            border-left: 3px solid var(--v2); font-weight: 700;
+        }
+
+        /* ══ MAIN CONTENT ══ */
+        .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+        /* Page title bar */
+        .lib-header {
+            background: var(--blanco); border-bottom: 2px solid var(--v2);
+            padding: 16px 24px; display: flex;
+            align-items: flex-start; justify-content: space-between;
+            gap: 20px; flex-wrap: wrap;
+        }
+        .lib-title-block { flex: 1; min-width: 0; }
+        .lib-title {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 22px; font-weight: bold; color: var(--v1);
+            display: flex; align-items: center; gap: 12px; line-height: 1.1;
+        }
+        .lib-title-icon {
+            width: 36px; height: 36px; background: var(--v2);
+            border-radius: 6px; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0;
+        }
+        .lib-title-icon svg { color: var(--v7); }
+        .lib-subtitle { font-size: 12px; color: var(--gris4); margin-top: 5px; }
+
+        /* Search + actions row */
+        .lib-controls {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0;
+        }
+        .lib-search-wrap {
+            display: flex; align-items: center; gap: 0;
+            border: 1px solid var(--borde); border-radius: 4px;
+            overflow: hidden; background: var(--blanco);
+        }
+        .lib-search-wrap:focus-within { border-color: var(--v3); }
+        .lib-search-icon {
+            padding: 0 10px; display: flex; align-items: center;
+            background: var(--gris1); border-right: 1px solid var(--borde);
+        }
+        .lib-search-icon svg { color: var(--gris3); }
+        .lib-search-input {
+            border: none; outline: none; padding: 8px 10px;
+            font-size: 12.5px; font-family: inherit; color: var(--texto);
+            background: transparent; min-width: 220px;
+        }
+        .lib-search-input::placeholder { color: var(--gris3); }
+        .lib-btn {
+            padding: 8px 14px; border: none; border-radius: 4px;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
+            transition: background 0.18s; white-space: nowrap; font-family: inherit;
+        }
+        .lib-btn-primary { background: var(--v2); color: var(--blanco); }
+        .lib-btn-primary:hover { background: var(--v1); }
+        .lib-btn-secondary {
+            background: var(--blanco); color: var(--v2);
+            border: 1px solid var(--borde);
+        }
+        .lib-btn-secondary:hover { background: var(--v8); border-color: var(--v3); }
+        .lib-btn-outline {
+            background: transparent; color: var(--gris4);
+            border: 1px solid var(--borde);
+        }
+        .lib-btn-outline:hover { background: var(--gris1); color: var(--texto); }
+
+        /* Books area */
+        .lib-body { flex: 1; padding: 20px 24px 40px; }
+
+        /* ══ LOADING / EMPTY ══ */
+        .loading {
+            text-align: center; padding: 60px 20px; color: var(--gris4);
+        }
+        .spinner {
+            border: 3px solid var(--gris2); border-top: 3px solid var(--v3);
+            border-radius: 50%; width: 36px; height: 36px;
+            animation: spin 0.8s linear infinite; margin: 0 auto 14px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty-message {
+            text-align: center; padding: 50px 20px; color: var(--gris4);
+            grid-column: 1 / -1;
+        }
+        .empty-message p:first-child { font-weight: 700; color: var(--v2); font-size: 14px; margin-bottom: 6px; }
+
+        /* ══ BOOKS GRID ══ */
+        .books-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 18px;
+        }
+        .book-item { flex: none; }
+
+        /* ══ PUBLICATION CARD ══ */
+        .publication-card {
+            background: var(--blanco); border: 1px solid var(--borde);
+            border-radius: 5px; overflow: hidden;
+            display: flex; flex-direction: column; height: 100%;
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+        .publication-card:hover {
+            box-shadow: 0 6px 20px rgba(15,48,16,0.12);
+            border-color: var(--v4);
+        }
+        .publication-cover {
+            width: 100%; height: 240px; object-fit: cover;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; cursor: pointer; background: var(--v8);
+        }
+        .publication-cover img { width: 100%; height: 100%; object-fit: cover; }
+        .publication-cover svg { width: 100%; height: 100%; }
+
+        .publication-header { padding: 12px 12px 8px; border-bottom: 1px solid var(--gris1); }
+        .publication-title {
+            color: var(--v1); font-size: 13px; font-weight: 700;
+            margin: 0 0 4px; line-height: 1.35;
+            max-height: 2.7em; overflow: hidden; text-overflow: ellipsis;
+            font-family: Georgia, 'Times New Roman', serif;
+        }
+        .publication-subtitle {
+            color: var(--gris4); font-size: 11px;
+            margin: 0 0 6px; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
+        }
+        .publication-meta {
+            display: flex; justify-content: space-between;
+            font-size: 10.5px; color: var(--gris4);
+        }
+        .publication-footer {
+            display: flex; gap: 6px; padding: 10px 12px;
+            border-top: 1px solid var(--gris1); background: var(--gris1);
+            margin-top: auto;
+        }
+        .publication-footer button {
+            flex: 1; padding: 6px; border-radius: 3px;
+            cursor: pointer; font-size: 11px; font-weight: 600;
+            transition: all 0.18s; font-family: inherit;
+        }
+        .btn-edit {
+            background: var(--blanco); color: var(--v2);
+            border: 1px solid var(--borde);
+        }
+        .btn-edit:hover { background: var(--v8); border-color: var(--v3); }
+        .btn-delete {
+            background: var(--gris1); color: var(--danger);
+            border: 1px solid var(--borde);
+        }
+        .btn-delete:hover { background: var(--danger); color: var(--blanco); border-color: var(--danger); }
+
+        /* ══ ADVANCED SEARCH FLOATING ══ */
+        .search-advanced {
+            display: none; position: fixed;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--blanco); border: 1px solid var(--borde);
+            border-top: 4px solid var(--v2);
+            border-radius: 6px; padding: 0; width: 420px;
+            max-height: 80vh; overflow-y: auto;
+            z-index: 2000; box-shadow: 0 20px 48px rgba(0,0,0,0.18);
+        }
+        .search-advanced.show { display: block; }
+        .search-advanced-header {
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 14px 20px;
+            border-bottom: 1px solid var(--borde); background: var(--v9);
+        }
+        .search-advanced-header h3 {
+            margin: 0; color: var(--v1); font-size: 14px;
+            font-weight: 700; font-family: Georgia, 'Times New Roman', serif;
+        }
+        .search-advanced-fields { display: grid; gap: 12px; padding: 20px; }
+        .search-field { display: flex; flex-direction: column; }
+        .search-field label {
+            font-weight: 700; color: var(--gris4); font-size: 10.5px;
+            margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .search-field input {
+            padding: 8px 10px; border: 1px solid var(--borde);
+            border-radius: 4px; font-size: 12.5px; font-family: inherit;
+            background: var(--gris1); color: var(--texto);
+        }
+        .search-field input:focus { outline: none; border-color: var(--v3); background: var(--blanco); }
+
+        /* ══ NOTIFICATION ══ */
+        .notification {
+            position: fixed; top: 20px; right: 20px;
+            padding: 12px 18px; background: var(--v2); color: var(--blanco);
+            border-radius: 5px; box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+            z-index: 3000; font-size: 13px; font-weight: 600;
+            animation: slideIn 0.3s ease; max-width: 320px;
+        }
+        .notification.error { background: var(--danger); }
+        @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
+
+        /* ══ USER STATUS ══ */
+        .user-status {
+            position: fixed; bottom: 20px; right: 20px;
+            font-size: 12px; color: var(--gris4);
+            background: var(--blanco); border: 1px solid var(--borde);
+            padding: 10px 14px; border-radius: 4px; z-index: 999;
+            max-width: 280px; box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+            display: none; border-left: 3px solid var(--v3);
+        }
+        .user-status.show { display: block; }
+        .user-status strong { color: var(--v2); font-weight: 700; display: block; margin-bottom: 3px; }
+        .user-status span { display: block; font-size: 11px; color: var(--gris4); }
+        .user-status.error { border-left-color: var(--danger); }
+        .user-status.error strong { color: var(--danger); }
+
+        /* ══ MODALS ══ */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.55);
+            z-index: 1000; overflow-y: auto;
+        }
+        .modal.show { display: block; }
+        .modal-content {
+            background: var(--blanco); margin: 40px auto; padding: 0;
+            border-radius: 6px; max-width: 680px;
+            box-shadow: 0 20px 48px rgba(0,0,0,0.22);
+            border-top: 4px solid var(--v2);
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px; border-bottom: 1px solid var(--borde);
+            background: var(--v9);
+        }
+        .modal-header h2 {
+            color: var(--v1); margin: 0; font-size: 16px;
+            font-weight: bold; font-family: Georgia, 'Times New Roman', serif;
+        }
+        .close-btn {
+            background: none; border: none; font-size: 24px;
+            cursor: pointer; color: var(--gris4); transition: color 0.2s;
+            line-height: 1; padding: 0;
+        }
+        .close-btn:hover { color: var(--texto); }
+
+        .modal-body-pad { padding: 20px; }
+
+        .form-group { margin-bottom: 14px; }
+        .form-group label {
+            display: block; color: var(--gris4); font-weight: 700;
+            margin-bottom: 5px; font-size: 10.5px;
+            text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .form-group input {
+            width: 100%; padding: 8px 11px;
+            border: 1px solid var(--borde); border-radius: 4px;
+            font-family: inherit; font-size: 12.5px;
+            background: var(--gris1); color: var(--texto);
+        }
+        .form-group input:focus { outline: none; border-color: var(--v3); background: var(--blanco); }
+        .form-group small { font-size: 11px; color: var(--gris4); display: block; margin-top: 4px; }
+        .form-group input[type="file"] { background: var(--blanco); padding: 6px; }
+
+        /* Editor */
+        .editor-wrapper { margin-bottom: 14px; }
+        .editor-wrapper > label {
+            display: block; color: var(--gris4); font-weight: 700;
+            margin-bottom: 5px; font-size: 10.5px;
+            text-transform: uppercase; letter-spacing: 0.06em;
+        }
+        .editor-toolbar {
+            display: flex; gap: 3px; flex-wrap: wrap;
+            background: var(--gris1); padding: 7px 10px;
+            border: 1px solid var(--borde); border-bottom: none;
+            border-radius: 4px 4px 0 0;
+        }
+        .editor-toolbar button {
+            padding: 5px 9px; background: var(--blanco);
+            border: 1px solid var(--borde); border-radius: 3px;
+            cursor: pointer; font-size: 11px; font-weight: 600;
+            color: var(--gris5); transition: all 0.15s; font-family: inherit;
+        }
+        .editor-toolbar button:hover { background: var(--v8); color: var(--v2); border-color: var(--v3); }
+        .editor-content {
+            min-height: 280px; padding: 12px;
+            border: 1px solid var(--borde); border-radius: 0 0 4px 4px;
+            font-size: 13px; line-height: 1.6; overflow-y: auto;
+            max-height: 420px; background: var(--blanco); color: var(--texto);
+            font-family: Georgia, 'Times New Roman', serif;
+        }
+        .editor-content:focus { outline: none; border-color: var(--v3); }
+
+        .modal-actions {
+            display: flex; gap: 8px; margin-top: 18px;
+            justify-content: flex-end; padding: 14px 20px;
+            border-top: 1px solid var(--borde); background: var(--gris1);
+        }
+        .btn-cancel {
+            padding: 8px 18px; background: var(--blanco); color: var(--texto);
+            border: 1px solid var(--borde); border-radius: 4px;
+            font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+        }
+        .btn-cancel:hover { background: var(--gris1); }
+        .btn-submit {
+            padding: 8px 18px; background: var(--v2); color: var(--blanco);
+            border: none; border-radius: 4px;
+            font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer;
+        }
+        .btn-submit:hover { background: var(--v1); }
+
+        /* ══ BOOK VIEWER MODAL ══ */
+        .book-viewer-modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.60); z-index: 2000;
+            overflow-y: auto; padding: 20px;
+        }
+        .book-viewer-modal.show { display: flex; align-items: center; justify-content: center; }
+        .book-viewer-container {
+            background: var(--blanco); max-width: 840px; width: 100%;
+            max-height: 90vh; border-radius: 6px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.30);
+            display: flex; flex-direction: column; overflow: hidden;
+            border-top: 4px solid var(--v2);
+        }
+        .book-viewer-header {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; padding: 28px 40px 20px;
+            background: var(--v9); border-bottom: 1px solid var(--borde);
+            flex-shrink: 0;
+        }
+        .book-viewer-header h2 {
+            margin: 0 0 6px; color: var(--v1); font-size: 22px;
+            font-weight: bold; font-family: Georgia, 'Times New Roman', serif;
+            line-height: 1.25; max-width: 600px;
+        }
+        .book-viewer-subtitle { color: var(--gris4); font-size: 13px; }
+        .book-viewer-close {
+            background: none; border: none; font-size: 28px;
+            cursor: pointer; color: var(--gris4); width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            transition: color 0.2s; flex-shrink: 0;
+        }
+        .book-viewer-close:hover { color: var(--texto); }
+        .book-viewer-content {
+            flex: 1; overflow-y: auto; padding: 36px 48px;
+            background: var(--blanco); color: #333; line-height: 1.85;
+            font-size: 15px; font-family: Georgia, 'Times New Roman', serif;
+            text-align: justify;
+        }
+        .book-viewer-content::-webkit-scrollbar { width: 6px; }
+        .book-viewer-content::-webkit-scrollbar-thumb { background: var(--gris2); border-radius: 3px; }
+        .book-viewer-content h2 { color: var(--v1); margin: 28px 0 12px; font-size: 17px; font-family: Georgia, serif; }
+        .book-viewer-content h3 { color: var(--v2); margin: 20px 0 8px; font-size: 14px; }
+        .book-viewer-content strong { font-weight: 700; color: var(--v1); }
+        .book-viewer-content em { font-style: italic; color: var(--gris4); }
+        .book-viewer-content hr { border: none; border-top: 1px solid var(--gris2); margin: 22px 0; }
+        .book-viewer-content p { margin: 0 0 12px; }
+        .book-viewer-footer {
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 16px 40px;
+            border-top: 1px solid var(--borde); background: var(--gris1);
+            gap: 16px; flex-wrap: wrap; flex-shrink: 0;
+        }
+        .book-viewer-meta { display: flex; flex-direction: column; gap: 3px; }
+        .book-viewer-meta span { font-size: 12px; color: var(--gris4); }
+        .book-viewer-meta strong { color: var(--v2); font-weight: 700; }
+        .book-viewer-pagination { font-size: 12px; color: var(--gris4); font-weight: 600; }
+        .book-viewer-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-download {
+            padding: 9px 14px; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 12px; font-weight: 700;
+            display: flex; align-items: center; gap: 7px;
+            text-transform: uppercase; letter-spacing: 0.04em;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .btn-download.pdf { background: #8a1818; color: var(--blanco); }
+        .btn-download.pdf:hover { background: #6a1010; }
+        .btn-download.word { background: #1a4a8a; color: var(--blanco); }
+        .btn-download.word:hover { background: #0e3060; }
+        .icon-download { width: 14px; height: 14px; display: inline-flex; align-items: center; }
+
+        /* ══ RESPONSIVE ══ */
+        @media (max-width: 900px) {
+            .left-sidebar { display: none; }
+            .main-nav { display: none; }
+            .alpha-sidebar { width: 44px; min-width: 44px; }
+            .books-display { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+        }
+        @media (max-width: 600px) {
+            .books-display { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+            .lib-controls { flex-direction: column; align-items: stretch; }
+            .lib-search-input { min-width: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ══ TOPBAR ══ -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Distrito de Juan Guerra, San Martín
+            </div>
+            <div class="topbar-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                Plataforma Segura — HTTPS
+            </div>
+        </div>
+        <div class="topbar-right">
+            <div class="topbar-pill">Comunidad Juan Guerra</div>
+            <div class="topbar-pill accent">A1 Analytics</div>
+        </div>
+    </div>
+
+    <!-- ══ HEADER ══ -->
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="index.html" class="brand">
+                <img src="INTELIGENCIAJG.png" alt="Inteligencia Juan Guerra" class="brand-img">
+                <div class="brand-text">
+                    <span class="brand-title">INTELIGENCIA</span>
+                    <span class="brand-subtitle">Juan Guerra &nbsp;·&nbsp; Sistema Social y Analítico Comunitario</span>
+                </div>
+            </a>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-link">Inicio</a>
+                <a href="calendar.html" class="nav-link">Calendario</a>
+                <a href="database.html" class="nav-link">Base de Datos</a>
+                <a href="neural.html" class="nav-link">Predicciones IA</a>
+                <a href="pqowndiqwnxzmalkdnnqwe881.html" class="nav-link active">Biblioteca</a>
+                <a href="cycle.html" class="nav-link">Ciclos</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ══ BREADCRUMB ══ -->
+    <div class="breadcrumb">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <a href="index.html">Inicio A1</a>
+        <span class="breadcrumb-sep">/</span>
+        Biblioteca Digital [LIB]
+    </div>
+
+    <!-- ══ PAGE BODY ══ -->
+    <div class="page-body">
+
+        <!-- LEFT SIDEBAR NAV -->
+        <aside class="left-sidebar">
+            <div class="sidebar-section-hdr">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                Menú
+            </div>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-cat-label">Herramientas</div>
+            <a href="calendar.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                Calendario
+            </a>
+            <a href="neural.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                Predicciones IA
+            </a>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-cat-label">Recursos</div>
+            <a href="biblioteca.html" class="sidebar-nav-item active">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                Biblioteca [LIB]
+            </a>
+            <a href="pdf.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Herramientas PDF
+            </a>
+            <div class="sidebar-divider"></div>
+            <a href="database.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3S3 13.66 3 12"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg>
+                Base de Datos
+            </a>
+            <a href="index.html" class="sidebar-nav-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                Volver al Inicio
+            </a>
+        </aside>
+
+        <!-- ALPHABET SIDEBAR -->
+        <div class="alpha-sidebar">
+            <div class="alpha-sidebar-hdr">Índice</div>
+            <div class="alpha-items" id="alphabetMenu">
+                <!-- JS fills this -->
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+
+            <!-- LIB HEADER -->
+            <div class="lib-header">
+                <div class="lib-title-block">
+                    <div class="lib-title">
+                        <div class="lib-title-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                        </div>
+                        Biblioteca Digital [LIB]
+                    </div>
+                    <div class="lib-subtitle">Base de datos colaborativa de información y recursos de la comunidad</div>
+                </div>
+                <div class="lib-controls">
+                    <div class="lib-search-wrap">
+                        <div class="lib-search-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </div>
+                        <input type="text" id="searchInput" class="lib-search-input" placeholder="Buscar por título…">
+                    </div>
+                    <button class="lib-btn lib-btn-primary" onclick="performSearch()">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        Buscar
+                    </button>
+                    <button class="lib-btn lib-btn-outline" onclick="toggleAdvancedSearch()">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="12" y1="18" x2="12" y2="18" stroke-linecap="round" stroke-width="3"/></svg>
+                        Avanzada
+                    </button>
+                    <button class="lib-btn lib-btn-secondary" onclick="openPublishModal()">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Crear
+                    </button>
+                </div>
+            </div>
+
+            <!-- BOOKS BODY -->
+            <div class="lib-body">
+                <div id="loadingState" class="loading">
+                    <div class="spinner"></div>
+                    <p style="font-weight:600;color:var(--v2);">Cargando publicaciones…</p>
+                </div>
+                <div class="books-display" id="booksDisplay"></div>
+            </div>
+
+        </div><!-- end main-content -->
+    </div><!-- end page-body -->
+
+    <!-- ADVANCED SEARCH OVERLAY -->
+    <div class="search-advanced" id="advancedSearch">
+        <div class="search-advanced-header">
+            <h3>Búsqueda Avanzada</h3>
+            <button class="close-btn" onclick="toggleAdvancedSearch()">×</button>
+        </div>
+        <div class="search-advanced-fields">
+            <div class="search-field">
+                <label>Título</label>
+                <input type="text" id="advTitle" placeholder="Buscar en títulos">
+            </div>
+            <div class="search-field">
+                <label>Palabras clave (separadas por comas)</label>
+                <input type="text" id="advKeywords" placeholder="ej: educación, comunidad">
+            </div>
+            <div class="search-field">
+                <label>Desde (fecha)</label>
+                <input type="date" id="advDateFrom">
+            </div>
+            <div class="search-field">
+                <label>Hasta (fecha)</label>
+                <input type="date" id="advDateTo">
+            </div>
+            <button class="lib-btn lib-btn-primary" style="width:100%;" onclick="performAdvancedSearch()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Buscar Avanzado
+            </button>
+        </div>
+    </div>
+
+    <!-- USER STATUS -->
+    <div class="user-status" id="userStatus"></div>
+
+    <!-- BOOK VIEWER MODAL -->
+    <div class="book-viewer-modal" id="bookViewerModal">
+        <div class="book-viewer-container">
+            <div class="book-viewer-header">
+                <div>
+                    <h2 id="bookTitle">Título</h2>
+                    <div class="book-viewer-subtitle" id="bookSubtitle"></div>
+                </div>
+                <button class="book-viewer-close" onclick="closeBookViewer()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="book-viewer-content" id="bookContent"></div>
+            <div class="book-viewer-footer">
+                <div class="book-viewer-meta">
+                    <span>Por <strong id="bookAuthor"></strong></span>
+                    <span id="bookDate"></span>
+                </div>
+                <div class="book-viewer-pagination" id="bookPages">Página 1 de 0</div>
+                <div class="book-viewer-actions">
+                    <button class="btn-download pdf" onclick="downloadBookPDF()">
+                        <svg class="icon-download" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-8-6zm4 18H6V4h6v4h6v12z"/></svg>
+                        PDF
+                    </button>
+                    <button class="btn-download word" onclick="downloadBookWord()">
+                        <svg class="icon-download" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16v2H4V4zm0 5h16v2H4V9zm0 7h16v2H4v-2z"/></svg>
+                        Word
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PUBLICADOR -->
+    <div class="modal" id="publishModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Publicar Información</h2>
+                <button class="close-btn" onclick="closePublishModal()">&times;</button>
+            </div>
+            <div class="modal-body-pad">
+                <div class="form-group">
+                    <label>Título *</label>
+                    <input type="text" id="pubTitle" placeholder="Título principal de la publicación" required>
+                </div>
+                <div class="form-group">
+                    <label>Subtítulo</label>
+                    <input type="text" id="pubSubtitle" placeholder="Subtítulo opcional">
+                </div>
+                <div class="form-group">
+                    <label>Palabras clave (separadas por comas)</label>
+                    <input type="text" id="pubKeywords" placeholder="ej: educación, análisis, estadística">
+                </div>
+                <div class="form-group">
+                    <label>Carátula (Imagen)</label>
+                    <input type="file" id="pubCover" accept="image/*">
+                    <small>Puedes subir una imagen para la carátula. Si no seleccionas ninguna, se generará una automática.</small>
+                    <div id="coverPreview" style="margin-top:10px;"></div>
+                </div>
+                <div class="editor-wrapper">
+                    <label>Contenido</label>
+                    <div class="editor-toolbar">
+                        <button onclick="formatText('bold')">B</button>
+                        <button onclick="formatText('italic')">I</button>
+                        <button onclick="formatText('underline')">U</button>
+                        <button onclick="formatText('h2')">H2</button>
+                        <button onclick="formatText('h3')">H3</button>
+                        <button onclick="insertSpecial('linebreak')">¶</button>
+                        <button onclick="insertSpecial('hr')">—</button>
+                        <button onclick="clearEditor()">Limpiar</button>
+                    </div>
+                    <div class="editor-content" id="editorContent" contenteditable="true" placeholder="Escribe aquí el contenido..."></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closePublishModal()">Cancelar</button>
+                <button class="btn-submit" onclick="publishContent()">Publicar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Editar Publicación</h2>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body-pad">
+                <div class="form-group">
+                    <label>Título *</label>
+                    <input type="text" id="editTitle" placeholder="Título principal" required>
+                </div>
+                <div class="form-group">
+                    <label>Subtítulo</label>
+                    <input type="text" id="editSubtitle" placeholder="Subtítulo opcional">
+                </div>
+                <div class="form-group">
+                    <label>Palabras clave (separadas por comas)</label>
+                    <input type="text" id="editKeywords" placeholder="ej: educación, análisis">
+                </div>
+                <div class="form-group">
+                    <label>Carátula (Imagen)</label>
+                    <input type="file" id="editCover" accept="image/*">
+                    <small>Déjalo vacío para mantener la carátula actual.</small>
+                    <div id="editCoverPreview" style="margin-top:10px;"></div>
+                </div>
+                <div class="editor-wrapper">
+                    <label>Contenido</label>
+                    <div class="editor-toolbar">
+                        <button onclick="formatText('bold','editContent')">B</button>
+                        <button onclick="formatText('italic','editContent')">I</button>
+                        <button onclick="formatText('underline','editContent')">U</button>
+                        <button onclick="formatText('h2','editContent')">H2</button>
+                        <button onclick="formatText('h3','editContent')">H3</button>
+                        <button onclick="insertSpecial('linebreak','editContent')">¶</button>
+                        <button onclick="insertSpecial('hr','editContent')">—</button>
+                        <button onclick="clearEditor('editContent')">Limpiar</button>
+                    </div>
+                    <div class="editor-content" id="editContent" contenteditable="true" placeholder="Escribe aquí el contenido..."></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
+                <button class="btn-submit" onclick="saveEditPublication()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ═══════════════════════════════════════════════
+           CÓDIGO ORIGINAL COMPLETO PRESERVADO
+        ═══════════════════════════════════════════════ */
+
+        let currentUser = null;
+        let currentUserRole = null;
+        let allPublications = [];
+        let filteredPublications = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkUserStatus();
+            await loadPublications();
+
+            document.getElementById('pubCover').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('coverPreview');
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        preview.innerHTML = `<img src="${event.target.result}" style="max-width:150px;max-height:200px;border-radius:4px;border:2px solid var(--v3);" alt="Vista previa">`;
+                    };
+                    reader.readAsDataURL(file);
+                } else { preview.innerHTML = ''; }
+            });
+
+            document.getElementById('editCover').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('editCoverPreview');
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        preview.innerHTML = `<img src="${event.target.result}" style="max-width:150px;max-height:200px;border-radius:4px;border:2px solid var(--v3);" alt="Vista previa">`;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    const currentPublication = allPublications.find(p => p._id === currentEditingId) || {};
+                    if (currentPublication.coverUrl) {
+                        preview.innerHTML = `<img src="${currentPublication.coverUrl}" style="max-width:150px;max-height:200px;border-radius:4px;" alt="Carátula actual">`;
+                    } else { preview.innerHTML = ''; }
+                }
+            });
+        });
+
+        async function checkUserStatus() {
+            try {
+                const userEmail = localStorage.getItem('userEmail');
+                const userName  = localStorage.getItem('userName');
+                const userRole  = localStorage.getItem('userRole');
+                if (!userEmail) { updateUserStatus('No autenticado', false); return; }
+                const response = await fetch('/status?email=' + encodeURIComponent(userEmail));
+                if (!response.ok) { updateUserStatus('Error', false); return; }
+                const data = await response.json();
+                currentUser = userEmail;
+                currentUserRole = data.role || 'user';
+                localStorage.setItem('userRole', currentUserRole);
+                localStorage.setItem('userApproved', String(data.approved || false));
+                updateUserStatus(currentUser, true);
+            } catch (error) {
+                console.error('Error verificando usuario:', error);
+                updateUserStatus('Error', false);
+            }
+        }
+
+        function updateUserStatus(user, isAuth) {
+            const status = document.getElementById('userStatus');
+            if (isAuth) {
+                const roleText = currentUserRole === 'admin' ? 'Administrador' : 'Usuario';
+                status.innerHTML = `<strong>${roleText}</strong><span>${user}</span>`;
+                status.classList.remove('error');
+                status.classList.add('show');
+            } else {
+                status.innerHTML = `<strong>Autenticación requerida</strong><span>Debes autenticarte para crear publicaciones</span>`;
+                status.classList.add('error','show');
+            }
+        }
+
+        async function loadPublications() {
+            try {
+                document.getElementById('loadingState').style.display = 'block';
+                const response = await fetch('/api/publications');
+                if (!response.ok) throw new Error('Error cargando publicaciones');
+                allPublications = await response.json();
+                filteredPublications = [...allPublications];
+                renderPublications();
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('booksDisplay').innerHTML = `
+                    <div class="empty-message">
+                        <p>Error cargando publicaciones</p>
+                        <p style="font-size:11px;">Verifica tu conexión e intenta recargar la página</p>
+                    </div>`;
+                document.getElementById('loadingState').style.display = 'none';
+            }
+        }
+
+        function renderPublications() {
+            const display = document.getElementById('booksDisplay');
+            document.getElementById('loadingState').style.display = 'none';
+            if (filteredPublications.length === 0) {
+                display.innerHTML = `
+                    <div class="empty-message">
+                        <p>No hay publicaciones disponibles</p>
+                        <p style="font-size:11px;">Sé el primero en publicar información</p>
+                    </div>`;
+                renderAlphabetMenu();
+                return;
+            }
+            display.innerHTML = filteredPublications.map(pub => `<div class="book-item">${createPublicationCard(pub)}</div>`).join('');
+            renderAlphabetMenu();
+        }
+
+        function renderAlphabetMenu() {
+            const menuContainer = document.getElementById('alphabetMenu');
+            const letters = new Set();
+            filteredPublications.forEach(pub => {
+                const letter = (pub.title[0] || '').toUpperCase();
+                if (letter) letters.add(letter);
+            });
+            const sortedLetters = Array.from(letters).sort();
+            if (sortedLetters.length === 0) {
+                menuContainer.innerHTML = '<div style="padding:10px 4px;font-size:10px;color:var(--gris4);text-align:center;">—</div>';
+                return;
+            }
+            let html = `<button class="alpha-item active" onclick="showAllBooks()">All</button>`;
+            html += sortedLetters.map(letter =>
+                `<button class="alpha-item" onclick="filterByLetter('${letter}')">${letter}</button>`
+            ).join('');
+            menuContainer.innerHTML = html;
+        }
+
+        function filterByLetter(letter) {
+            document.querySelectorAll('.alpha-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.textContent.trim() === letter) item.classList.add('active');
+            });
+            filteredPublications = allPublications.filter(pub => (pub.title[0] || '').toUpperCase() === letter);
+            const display = document.getElementById('booksDisplay');
+            display.innerHTML = filteredPublications.map(pub => `<div class="book-item">${createPublicationCard(pub)}</div>`).join('');
+        }
+
+        function showAllBooks() {
+            document.querySelectorAll('.alpha-item').forEach(item => item.classList.remove('active'));
+            filteredPublications = [...allPublications];
+            renderPublications();
+        }
+
+        function createPublicationCard(pub) {
+            const isAuthor = currentUser === pub.author;
+            const pubDate  = new Date(pub.publishedAt);
+            const dateStr  = pubDate.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+            let coverHTML  = pub.coverUrl
+                ? `<img src="${pub.coverUrl}" alt="Carátula" onerror="this.parentElement.innerHTML=generateDefaultCover()">`
+                : generateDefaultCover();
+
+            return `
+            <div class="publication-card">
+                <div class="publication-cover" onclick="openBookViewer('${pub._id}')">${coverHTML}</div>
+                <div class="publication-header">
+                    <h3 class="publication-title">${escapeHtml(pub.title)}</h3>
+                    ${pub.subtitle ? `<p class="publication-subtitle">${escapeHtml(pub.subtitle)}</p>` : ''}
+                    <div class="publication-meta">
+                        <span>${dateStr}</span>
+                        <span style="font-size:10px;">${escapeHtml(pub.author)}</span>
+                    </div>
+                </div>
+                <div class="publication-footer">
+                    ${isAuthor ? `
+                        <button class="btn-edit" onclick="openEditModal('${pub._id}')">Editar</button>
+                        <button class="btn-delete" onclick="deletePublication('${pub._id}')">Eliminar</button>
+                    ` : (currentUserRole === 'admin' ? `
+                        <button class="btn-delete" onclick="deletePublication('${pub._id}')">Eliminar</button>
+                    ` : '')}
+                </div>
+            </div>`;
+        }
+
+        function generateDefaultCover() {
+            const palettes = [
+                { a: '#1d4f1d', b: '#4a8c3a' },
+                { a: '#0f3010', b: '#2e6b2e' },
+                { a: '#1a4a8a', b: '#2e6baa' },
+                { a: '#5a2a8a', b: '#8a4aaa' },
+                { a: '#8a1818', b: '#aa3838' },
+                { a: '#156060', b: '#2a8080' }
+            ];
+            const c = palettes[Math.floor(Math.random() * palettes.length)];
+            return `<svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="g${Math.random().toString(36).slice(2)}" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:${c.a}"/><stop offset="100%" style="stop-color:${c.b}"/>
+                </linearGradient></defs>
+                <rect width="400" height="500" fill="url(#g${Math.random().toString(36).slice(2)})"/>
+                <circle cx="200" cy="120" r="50" fill="rgba(255,255,255,0.25)"/>
+                <rect x="170" y="180" width="60" height="80" fill="rgba(255,255,255,0.35)" rx="8"/>
+                <circle cx="120" cy="210" r="18" fill="rgba(255,255,255,0.3)"/>
+                <circle cx="280" cy="210" r="18" fill="rgba(255,255,255,0.3)"/>
+                <line x1="130" y1="210" x2="170" y2="210" stroke="rgba(255,255,255,0.3)" stroke-width="16" stroke-linecap="round"/>
+                <line x1="230" y1="210" x2="270" y2="210" stroke="rgba(255,255,255,0.3)" stroke-width="16" stroke-linecap="round"/>
+                <line x1="185" y1="260" x2="185" y2="340" stroke="rgba(255,255,255,0.35)" stroke-width="14" stroke-linecap="round"/>
+                <line x1="215" y1="260" x2="215" y2="340" stroke="rgba(255,255,255,0.35)" stroke-width="14" stroke-linecap="round"/>
+                <polygon points="50,100 80,50 110,100" fill="rgba(255,255,255,0.12)"/>
+                <polygon points="320,350 350,400 290,400" fill="rgba(255,255,255,0.12)"/>
+                <rect x="30" y="400" width="40" height="40" fill="rgba(255,255,255,0.18)" transform="rotate(45 50 420)"/>
+            </svg>`;
+        }
+
+        function openPublishModal() {
+            if (!currentUser) { showNotification('Debes autenticarte primero', 'error'); return; }
+            document.getElementById('publishModal').classList.add('show');
+            document.getElementById('editorContent').focus();
+        }
+        function closePublishModal() {
+            document.getElementById('publishModal').classList.remove('show');
+            ['pubTitle','pubSubtitle','pubKeywords','pubCover'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+            document.getElementById('coverPreview').innerHTML = '';
+            document.getElementById('editorContent').innerHTML = '';
+        }
+
+        let currentEditingId = null;
+        async function openEditModal(pubId) {
+            const pub = allPublications.find(p => p._id === pubId);
+            if (!pub) { showNotification('Publicación no encontrada', 'error'); return; }
+            if (currentUser !== pub.author) { showNotification('Solo puedes editar tus propias publicaciones', 'error'); return; }
+            currentEditingId = pubId;
+            document.getElementById('editTitle').value    = pub.title;
+            document.getElementById('editSubtitle').value = pub.subtitle || '';
+            document.getElementById('editKeywords').value = (pub.keywords || []).join(', ');
+            document.getElementById('editContent').innerHTML = pub.content;
+            if (pub.coverUrl) {
+                document.getElementById('editCoverPreview').innerHTML = `<img src="${pub.coverUrl}" style="max-width:150px;max-height:200px;border-radius:4px;" alt="Carátula actual">`;
+            }
+            document.getElementById('editModal').classList.add('show');
+            document.getElementById('editContent').focus();
+        }
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('show');
+            currentEditingId = null;
+            ['editTitle','editSubtitle','editKeywords','editCover'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+            document.getElementById('editCoverPreview').innerHTML = '';
+            document.getElementById('editContent').innerHTML = '';
+        }
+
+        async function saveEditPublication() {
+            if (!currentEditingId) return;
+            const title    = document.getElementById('editTitle').value.trim();
+            const subtitle = document.getElementById('editSubtitle').value.trim();
+            const keywords = document.getElementById('editKeywords').value.split(',').map(k=>k.trim()).filter(k=>k);
+            const content  = document.getElementById('editContent').innerHTML;
+            const coverFile= document.getElementById('editCover').files[0];
+            if (!title) { showNotification('El título es requerido', 'error'); return; }
+            if (!content.trim()) { showNotification('El contenido no puede estar vacío', 'error'); return; }
+            try {
+                let coverUrl = allPublications.find(p => p._id === currentEditingId)?.coverUrl || null;
+                if (coverFile) {
+                    const formData = new FormData();
+                    formData.append('coverFile', coverFile);
+                    const uploadResponse = await fetch('/api/upload-cover', { method: 'POST', body: formData });
+                    if (!uploadResponse.ok) { const e = await uploadResponse.json().catch(()=>({})); throw new Error(e.error || 'Error al subir carátula'); }
+                    const uploadData = await uploadResponse.json();
+                    coverUrl = uploadData.url;
+                }
+                const response = await fetch(`/api/publications/${currentEditingId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, subtitle, keywords, content, coverUrl, userEmail: currentUser })
+                });
+                if (!response.ok) { const error = await response.json(); throw new Error(error.error || 'Error editando'); }
+                showNotification('Publicación actualizada');
+                closeEditModal();
+                await loadPublications();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            if (!query.trim()) { showAllBooks(); return; }
+            filteredPublications = allPublications.filter(pub =>
+                pub.title.toLowerCase().includes(query) ||
+                (pub.subtitle && pub.subtitle.toLowerCase().includes(query)) ||
+                (pub.keywords && pub.keywords.some(k => k.includes(query)))
+            );
+            renderPublications();
+        }
+
+        function toggleAdvancedSearch() {
+            document.getElementById('advancedSearch').classList.toggle('show');
+        }
+
+        function performAdvancedSearch() {
+            const title      = document.getElementById('advTitle').value.toLowerCase().trim();
+            const kwInput    = document.getElementById('advKeywords').value.toLowerCase().trim();
+            const keywords   = kwInput ? kwInput.split(',').map(k=>k.trim()).filter(k=>k) : [];
+            const dateFrom   = document.getElementById('advDateFrom').value ? new Date(document.getElementById('advDateFrom').value) : null;
+            const dateTo     = document.getElementById('advDateTo').value   ? new Date(document.getElementById('advDateTo').value)   : null;
+            if (!title && keywords.length === 0 && !dateFrom && !dateTo) { showNotification('Completa al menos un campo', 'error'); return; }
+            if (dateFrom && dateTo && dateFrom > dateTo) { showNotification('La fecha inicial debe ser menor que la final', 'error'); return; }
+            filteredPublications = allPublications.filter(pub => {
+                if (title && !pub.title.toLowerCase().includes(title)) return false;
+                if (keywords.length > 0) {
+                    const pubKW = pub.keywords || [];
+                    if (!keywords.some(k => pubKW.some(pk => pk.toLowerCase().includes(k)))) return false;
+                }
+                const pubDate = new Date(pub.publishedAt);
+                if (dateFrom && pubDate < dateFrom) return false;
+                if (dateTo) { const next = new Date(dateTo); next.setDate(next.getDate()+1); if (pubDate >= next) return false; }
+                return true;
+            });
+            if (filteredPublications.length === 0) showNotification('No se encontraron publicaciones', 'error');
+            renderPublications();
+        }
+
+        function formatText(format, editorId = 'editorContent') {
+            const editor = document.getElementById(editorId);
+            editor.focus();
+            switch(format) {
+                case 'bold':      document.execCommand('bold', false, null); break;
+                case 'italic':    document.execCommand('italic', false, null); break;
+                case 'underline': document.execCommand('underline', false, null); break;
+                case 'h2':        document.execCommand('formatBlock', false, 'h2'); break;
+                case 'h3':        document.execCommand('formatBlock', false, 'h3'); break;
+            }
+        }
+        function insertSpecial(type, editorId = 'editorContent') {
+            const editor = document.getElementById(editorId);
+            if (type === 'linebreak') document.execCommand('insertHTML', false, '<br>');
+            else if (type === 'hr')   document.execCommand('insertHTML', false, '<hr style="margin:15px 0;border:none;border-top:1px solid #ddd;">');
+            editor.focus();
+        }
+        function clearEditor(editorId = 'editorContent') {
+            if (confirm('¿Limpiar completamente el contenido?')) document.getElementById(editorId).innerHTML = '';
+        }
+
+        async function publishContent() {
+            const title    = document.getElementById('pubTitle').value.trim();
+            const subtitle = document.getElementById('pubSubtitle').value.trim();
+            const keywords = document.getElementById('pubKeywords').value.split(',').map(k=>k.trim()).filter(k=>k);
+            const content  = document.getElementById('editorContent').innerHTML;
+            const coverFile= document.getElementById('pubCover').files[0];
+            if (!title)   { showNotification('El título es requerido', 'error'); return; }
+            if (!content.trim()) { showNotification('El contenido no puede estar vacío', 'error'); return; }
+            if (!currentUser)    { showNotification('Debes autenticarte para publicar', 'error'); return; }
+            try {
+                let coverUrl = null;
+                if (coverFile) {
+                    const formData = new FormData();
+                    formData.append('coverFile', coverFile);
+                    const uploadResponse = await fetch('/api/upload-cover', { method: 'POST', body: formData });
+                    if (!uploadResponse.ok) { const e = await uploadResponse.json().catch(()=>({})); throw new Error(e.error || `Error al subir carátula (${uploadResponse.status})`); }
+                    const uploadData = await uploadResponse.json();
+                    coverUrl = uploadData.url;
+                }
+                const response = await fetch('/api/publications', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, subtitle, keywords, content, author: currentUser, role: currentUserRole, coverUrl })
+                });
+                if (!response.ok) { const error = await response.json(); throw new Error(error.error || 'Error publicando'); }
+                showNotification('Publicación creada');
+                closePublishModal();
+                await loadPublications();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function deletePublication(pubId) {
+            if (!confirm('¿Estás seguro de que deseas eliminar esta publicación?')) return;
+            try {
+                const response = await fetch(`/api/publications/${pubId}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userEmail: currentUser, userRole: currentUserRole })
+                });
+                if (!response.ok) { const error = await response.json(); throw new Error(error.error || 'Error eliminando'); }
+                showNotification('Publicación eliminada');
+                await loadPublications();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error eliminando. No tienes permiso.', 'error');
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function sanitizeHTML(html) {
+            if (!html) return '';
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            const allowed = ['strong','em','u','h2','h3','p','br','hr','span','div'];
+            const walk = (node) => {
+                for (let i = node.childNodes.length - 1; i >= 0; i--) {
+                    const child = node.childNodes[i];
+                    if (child.nodeType === 1) {
+                        if (!allowed.includes(child.tagName.toLowerCase())) {
+                            while (child.firstChild) node.insertBefore(child.firstChild, child);
+                            node.removeChild(child);
+                        } else { walk(child); }
+                    }
+                }
+            };
+            walk(temp);
+            return temp.innerHTML;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notif = document.createElement('div');
+            notif.className = `notification ${type}`;
+            notif.textContent = message;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+
+        function irAlInicio() { window.location.href = 'index.html'; }
+
+        let currentViewingBook = null;
+        function openBookViewer(pubId) {
+            const book = allPublications.find(p => p._id === pubId);
+            if (!book) { showNotification('Libro no encontrado', 'error'); return; }
+            currentViewingBook = book;
+            document.getElementById('bookTitle').textContent = escapeHtml(book.title);
+            document.getElementById('bookSubtitle').textContent = book.subtitle ? escapeHtml(book.subtitle) : '';
+            document.getElementById('bookAuthor').textContent = escapeHtml(book.author);
+            const dateStr = new Date(book.publishedAt).toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' });
+            document.getElementById('bookDate').textContent = dateStr;
+            document.getElementById('bookContent').innerHTML = sanitizeHTML(book.content);
+            const totalPages = Math.max(1, Math.ceil(book.content.length / 2000));
+            document.getElementById('bookPages').textContent = `Página 1 de ${totalPages}`;
+            document.getElementById('bookViewerModal').classList.add('show');
+            const contentDiv = document.getElementById('bookContent');
+            contentDiv.addEventListener('scroll', () => {
+                const pct = contentDiv.scrollTop / (contentDiv.scrollHeight - contentDiv.clientHeight) || 0;
+                const cur = Math.min(Math.max(1, Math.ceil(pct * totalPages) + 1), totalPages);
+                document.getElementById('bookPages').textContent = `Página ${cur} de ${totalPages}`;
+            });
+        }
+        function closeBookViewer() {
+            document.getElementById('bookViewerModal').classList.remove('show');
+            currentViewingBook = null;
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeBookViewer(); });
+        document.getElementById('bookViewerModal')?.addEventListener('click', e => { if (e.target.id === 'bookViewerModal') closeBookViewer(); });
+
+        async function downloadBookPDF() {
+            if (!currentViewingBook) return;
+            showNotification('Generando PDF…');
+            const element = document.createElement('div');
+            element.style.cssText = 'padding:40px;font-family:Georgia,serif;line-height:1.8;';
+            element.innerHTML = `<h1>${escapeHtml(currentViewingBook.title)}</h1>
+                ${currentViewingBook.subtitle ? `<h2 style="color:#666;font-size:16px;">${escapeHtml(currentViewingBook.subtitle)}</h2>` : ''}
+                <div style="color:#999;font-size:12px;border-bottom:1px solid #ddd;padding-bottom:20px;margin-bottom:30px;">
+                    Por: ${escapeHtml(currentViewingBook.author)}<br>
+                    Fecha: ${new Date(currentViewingBook.publishedAt).toLocaleDateString('es-ES')}
+                </div>
+                <div>${currentViewingBook.content}</div>`;
+            if (typeof html2pdf !== 'undefined') {
+                html2pdf().set({ margin:10, filename:`${sanitizeFilename(currentViewingBook.title)}.pdf`, html2canvas:{scale:2}, jsPDF:{orientation:'portrait',unit:'mm',format:'a4'} }).from(element).save();
+            } else {
+                const pw = window.open('','','width=800,height=600');
+                pw.document.write(`<html><head><title>${escapeHtml(currentViewingBook.title)}</title><style>body{font-family:Georgia,serif;padding:40px;line-height:1.8;}h1{color:#1d4f1d;}h2{color:#666;}</style></head><body>`);
+                pw.document.write(`<h1>${escapeHtml(currentViewingBook.title)}</h1>`);
+                if (currentViewingBook.subtitle) pw.document.write(`<h2>${escapeHtml(currentViewingBook.subtitle)}</h2>`);
+                pw.document.write(`<p style="color:#999;font-size:12px;border-bottom:1px solid #ddd;padding-bottom:20px;">Por: ${escapeHtml(currentViewingBook.author)}</p>`);
+                pw.document.write(currentViewingBook.content);
+                pw.document.write('</body></html>');
+                pw.document.close();
+                setTimeout(() => { pw.print(); showNotification('Usa el diálogo de impresión para guardar como PDF'); }, 250);
+            }
+        }
+
+        async function downloadBookWord() {
+            if (!currentViewingBook) return;
+            showNotification('Generando documento Word…');
+            const docContent = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+                <head><meta charset="UTF-8"><title>${escapeHtml(currentViewingBook.title)}</title>
+                <style>body{font-family:Calibri,sans-serif;margin:1in;line-height:1.5;}h1{color:#1d4f1d;}h2{color:#666;font-size:16px;}</style></head>
+                <body><h1>${escapeHtml(currentViewingBook.title)}</h1>
+                ${currentViewingBook.subtitle ? `<h2>${escapeHtml(currentViewingBook.subtitle)}</h2>` : ''}
+                <p style="color:#999;font-size:12px;border-bottom:1px solid #ddd;padding-bottom:20px;">Por: ${escapeHtml(currentViewingBook.author)}<br>Fecha: ${new Date(currentViewingBook.publishedAt).toLocaleDateString('es-ES')}</p>
+                <div>${currentViewingBook.content}</div></body></html>`;
+            const blob = new Blob([docContent], { type: 'application/msword' });
+            const url  = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url; link.download = `${sanitizeFilename(currentViewingBook.title)}.doc`;
+            document.body.appendChild(link); link.click();
+            document.body.removeChild(link); window.URL.revokeObjectURL(url);
+            showNotification('Documento descargado');
+        }
+
+        function sanitizeFilename(filename) {
+            return filename.replace(/[^a-z0-9]/gi,'_').slice(0,100);
+        }
+    </script>
+</body>
+</html>

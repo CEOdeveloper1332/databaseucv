@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración — A1 Analytics</title>
+    <link rel="icon" type="image/png" href="INTELIGENCIAJG.png">
+    <link rel="apple-touch-icon" href="INTELIGENCIAJG.png">
+    <meta name="theme-color" content="#1d4f1d">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --v1: #0f3010;
+            --v2: #1d4f1d;
+            --v3: #2e6b2e;
+            --v4: #4a8c3a;
+            --v5: #6faa5a;
+            --v6: #a8cc96;
+            --v7: #d4ead0;
+            --v8: #eaf4e8;
+            --v9: #f4faf3;
+            --blanco: #ffffff;
+            --gris1: #f2f4f2;
+            --gris2: #e4e8e4;
+            --gris3: #c8cec8;
+            --gris4: #8a948a;
+            --gris5: #555d55;
+            --texto: #1a201a;
+            --borde: #d0d8d0;
+            --rojo: #8a1818;
+        }
+
+        /* ══ FIX FOOTER FLOTANTE ══ */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--gris1);
+            color: var(--texto);
+            font-size: 13px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ══ TOPBAR ══ */
+        .topbar {
+            background: var(--v1); color: var(--v7);
+            font-size: 11.5px; padding: 5px 24px;
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 16px;
+            flex-wrap: wrap; border-bottom: 2px solid var(--v4);
+            flex-shrink: 0;
+        }
+        .topbar-left { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+        .topbar-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .topbar-item svg { color: var(--v5); flex-shrink: 0; }
+        .topbar-right { display: flex; align-items: center; gap: 8px; }
+        .topbar-pill {
+            background: var(--v3); color: var(--v7); font-size: 10.5px;
+            font-weight: 700; padding: 3px 10px; border-radius: 2px;
+            text-transform: uppercase; letter-spacing: .05em; border: 1px solid var(--v4);
+        }
+        .topbar-pill.accent { background: var(--blanco); color: var(--v2); }
+        .topbar-pill.admin  { background: var(--rojo); color: var(--blanco); border-color: #aa2222; }
+
+        /* ══ SITE HEADER ══ */
+        .site-header {
+            background: var(--blanco); border-bottom: 3px solid var(--v2);
+            position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,.10);
+            flex-shrink: 0;
+        }
+        .header-inner {
+            display: flex; align-items: center;
+            justify-content: space-between; padding: 10px 24px; gap: 20px;
+        }
+        .brand { display: flex; align-items: center; gap: 13px; text-decoration: none; flex-shrink: 0; }
+        .brand-img { width: 56px; height: 56px; object-fit: contain; border-radius: 8px; }
+        .brand-text { display: flex; flex-direction: column; gap: 2px; }
+        .brand-title {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-weight: bold; font-size: 22px; color: var(--v2);
+            text-transform: uppercase; letter-spacing: .13em; line-height: 1;
+        }
+        .brand-subtitle { font-size: 10.5px; color: var(--gris4); text-transform: uppercase; letter-spacing: .07em; }
+
+        .admin-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(138,24,24,.08); border: 1.5px solid rgba(138,24,24,.3);
+            color: var(--rojo); padding: 6px 14px; border-radius: 4px;
+            font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+        }
+        .admin-badge svg { color: var(--rojo); }
+
+        /* ══ BREADCRUMB ══ */
+        .breadcrumb {
+            background: var(--blanco); border-bottom: 1px solid var(--borde);
+            padding: 7px 24px; font-size: 11.5px; color: var(--gris4);
+            display: flex; align-items: center; gap: 6px;
+            flex-shrink: 0;
+        }
+        .breadcrumb a { color: var(--v3); text-decoration: none; font-weight: 600; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb-sep { color: var(--gris3); }
+
+        /* ══ PAGE BODY ══ */
+        .page-body {
+            display: flex;
+            align-items: stretch;
+            flex: 1;
+        }
+
+        /* ══ LEFT SIDEBAR ══ */
+        .left-sidebar {
+            width: 240px; min-width: 240px;
+            background: var(--blanco);
+            border-right: 2px solid var(--borde);
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-admin-block {
+            background: var(--v1); padding: 16px 14px;
+            border-bottom: 2px solid var(--v3);
+        }
+        .sidebar-admin-inner { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .sidebar-admin-avatar {
+            width: 46px; height: 46px; border-radius: 50%;
+            border: 2px solid var(--v4); object-fit: cover; flex-shrink: 0;
+        }
+        .sidebar-admin-name { font-weight: 700; font-size: 13px; color: var(--v7); }
+        .sidebar-admin-email { font-size: 10.5px; color: var(--v6); word-break: break-all; line-height: 1.4; }
+        .sidebar-admin-role {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: var(--rojo); color: var(--blanco);
+            font-size: 10px; font-weight: 700; padding: 2px 8px;
+            border-radius: 10px; text-transform: uppercase; letter-spacing: .04em;
+            margin-top: 6px;
+        }
+        .logout-btn {
+            width: 100%; background: rgba(255,255,255,.1);
+            border: 1px solid rgba(255,255,255,.2); color: var(--v7);
+            padding: 7px; border-radius: 4px; font-family: inherit;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: background .2s; margin-top: 10px;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,.18); }
+
+        .sidebar-section-hdr {
+            background: var(--v2); color: var(--blanco);
+            font-size: 12px; font-weight: 700;
+            padding: 10px 16px; text-transform: uppercase;
+            letter-spacing: .07em; display: flex; align-items: center; gap: 8px;
+        }
+        .sidebar-section-hdr svg { color: var(--v6); }
+
+        .sidebar-cat-label {
+            font-size: 10px; font-weight: 700; color: var(--gris4);
+            text-transform: uppercase; letter-spacing: .09em; padding: 10px 16px 4px;
+        }
+        .sidebar-divider { height: 1px; background: var(--gris2); margin: 4px 0; }
+
+        .sidebar-nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 16px; font-size: 12.5px; color: var(--gris5);
+            text-decoration: none; border-bottom: 1px solid var(--gris1);
+            transition: background .15s, border-left .15s;
+            border-left: 3px solid transparent; cursor: pointer;
+        }
+        .sidebar-nav-item:hover {
+            background: var(--v8); color: var(--v2);
+            border-left-color: var(--v3); font-weight: 600;
+        }
+        .sidebar-nav-item svg { color: var(--v4); flex-shrink: 0; }
+        .sidebar-nav-item:hover svg { color: var(--v2); }
+
+        /* ══ MAIN CONTENT ══ */
+        .main-content {
+            flex: 1;
+            padding: 24px 28px 48px;
+            min-width: 0;
+        }
+
+        .page-title-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 22px; padding-bottom: 14px;
+            border-bottom: 2px solid var(--v2); gap: 16px; flex-wrap: wrap;
+        }
+        .page-title {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 24px; font-weight: bold; color: var(--v1);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .page-title-icon {
+            width: 38px; height: 38px; background: var(--rojo);
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+        }
+        .page-title-icon svg { color: var(--blanco); }
+        .page-desc { font-size: 12.5px; color: var(--gris4); margin-top: 5px; line-height: 1.6; }
+
+        .section-header {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 14px; margin-top: 6px;
+        }
+        .section-bar { width: 4px; height: 20px; background: var(--v3); border-radius: 2px; flex-shrink: 0; }
+        .section-title {
+            font-size: 14.5px; font-weight: 700; color: var(--v1);
+            font-family: Georgia, 'Times New Roman', serif;
+        }
+        .section-line { flex: 1; height: 1px; background: var(--gris2); }
+
+        /* Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 14px; margin-bottom: 24px;
+        }
+        .tool-card {
+            background: var(--blanco); border: 1px solid var(--borde);
+            border-radius: 5px; padding: 16px 18px;
+            border-left: 4px solid var(--v3);
+            transition: box-shadow .2s, border-color .2s;
+        }
+        .tool-card:hover { box-shadow: 0 6px 20px rgba(15,48,16,.1); border-left-color: var(--v2); }
+        .tool-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .tool-card-icon {
+            width: 32px; height: 32px; border-radius: 5px;
+            background: var(--v8); display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0;
+        }
+        .tool-card-icon svg { color: var(--v3); }
+        .tool-card h4 {
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 13.5px; font-weight: bold; color: var(--v1);
+        }
+        .tool-card p { font-size: 12px; color: var(--gris4); line-height: 1.55; margin-bottom: 10px; }
+
+        .sub-button {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: var(--v2); color: var(--blanco);
+            border: none; padding: 6px 12px; border-radius: 3px;
+            font-family: inherit; font-size: 11.5px; font-weight: 700;
+            cursor: pointer; text-decoration: none; transition: background .15s;
+        }
+        .sub-button:hover { background: var(--v1); }
+
+        .tc-azul   { border-left-color: #1a4a8a; }
+        .tc-azul .tool-card-icon { background: #eef2ff; }
+        .tc-azul .tool-card-icon svg { color: #1a4a8a; }
+        .tc-azul .sub-button { background: #1a4a8a; }
+        .tc-azul .sub-button:hover { background: #0e3060; }
+
+        .tc-morado { border-left-color: #5a2a8a; }
+        .tc-morado .tool-card-icon { background: #f4eeff; }
+        .tc-morado .tool-card-icon svg { color: #5a2a8a; }
+        .tc-morado .sub-button { background: #5a2a8a; }
+        .tc-morado .sub-button:hover { background: #3a1a6a; }
+
+        .tc-teal   { border-left-color: #156060; }
+        .tc-teal .tool-card-icon { background: #eafaff; }
+        .tc-teal .tool-card-icon svg { color: #156060; }
+        .tc-teal .sub-button { background: #156060; }
+        .tc-teal .sub-button:hover { background: #0a4040; }
+
+        .tc-naranja { border-left-color: #b05a10; }
+        .tc-naranja .tool-card-icon { background: #fff4ee; }
+        .tc-naranja .tool-card-icon svg { color: #b05a10; }
+        .tc-naranja .sub-button { background: #b05a10; }
+        .tc-naranja .sub-button:hover { background: #803808; }
+
+        .tc-rojo   { border-left-color: #8a1818; }
+        .tc-rojo .tool-card-icon { background: #fef2f2; }
+        .tc-rojo .tool-card-icon svg { color: #8a1818; }
+        .tc-rojo .sub-button { background: #8a1818; }
+        .tc-rojo .sub-button:hover { background: #6a1010; }
+
+        .tc-indigo { border-left-color: #2e3d9a; }
+        .tc-indigo .tool-card-icon { background: #eef0ff; }
+        .tc-indigo .tool-card-icon svg { color: #2e3d9a; }
+        .tc-indigo .sub-button { background: #2e3d9a; }
+        .tc-indigo .sub-button:hover { background: #1e2d7a; }
+
+        .tc-coral  { border-left-color: #a03025; }
+        .tc-coral .tool-card-icon { background: #fff1f0; }
+        .tc-coral .tool-card-icon svg { color: #a03025; }
+        .tc-coral .sub-button { background: #a03025; }
+        .tc-coral .sub-button:hover { background: #802015; }
+
+        /* Info box */
+        .info-box {
+            background: var(--v8); border: 1px solid var(--v7);
+            border-left: 4px solid var(--v3); border-radius: 4px;
+            padding: 16px 18px; margin-top: 8px;
+        }
+        .info-box-row {
+            display: flex; align-items: flex-start; gap: 10px;
+            font-size: 12px; color: var(--v1); line-height: 1.7;
+        }
+        .info-box-row + .info-box-row { margin-top: 8px; }
+        .info-box-row svg { color: var(--v3); flex-shrink: 0; margin-top: 2px; }
+        .info-box-row strong { font-weight: 700; }
+
+        /* ══ FOOTER — FIX ══ */
+        .site-footer {
+            background: var(--v1); color: var(--v7);
+            padding: 22px 24px; text-align: center;
+            border-top: 3px solid var(--v4);
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+        .site-footer p { font-size: 12px; margin: 4px 0; }
+        .site-footer strong { color: var(--blanco); }
+        .site-footer a { color: var(--v6); text-decoration: none; }
+        .site-footer a:hover { text-decoration: underline; }
+
+        /* Toast */
+        #toastContainer {
+            position: fixed; right: 20px; bottom: 20px; z-index: 3000;
+            display: flex; flex-direction: column; gap: 10px;
+            align-items: flex-end; pointer-events: none;
+        }
+        .toast {
+            pointer-events: auto;
+            background: rgba(10,26,10,0.95); color: var(--v7);
+            padding: 12px 14px; border-radius: 6px;
+            border-left: 3px solid var(--v4);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+            transform: translateY(20px) scale(0.98); opacity: 0;
+            transition: transform 300ms ease, opacity 300ms ease;
+            max-width: 330px; display: flex; align-items: center;
+            gap: 10px; font-size: 13px; line-height: 1.3;
+        }
+        .toast.show { opacity: 1; transform: translateY(0) scale(1); }
+        .toast.hide { opacity: 0; transform: translateY(20px) scale(0.98); }
+        .toast-message { flex: 1; }
+        .toast-close {
+            background: transparent; border: none; color: var(--v6);
+            font-size: 18px; line-height: 1; cursor: pointer; padding: 4px;
+        }
+
+        /* ══ RESPONSIVE ══ */
+        @media (max-width: 860px) {
+            .left-sidebar { display: none; }
+            .cards-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ══ TOPBAR ══ -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <div class="topbar-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Acceso Exclusivo — Panel de Administración
+            </div>
+            <div class="topbar-item">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                Plataforma Segura — HTTPS
+            </div>
+        </div>
+        <div class="topbar-right">
+            <div class="topbar-pill admin">Administrador</div>
+            <div class="topbar-pill accent">A1 Analytics</div>
+        </div>
+    </div>
+
+    <!-- ══ SITE HEADER ══ -->
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="index.html" class="brand">
+                <img src="INTELIGENCIAJG.png" alt="Inteligencia Juan Guerra" class="brand-img">
+                <div class="brand-text">
+                    <span class="brand-title">INTELIGENCIA</span>
+                    <span class="brand-subtitle">Juan Guerra &nbsp;·&nbsp; Sistema Social y Analítico Comunitario</span>
+                </div>
+            </a>
+            <div class="admin-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Panel de Administración
+            </div>
+        </div>
+    </header>
+
+    <!-- ══ BREADCRUMB ══ -->
+    <div class="breadcrumb">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <a href="index.html">Inicio A1</a>
+        <span class="breadcrumb-sep">/</span>
+        Panel de Administración
+    </div>
+
+    <!-- ══ PAGE BODY ══ -->
+    <div class="page-body">
+
+        <!-- LEFT SIDEBAR -->
+        <aside class="left-sidebar">
+
+            <div class="sidebar-admin-block">
+                <div class="sidebar-admin-inner">
+                    <img id="sidebarAvatar" class="sidebar-admin-avatar" alt="Avatar Admin" src="">
+                    <div style="min-width:0;">
+                        <div class="sidebar-admin-name" id="sidebarName">Admin</div>
+                        <div class="sidebar-admin-email" id="sidebarEmail"></div>
+                        <div class="sidebar-admin-role">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            Administrador
+                        </div>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="handleAdminLogout()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Cerrar Sesión
+                </button>
+            </div>
+
+            <div class="sidebar-section-hdr">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                Menú Admin
+            </div>
+
+            <div id="sidebarMenuContainer">
+                <div class="sidebar-cat-label">Navegación</div>
+                <a href="index.html" class="sidebar-nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Inicio
+                </a>
+                <a href="llxqowpzmvnwueyrtqppals991.html" class="sidebar-nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                    Calendario
+                </a>
+                <a href="zzxmncbqowieurytplaks991.html" class="sidebar-nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Ubicaciones
+                </a>
+
+                <div class="sidebar-divider"></div>
+                <div class="sidebar-cat-label">Gestión</div>
+
+                <a href="base.html" class="sidebar-nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Editar Perfiles
+                </a>
+                <a href="vnxoqwieuryplmzncbakd551.html" class="sidebar-nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4.03 3-9 3S3 13.66 3 12"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/></svg>
+                    Base de Datos
+                </a>
+                <a href="cxzplmwoeirutyqalksdn662.html" class="sidebar-nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                    Ciclos
+                </a>
+
+                <div class="sidebar-divider"></div>
+                <div class="sidebar-cat-label">Recursos</div>
+
+                <a href="pqowndiqwnxzmalkdnnqwe881.html" class="sidebar-nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                    Biblioteca General
+                </a>
+                <a href="zxmncbqowieurtyplakshdn221.html" class="sidebar-nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Biblioteca Admin
+                </a>
+                <a href="mqowieuryznxcbalkspp441.html" class="sidebar-nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Herramientas PDF
+                </a>
+
+                <div class="sidebar-divider"></div>
+                <div class="sidebar-cat-label">Análisis</div>
+
+                <a href="plakdjqowieuryxmncbvv821.html" class="sidebar-nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                    Redes Sociales
+                </a>
+                <a href="qowieurznmxclakshdpp774.html" class="sidebar-nav-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Tablero NEXUS
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+
+            <div class="page-title-bar">
+                <div>
+                    <div class="page-title">
+                        <div class="page-title-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        Panel de Administración
+                    </div>
+                    <p class="page-desc">Acceso completo a todas las herramientas del sistema. Centro de gestión de la comunidad de Juan Guerra y zonas vinculadas.</p>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <div class="section-bar"></div>
+                <div class="section-title">Herramientas Disponibles</div>
+                <div class="section-line"></div>
+            </div>
+
+            <div class="cards-grid">
+
+                <div class="tool-card tc-azul">
+                    <div class="tool-card-header">
+                        <div class="tool-card-icon">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        </div>
+                        <h4>Análisis Estadístico</h4>
+                    </div>
+                    <p>Visualiza datos sociales mediante gráficos interactivos, métricas de participación y análisis comparativos entre períodos.</p>
+                    <a href="vnxoqwieuryplmzncbakd551.html" class="sub-button">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Ver Base de Datos
+                    </a>
+                </div>
+
+                <div class="tool-card">
+                    <div class="tool-card-header">
+                        <div class="tool-card-icon">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        </div>
+                        <h4>Seguimiento Comunitario</h4>
+                    </div>
+                    <p>Monitorea el perfil individual de cada miembro con indicadores personalizados, roles sociales y recomendaciones.</p>
+                    <a href="base.html" class="sub-button">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Editar Perfiles
+                    </a>
+                </div>
+
+                <div class="tool-card tc-naranja">
+                    <div class="tool-card-header">
+                        <div class="tool-card-icon">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                        </div>
+                        <h4>Calendario Comunitario</h4>
+                    </div>
+                    <p>Organiza eventos sociales, reuniones comunitarias, fechas cívicas y actividades importantes en un calendario integrado.</p>
+                    <a href="llxqowpzmvnwueyrtqppals991.html" class="sub-button">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Ver Calendario
+                    </a>
+                </div>
+
+                <div class="tool-card tc-morado">
+                    <div class="tool-card-header">
+                        <div class="tool-card-icon">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                        </div>
+                        <h4>Redes Sociales</h4>
+                    </div>
+                    <p>Mapea vínculos sociales entre personas, grupos y comunidades usando el motor de grafos interactivo.</p>
+                    <a href="plakdjqowieuryxmncbvv821.html" class="sub-button">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Redes Sociales
+                    </a>
+                </div>
+
+                <div class="tool-card tc-indigo">
+                    <div class="tool-card-header">
+                        <div class="tool-card-icon">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                        </div>
+                        <h4>Ciclos y Períodos</h4>
+                    </div>
+                    <p>Administra ciclos sociales y comunitarios, compara períodos y mantén historial completo de actividad.</p>
+                    <a href="cxzplmwoeirutyqalksdn662.html" class="sub-button">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Gestionar Ciclos
+                    </a>
+                </div>
+
+                <div class="tool-card">
+                    <div class="tool-card-header">
+                        <div class="tool-card-icon">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        </div>
+                        <h4>Ubicaciones y Sedes</h4>
+                    </div>
+                    <p>Administra sedes, barrios, caseríos y espacios de la comunidad con seguimiento geográfico integral.</p>
+                    <a href="zzxmncbqowieurytplaks991.html" class="sub-button">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Ver Ubicaciones
+                    </a>
+                </div>
+
+                <div class="tool-card tc-teal">
+                    <div class="tool-card-header">
+                        <div class="tool-card-icon">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+                        </div>
+                        <h4>Biblioteca Digital [LIB]</h4>
+                    </div>
+                    <p>Base de datos colaborativa donde la comunidad publica, organiza y accede a información y recursos sociales.</p>
+                    <a href="pqowndiqwnxzmalkdnnqwe881.html" class="sub-button">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Biblioteca General
+                    </a>
+                </div>
+
+                <div class="tool-card tc-rojo">
+                    <div class="tool-card-header">
+                        <div class="tool-card-icon">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <h4>Biblioteca Administradores</h4>
+                    </div>
+                    <p>Sección exclusiva de recursos, reportes y documentos privados solo para administradores del sistema.</p>
+                    <a href="zxmncbqowieurtyplakshdn221.html" class="sub-button">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Biblioteca Admin
+                    </a>
+                </div>
+
+                <div class="tool-card tc-coral">
+                    <div class="tool-card-header">
+                        <div class="tool-card-icon">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        </div>
+                        <h4>Herramientas PDF</h4>
+                    </div>
+                    <p>Sube documentos PDF, extrae contenido y realiza búsquedas avanzadas dentro de archivos de la comunidad.</p>
+                    <a href="mqowieuryznxcbalkspp441.html" class="sub-button">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Herramientas PDF
+                    </a>
+                </div>
+
+                <div class="tool-card tc-azul">
+                    <div class="tool-card-header">
+                        <div class="tool-card-icon">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </div>
+                        <h4>Tablero NEXUS</h4>
+                    </div>
+                    <p>Crea mapas de vínculos entre personas, eventos, lugares y evidencias. Construye líneas de tiempo comunitarias.</p>
+                    <a href="qowieurznmxclakshdpp774.html" class="sub-button">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        Abrir NEXUS
+                    </a>
+                </div>
+
+            </div>
+
+            <!-- INFO BOX -->
+            <div class="info-box">
+                <div class="info-box-row">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                    <span><strong>Fines Sociales:</strong> Este sistema sirve a la comunidad de Juan Guerra y zonas vinculadas — fortaleciendo lazos sociales, facilitando el acceso equitativo a la información y potenciando el desarrollo colectivo de nuestra sociedad.</span>
+                </div>
+                <div class="info-box-row">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                    <span><strong>Seguridad:</strong> Todos los datos están encriptados, las conexiones son seguras (HTTPS), y cumplimos con normativas de protección de datos vigentes.</span>
+                </div>
+            </div>
+
+        </main>
+    </div><!-- end page-body -->
+
+    <!-- FOOTER — siempre al fondo -->
+    <footer class="site-footer">
+        <p><strong>A1 Analytics</strong> — Sistema Integral de Análisis de la Comunidad de Juan Guerra</p>
+        <p>© 2026 &nbsp;·&nbsp; Plataforma Social Comunitaria &nbsp;·&nbsp; Distrito de Juan Guerra, San Martín</p>
+        <div style="margin-top:8px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-size:11px;">
+            <a href="#">Políticas de Privacidad</a>
+            <a href="#">Términos de Servicio</a>
+        </div>
+    </footer>
+
+    <div id="toastContainer"></div>
+
+    <script>
+        /* ═══════════════════════════════════════════════
+           FUNCIONES DE SESIÓN ADMIN
+        ═══════════════════════════════════════════════ */
+
+        function showToast(message, duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<div class="toast-message">${message}</div><button class="toast-close" aria-label="Cerrar">&times;</button>`;
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('show'));
+            const hide = () => {
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+            };
+            toast.querySelector('.toast-close').addEventListener('click', hide);
+            setTimeout(hide, duration);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const userEmail    = localStorage.getItem('userEmail');
+            const userName     = localStorage.getItem('userName');
+            const userApproved = localStorage.getItem('userApproved');
+            const userRole     = localStorage.getItem('userRole');
+
+            if (userRole === 'admin' && userApproved === 'true') {
+                const nameEl   = document.getElementById('sidebarName');
+                const emailEl  = document.getElementById('sidebarEmail');
+                const avatarEl = document.getElementById('sidebarAvatar');
+
+                if (nameEl)   nameEl.textContent  = userName  || 'Admin';
+                if (emailEl)  emailEl.textContent = userEmail || '';
+                if (avatarEl) avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || userEmail)}&background=1d4f1d&color=d4ead0`;
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        function handleAdminLogout() {
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('userApproved');
+            localStorage.removeItem('userRole');
+            localStorage.removeItem('id_token');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

@@ -121,7 +121,7 @@ function initializeGoogleSignIn() {
     if (!window.google || !window.google.accounts || !window.google.accounts.id) return;
 
     const clientId = window.__googleClientId ||
-        '903625348841-j9ed7i8hb3me77lvhp7gai175c4rr68i.apps.googleusercontent.com';
+        '903625348841-bmkhrd53eok4bgo2j4pfhrijck43pgdb.apps.googleusercontent.com';
 
     google.accounts.id.initialize({
         client_id: clientId,

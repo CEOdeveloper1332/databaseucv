@@ -752,12 +752,17 @@ function setSyncState(state,label){
   el.innerHTML=`<div class="s-dot"></div>${label}`;
 }
 
+function getAuthHeaders(extra = {}) {
+  const token = localStorage.getItem('sessionToken');
+  return token ? Object.assign({}, extra, { 'Authorization': 'Bearer ' + token }) : extra;
+}
+
 async function apiSaveCase(data){
   try{
     setSyncState('syncing','GUARDANDO…');
     const method=currentCaseId?'PUT':'POST';
     const url=currentCaseId?`${API_BASE}/api/nexus-cases/${currentCaseId}`:`${API_BASE}/api/nexus-cases`;
-    const res=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const res=await fetch(url,{method,headers:getAuthHeaders({'Content-Type':'application/json'}),body:JSON.stringify(data)});
     if(!res.ok) throw new Error('server error '+res.status);
     const saved=await res.json();
     currentCaseId=saved.id||saved._id?.toString()||currentCaseId;
@@ -766,11 +771,11 @@ async function apiSaveCase(data){
   }catch(err){setSyncState('error','ERROR SYNC');console.error(err);return null;}
 }
 async function apiLoadCases(){
-  try{const res=await fetch(`${API_BASE}/api/nexus-cases`);if(!res.ok)return[];return await res.json();}
+  try{const res=await fetch(`${API_BASE}/api/nexus-cases`,{headers:getAuthHeaders()});if(!res.ok)return[];return await res.json();}
   catch(err){console.error(err);return[];}
 }
 async function apiDeleteCase(id){
-  try{const res=await fetch(`${API_BASE}/api/nexus-cases/${id}`,{method:'DELETE'});return res.ok;}
+  try{const res=await fetch(`${API_BASE}/api/nexus-cases/${id}`,{method:'DELETE',headers:getAuthHeaders()});return res.ok;}
   catch(err){return false;}
 }
 
@@ -1217,7 +1222,7 @@ document.getElementById('fileIn').addEventListener('change',async e=>{
     toast('Subiendo '+file.name+'…');
     try{
       const fd=new FormData();fd.append('photoFile',file);
-      const r=await fetch('/api/upload',{method:'POST',body:fd});
+      const r=await fetch('/api/upload',{method:'POST',headers:getAuthHeaders(),body:fd});
       if(r.ok){const d=await r.json();n.media.push({url:d.url,mediaType:file.type.startsWith('video/')?'video':'image',name:file.name});}
       else{const url=URL.createObjectURL(file);n.media.push({url,mediaType:file.type.startsWith('video/')?'video':'image',name:file.name});toast('Imagen solo en esta sesión');}
     }catch(err){const url=URL.createObjectURL(file);n.media.push({url,mediaType:file.type.startsWith('video/')?'video':'image',name:file.name});toast('Sin conexión — imagen local');}

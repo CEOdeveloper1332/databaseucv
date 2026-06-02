@@ -1091,7 +1091,12 @@ function saveNetworkThrottle(){ clearTimeout(_saveTimer); _saveTimer=setTimeout(
 async function saveNetwork(){
     if(!state.currentNet) return;
     state.currentNet.nodes=(state.currentNet.nodes||[]).map(n=>{ const nd=state.nodes.get(n.profileId); return nd?{...n,x:nd.x,y:nd.y,stats:nd.stats}:n; });
-    try{ await fetch(`/api/networks/${state.currentNet.id}`,{ method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:state.currentNet.name,nodes:state.currentNet.nodes,links:state.currentNet.links||[]}) }); }
+    try{ 
+        const token = localStorage.getItem('sessionToken');
+        const headers = {'Content-Type':'application/json'};
+        if(token) headers['Authorization'] = 'Bearer ' + token;
+        await fetch(`/api/networks/${state.currentNet.id}`,{ method:'PUT', headers, body:JSON.stringify({name:state.currentNet.name,nodes:state.currentNet.nodes,links:state.currentNet.links||[]}) }); 
+    }
     catch(err){ console.warn('saveNetwork error',err); }
 }
 

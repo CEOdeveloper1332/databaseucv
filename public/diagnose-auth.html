@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Diagnóstico de Autenticación</title>
+    <style>
+        body { font-family: monospace; margin: 20px; background: #1e1e1e; color: #d4d4d4; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #444; border-radius: 5px; }
+        .section h3 { margin-top: 0; color: #4ec9b0; }
+        .ok { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .warn { color: #dcdcaa; }
+        pre { background: #252526; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        button { padding: 8px 15px; margin: 5px 5px 5px 0; background: #0e639c; color: #fff; border: none; cursor: pointer; border-radius: 3px; }
+        button:hover { background: #1177bb; }
+    </style>
+</head>
+<body>
+    <h2>🔐 Diagnóstico de Autenticación</h2>
+    
+    <div class="section">
+        <h3>1. Estado de localStorage</h3>
+        <pre id="localStorageStatus"></pre>
+    </div>
+
+    <div class="section">
+        <h3>2. Validación de Token</h3>
+        <pre id="tokenValidation"></pre>
+    </div>
+
+    <div class="section">
+        <h3>3. Prueba de Petición Autenticada</h3>
+        <button onclick="testAuthFetch()">Probar GET /api/profiles</button>
+        <pre id="fetchTestResult"></pre>
+    </div>
+
+    <div class="section">
+        <h3>4. Simulador de authFetch()</h3>
+        <pre id="authFetchSimulation"></pre>
+    </div>
+
+    <div class="section">
+        <h3>5. Información de Sesión</h3>
+        <pre id="sessionInfo"></pre>
+    </div>
+
+    <script>
+        async function checkLocalStorage() {
+            const token = localStorage.getItem('sessionToken');
+            const userEmail = localStorage.getItem('userEmail');
+            const userRole = localStorage.getItem('userRole');
+            const userApproved = localStorage.getItem('userApproved');
+            const userName = localStorage.getItem('userName');
+
+            let html = '';
+            html += `<span class="${token ? 'ok' : 'error'}">✓ sessionToken: ${token ? '✓ Presente (' + token.length + ' chars)' : '✗ NO ENCONTRADO'}</span>\n`;
+            html += `<span class="${userEmail ? 'ok' : 'error'}">✓ userEmail: ${userEmail ? '✓ ' + userEmail : '✗ NO ENCONTRADO'}</span>\n`;
+            html += `<span class="${userRole ? 'ok' : 'error'}">✓ userRole: ${userRole ? '✓ ' + userRole : '✗ NO ENCONTRADO'}</span>\n`;
+            html += `<span class="${userApproved ? 'ok' : 'error'}">✓ userApproved: ${userApproved ? '✓ ' + userApproved : '✗ NO ENCONTRADO'}</span>\n`;
+            html += `<span class="${userName ? 'ok' : 'error'}">✓ userName: ${userName ? '✓ ' + userName : '✗ NO ENCONTRADO'}</span>\n`;
+
+            document.getElementById('localStorageStatus').innerHTML = html;
+        }
+
+        function validateToken() {
+            const token = localStorage.getItem('sessionToken');
+            let html = '';
+
+            if (!token) {
+                html += '<span class="error">✗ No hay token en localStorage</span>\n';
+            } else if (token === 'undefined' || token === 'null') {
+                html += `<span class="error">✗ Token inválido: "${token}"</span>\n`;
+            } else if (token.trim() === '') {
+                html += '<span class="error">✗ Token vacío</span>\n';
+            } else {
+                html += `<span class="ok">✓ Token válido</span>\n`;
+                html += `  - Longitud: ${token.length} caracteres\n`;
+                html += `  - Primeros 20 chars: ${token.substring(0, 20)}...\n`;
+                html += `  - Últimos 20 chars: ...${token.substring(token.length - 20)}\n`;
+                
+                // Intentar decodificar como JWT
+                try {
+                    const parts = token.split('.');
+                    if (parts.length === 3) {
+                        const payload = JSON.parse(atob(parts[1]));
+                        html += `  - Payload decodificado: ${JSON.stringify(payload, null, 2)}\n`;
+                    }
+                } catch (e) {
+                    html += `  - (No es un JWT válido o está encriptado)\n`;
+                }
+            }
+
+            document.getElementById('tokenValidation').innerHTML = html;
+        }
+
+        async function testAuthFetch() {
+            const resultEl = document.getElementById('fetchTestResult');
+            resultEl.innerHTML = '<span class="warn">⏳ Enviando petición...</span>';
+
+            try {
+                const token = localStorage.getItem('sessionToken');
+                
+                if (!token || token === 'undefined' || token === 'null' || token.trim() === '') {
+                    resultEl.innerHTML = '<span class="error">✗ Sin token válido, no se puede enviar petición autenticada</span>';
+                    return;
+                }
+
+                const headers = {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                };
+
+                const response = await fetch('/api/profiles', { headers });
+                
+                let html = '';
+                html += `<span class="ok">Status: ${response.status} ${response.statusText}</span>\n`;
+                
+                if (response.ok) {
+                    html += '<span class="ok">✓ Petición exitosa</span>\n';
+                    const data = await response.json();
+                    html += `Respuesta (primeros 500 chars): ${JSON.stringify(data).substring(0, 500)}...\n`;
+                } else {
+                    html += `<span class="error">✗ Error HTTP ${response.status}</span>\n`;
+                    const text = await response.text();
+                    html += `Respuesta: ${text.substring(0, 300)}...\n`;
+                }
+
+                resultEl.innerHTML = html;
+            } catch (err) {
+                resultEl.innerHTML = `<span class="error">✗ Error de red: ${err.message}</span>`;
+            }
+        }
+
+        function simulateAuthFetch() {
+            let html = '';
+            
+            // Simular la lógica de authFetch()
+            let token = window.__sessionToken || localStorage.getItem('sessionToken');
+            html += `window.__sessionToken: ${window.__sessionToken || '(vacío)'}\n`;
+            html += `localStorage.sessionToken: ${localStorage.getItem('sessionToken') ? '✓' : '✗'}\n`;
+            html += `token final: ${token ? '✓ Obtuvimos un token' : '✗ No hay token'}\n\n`;
+
+            if (!token || token === 'undefined' || token === 'null' || token.trim() === '') {
+                html += '<span class="error">❌ Resultado: authFetch() retornaría 401 Unauthorized</span>';
+            } else {
+                html += '<span class="ok">✓ Resultado: authFetch() enviaría Authorization header válido</span>\n';
+                html += `Authorization: Bearer ${token.substring(0, 20)}...\n`;
+            }
+
+            document.getElementById('authFetchSimulation').innerHTML = html;
+        }
+
+        function sessionInfo() {
+            let html = '';
+            
+            // Información de tiempo
+            const now = new Date();
+            html += `Hora actual: ${now.toLocaleString()}\n`;
+            html += `Zona horaria: ${Intl.DateTimeFormat().resolvedOptions().timeZone}\n\n`;
+
+            // Información del navegador
+            html += `User Agent: ${navigator.userAgent.substring(0, 80)}...\n`;
+            html += `Cookies habilitadas: ${navigator.cookieEnabled ? 'Sí' : 'No'}\n`;
+            html += `localStorage disponible: ${'localStorage' in window ? 'Sí' : 'No'}\n`;
+
+            // URLs útiles
+            html += `\nURL actual: ${window.location.href}\n`;
+            html += `Protocolo: ${window.location.protocol}\n`;
+            html += `Host: ${window.location.host}\n`;
+
+            document.getElementById('sessionInfo').innerHTML = html;
+        }
+
+        // Ejecutar al cargar
+        checkLocalStorage();
+        validateToken();
+        simulateAuthFetch();
+        sessionInfo();
+
+        // Auto-refresh cada 5 segundos
+        setInterval(() => {
+            checkLocalStorage();
+            validateToken();
+            simulateAuthFetch();
+        }, 5000);
+    </script>
+</body>
+</html>

@@ -443,7 +443,12 @@
 
         async function loadBirthdays() {
             try {
-                const res = await fetch('/api/profiles');
+                const token = localStorage.getItem('sessionToken');
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = 'Bearer ' + token;
+                }
+                const res = await fetch('/api/profiles', { headers });
                 if (!res.ok) throw new Error('Error ' + res.status);
                 const profiles = await res.json();
 

@@ -149,7 +149,7 @@ app.use((req, res, next) => {
 		"script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://unpkg.com",
 		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://unpkg.com",
 		"font-src 'self' https://fonts.gstatic.com",
-		"connect-src 'self' https://nominatim.openstreetmap.org https://overpass.openstreetmap.fr https://demotiles.maplibre.org https://server.arcgisonline.com https://accounts.google.com https://szurscobpuayftnhusif.supabase.co",
+		"connect-src 'self' https://nominatim.openstreetmap.org https://overpass.openstreetmap.fr https://demotiles.maplibre.org https://server.arcgisonline.com https://accounts.google.com https://apis.google.com https://unpkg.com https://szurscobpuayftnhusif.supabase.co",
 		"frame-src https://accounts.google.com",
 		"worker-src 'self' blob:",
 		"object-src 'none'",
@@ -629,9 +629,9 @@ app.post('/request-approval', async (req, res) => {
 
 app.get('/status', requireAuth, async (req, res) => {
 	try {
-		const { data } = await supabase.from('users').select('approved, role').eq('email', req.verifiedEmail).single();
-		if (!data) return res.json({ approved: false, role: 'user' });
-		res.json({ approved: data.approved || false, role: data.role || 'user' });
+		const { data } = await supabase.from('users').select('approved, role, name').eq('email', req.verifiedEmail).single();
+		if (!data) return res.json({ email: req.verifiedEmail, name: req.verifiedName, approved: false, role: 'user' });
+		res.json({ email: req.verifiedEmail, name: data.name || req.verifiedName, approved: data.approved || false, role: data.role || 'user' });
 	} catch (err) { console.error('status error', err); res.status(500).json({ error: 'server error' }); }
 });
 
@@ -895,6 +895,39 @@ app.post('/api/search-semantic', requireAuth, async (req, res) => {
 // ── PADRÓN SUNAT — Consulta DNI / Nombre ────────────────────────
 // ════════════════════════════════════════════════════════════════
 
+const PADRON_TABLES = [...new Set([process.env.PADRON_TABLE || 'padron_sunat', 'padron_sunat', 'padron'])];
+
+function normalizePadronQuery(value) {
+	return String(value || '')
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.replace(/\s+/g, ' ')
+		.trim()
+		.toUpperCase();
+}
+
+function mapPadronRow(row) {
+	const ruc = String(row?.ruc || '').trim();
+	return {
+		ruc,
+		dni: ruc.startsWith('10') && ruc.length >= 10 ? ruc.slice(2, 10) : null,
+		nombre: row?.nombre || row?.razon_social || row?.name || ''
+	};
+}
+
+async function queryPadronTables(buildQuery) {
+	let lastError = null;
+	for (const table of PADRON_TABLES) {
+		const { data, error } = await buildQuery(supabase.from(table), table);
+		if (!error) return { data: data || [], table };
+		lastError = error;
+		const msg = `${error.message || ''} ${error.details || ''}`.toLowerCase();
+		const canTryNext = msg.includes('does not exist') || msg.includes('schema cache') || msg.includes('not find');
+		if (!canTryNext) break;
+	}
+	return { data: null, error: lastError };
+}
+
 // GET /api/lookup-dni/:dni
 // Busca persona natural por DNI (8 dígitos) en el padrón SUNAT
 // Requiere auth. Devuelve ruc + nombre.
@@ -910,10 +943,14 @@ app.get('/api/lookup-dni/:dni', requireAuth, async (req, res) => {
 			.from('padron_sunat')
 			.select('ruc, nombre')
 			.like('ruc', `10${dni}_`)
-			.limit(1)
-			.single();
+			.limit(1);
 
-		if (error || !data)
+		if (error) {
+			console.error('lookup-dni supabase error:', error);
+			return res.status(500).json({ error: 'Error consultando padron SUNAT' });
+		}
+		const row = (data || [])[0];
+		if (!row)
 			return res.status(404).json({ error: 'DNI no encontrado en padrón SUNAT', dni });
 
 		return res.json({
@@ -921,8 +958,8 @@ app.get('/api/lookup-dni/:dni', requireAuth, async (req, res) => {
 			fuente: 'SUNAT padrón reducido',
 			data: {
 				dni,
-				ruc: data.ruc,
-				nombre: data.nombre
+				ruc: row.ruc,
+				nombre: row.nombre
 			}
 		});
 	} catch (err) {
@@ -937,30 +974,40 @@ app.get('/api/lookup-dni/:dni', requireAuth, async (req, res) => {
 // tipo=empresa filtra RUC que empieza en 20.
 app.get('/api/lookup-nombre', requireAuth, async (req, res) => {
 	try {
-		const q = (req.query.q || '').trim().toUpperCase();
+		const q = normalizePadronQuery(req.query.q);
 		const tipo = req.query.tipo === 'empresa' ? 'empresa' : 'persona';
 
 		if (q.length < 3)
 			return res.status(400).json({ error: 'Mínimo 3 caracteres para buscar' });
 
+		const tokens = q.split(' ').filter(Boolean).slice(0, 5);
 		let query = supabase
 			.from('padron_sunat')
 			.select('ruc, nombre')
-			.ilike('nombre', `%${q}%`)
-			.limit(20);
+			.limit(80);
 
 		// Filtrar por tipo de contribuyente via prefijo RUC
 		if (tipo === 'persona') query = query.like('ruc', '10%');
 		if (tipo === 'empresa') query = query.like('ruc', '20%');
+		tokens.forEach(token => { query = query.ilike('nombre', `%${token}%`); });
 
-		const { data, error } = await query;
-		if (error) throw error;
+		let { data, error } = await query;
+		if (error) {
+			const fallback = await queryPadronTables(db => {
+				let fallbackQuery = db.select('ruc, nombre').limit(80);
+				if (tipo === 'persona') fallbackQuery = fallbackQuery.like('ruc', '10%');
+				if (tipo === 'empresa') fallbackQuery = fallbackQuery.like('ruc', '20%');
+				tokens.forEach(token => { fallbackQuery = fallbackQuery.ilike('nombre', `%${token}%`); });
+				return fallbackQuery;
+			});
+			if (fallback.error) {
+				console.error('lookup-nombre supabase error:', error, fallback.error);
+				return res.status(500).json({ error: 'Error consultando padron SUNAT', detail: fallback.error.message || error.message || 'Supabase error' });
+			}
+			data = fallback.data;
+		}
 
-		const results = (data || []).map(row => ({
-			ruc: row.ruc,
-			dni: row.ruc.startsWith('10') ? row.ruc.slice(2, 10) : null,
-			nombre: row.nombre
-		}));
+		const results = (data || []).slice(0, 20).map(mapPadronRow);
 
 		res.json({
 			success: true,

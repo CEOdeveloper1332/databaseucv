@@ -909,7 +909,9 @@
 
         async function loadProfiles() {
             try {
-                const res = await fetch('/api/profiles');
+                const token = localStorage.getItem('sessionToken');
+                const headers = token ? { Authorization: 'Bearer ' + token } : {};
+                const res = await fetch('/api/profiles', { headers });
                 if (!res.ok) throw new Error('Error ' + res.status);
                 allProfiles = await res.json();
                 updateStats(allProfiles, allProfiles);

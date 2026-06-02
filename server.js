@@ -270,7 +270,26 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API listening ${PORT}`));
 
 // ── FRONT ──
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+const frontendAliases = {
+	'/': 'index.html',
+	'/index.html': 'index.html',
+	'/akdnqkdnqwndqiwndiqwndiqwndx91.html': 'index.html',
+	'/admin.html': 'xqowmznxkalwodnqpwmdlsaa92.html',
+	'/biblioteca.html': 'pqowndiqwnxzmalkdnnqwe881.html',
+	'/biblioteca-admin.html': 'zxmncbqowieurtyplakshdn221.html',
+	'/calendar.html': 'llxqowpzmvnwueyrtqppals991.html',
+	'/consultas.html': 'wqmnzxpalkdjqowieuryt771.html',
+	'/cycle.html': 'cxzplmwoeirutyqalksdn662.html',
+	'/database.html': 'vnxoqwieuryplmzncbakd551.html',
+	'/investigation.html': 'qowieurznmxclakshdpp774.html',
+	'/locations.html': 'zzxmncbqowieurytplaks991.html',
+	'/neural.html': 'plakdjqowieuryxmncbvv821.html',
+	'/pdf.html': 'mqowieuryznxcbalkspp441.html'
+};
+
+Object.entries(frontendAliases).forEach(([route, filename]) => {
+	app.get(route, (req, res) => res.sendFile(path.join(__dirname, 'public', filename)));
+});
 
 // ── /api/upload ──
 app.post('/api/upload', requireAuth, upload.single('photoFile'), async (req, res) => {

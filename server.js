@@ -69,6 +69,8 @@ async function getUserRole(email) {
 const app = express();
 
 // ── CORS ──
+// FIX #1: callback(null, false) en lugar de callback(new Error(...))
+// Antes lanzaba una excepción no capturada → HTTP 500 con cualquier Origin externo (DoS sin auth)
 const DEFAULT_ALLOWED_ORIGINS = ['https://databaseucv.onrender.com'];
 const ALLOWED_ORIGINS = [
 	...DEFAULT_ALLOWED_ORIGINS,
@@ -82,7 +84,7 @@ app.use(cors({
 		if (LOCALHOST_REGEX.test(origin)) return callback(null, true);
 		if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
 		console.warn(`[CORS] Origin rechazado: ${origin}`);
-		return callback(new Error('CORS: origen no permitido'), false);
+		return callback(null, false); // FIX: era callback(new Error('CORS: origen no permitido'), false)
 	},
 	credentials: true
 }));
@@ -98,8 +100,15 @@ const pdfRateMap = new Map();
 const PDF_RATE_WINDOW = 60 * 60 * 1000;
 const PDF_RATE_MAX = 10;
 
+// FIX #2: usar CF-Connecting-IP en lugar de X-Forwarded-For
+// X-Forwarded-For puede ser falsificado por cualquier cliente → bypass total del rate limiting
+// CF-Connecting-IP es inyectado por Cloudflare y no puede ser spoofed desde el cliente
 function getClientIp(req) {
-	return req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip || req.connection?.remoteAddress || 'unknown';
+	return req.headers['cf-connecting-ip']
+		|| req.headers['x-real-ip']
+		|| req.ip
+		|| req.connection?.remoteAddress
+		|| 'unknown';
 }
 
 function checkRateLimit(map, ip, windowMs, max) {
@@ -387,10 +396,22 @@ app.get('/api/profiles', requireAuth, async (req, res) => {
 	} catch (err) { console.error(err); res.status(500).json({ error: 'db error' }); }
 });
 
+// FIX #3: Mass assignment — ownership check antes de update + eliminar author del body
+// Antes cualquier usuario autenticado podía cambiar el author de un perfil ajeno
 app.post('/api/profiles', requireAuth, async (req, res) => {
 	try {
 		if (req.body.id) {
+			const { data: existing } = await supabase
+				.from('profiles')
+				.select('author')
+				.eq('id', req.body.id)
+				.single();
+			const role = await getUserRole(req.verifiedEmail);
+			if (existing && existing.author !== req.verifiedEmail && role !== 'admin')
+				return res.status(403).json({ error: 'Sin permiso para editar este perfil' });
+
 			const update = buildProfileUpdate(req.body);
+			delete update.author; // FIX: nunca permitir cambiar author vía body
 			update.updated_at = new Date().toISOString();
 			const { data, error } = await supabase.from('profiles').update(update).eq('id', req.body.id).select().single();
 			if (error) throw error;
@@ -416,6 +437,7 @@ app.post('/api/profiles', requireAuth, async (req, res) => {
 app.put('/api/profiles/:id', requireAuth, async (req, res) => {
 	try {
 		const update = buildProfileUpdate(req.body);
+		delete update.author; // FIX: consistencia — author no modificable vía PUT tampoco
 		update.updated_at = new Date().toISOString();
 		const { data, error } = await supabase.from('profiles').update(update).eq('id', req.params.id).select().single();
 		if (error) throw error;
@@ -683,7 +705,9 @@ app.post('/api/publications', requireAuth, async (req, res) => {
 	} catch (err) { res.status(500).json({ error: 'db error' }); }
 });
 
-app.post('/api/publications-admin', requireAuth, async (req, res) => {
+// FIX #4: /api/publications-admin requiere requireAdmin en escritura
+// Antes solo requireAuth → cualquier usuario autenticado podía escribir en publicationsadmin
+app.post('/api/publications-admin', requireAuth, requireAdmin, async (req, res) => {
 	try {
 		const author = req.verifiedEmail;
 		const { title, subtitle, keywords, content, role, coverUrl } = req.body;
@@ -730,7 +754,8 @@ app.delete('/api/publications/:id', requireAuth, async (req, res) => {
 	} catch (err) { res.status(500).json({ error: 'db error' }); }
 });
 
-app.put('/api/publications-admin/:id', requireAuth, async (req, res) => {
+// FIX #4 (cont): PUT y DELETE de publications-admin también requieren requireAdmin
+app.put('/api/publications-admin/:id', requireAuth, requireAdmin, async (req, res) => {
 	try {
 		const { title, subtitle, keywords, content, coverUrl } = req.body || {};
 		if (!title || !title.trim()) return res.status(400).json({ error: 'El título es requerido' });
@@ -748,7 +773,7 @@ app.put('/api/publications-admin/:id', requireAuth, async (req, res) => {
 	} catch (err) { res.status(500).json({ error: 'db error' }); }
 });
 
-app.delete('/api/publications-admin/:id', requireAuth, async (req, res) => {
+app.delete('/api/publications-admin/:id', requireAuth, requireAdmin, async (req, res) => {
 	try {
 		const realRole = await getUserRole(req.verifiedEmail);
 		const { data: pub } = await supabase.from('publicationsadmin').select('author').eq('id', req.params.id).single();
@@ -855,11 +880,18 @@ app.post('/api/upload-pdf', requireAuth, upload.single('pdfFile'), async (req, r
 });
 
 // ── /api/search-pdf ──
+// FIX #5: sanitizar wildcards PostgreSQL + limitar resultados para evitar query amplification DoS
 app.post('/api/search-pdf', requireAuth, async (req, res) => {
 	try {
 		const { query } = req.body;
 		if (!query || !query.trim()) return res.status(400).json({ error: 'Query is required' });
-		const { data, error } = await supabase.from('pdf_chunks').select('filename, content').ilike('content', `%${query}%`);
+		const safeQuery = query.trim().slice(0, 200).replace(/[%_\\]/g, ''); // FIX: eliminar wildcards y escape chars
+		if (!safeQuery) return res.status(400).json({ error: 'Query inválida' });
+		const { data, error } = await supabase
+			.from('pdf_chunks')
+			.select('filename, content')
+			.ilike('content', `%${safeQuery}%`)
+			.limit(50); // FIX: limitar resultados
 		if (error) throw error;
 		res.json({ results: data.map(r => ({ filename: r.filename, content: r.content })) });
 	} catch (err) { res.status(500).json({ error: 'db error' }); }
@@ -928,9 +960,6 @@ async function queryPadronTables(buildQuery) {
 	return { data: null, error: lastError };
 }
 
-// GET /api/lookup-dni/:dni
-// Busca persona natural por DNI (8 dígitos) en el padrón SUNAT
-// Requiere auth. Devuelve ruc + nombre.
 app.get('/api/lookup-dni/:dni', requireAuth, async (req, res) => {
 	try {
 		const { dni } = req.params;
@@ -938,7 +967,6 @@ app.get('/api/lookup-dni/:dni', requireAuth, async (req, res) => {
 		if (!/^\d{8}$/.test(dni))
 			return res.status(400).json({ error: 'DNI debe tener exactamente 8 dígitos' });
 
-		// Buscar por RUC con prefijo 10 + DNI (dígito verificador desconocido → LIKE)
 		const { data, error } = await supabase
 			.from('padron_sunat')
 			.select('ruc, nombre')
@@ -968,10 +996,6 @@ app.get('/api/lookup-dni/:dni', requireAuth, async (req, res) => {
 	}
 });
 
-// GET /api/lookup-nombre?q=GARCIA+JUAN&tipo=persona|empresa
-// Búsqueda por nombre en el padrón SUNAT. Máx 20 resultados.
-// tipo=persona (default) filtra RUC que empieza en 10.
-// tipo=empresa filtra RUC que empieza en 20.
 app.get('/api/lookup-nombre', requireAuth, async (req, res) => {
 	try {
 		const q = normalizePadronQuery(req.query.q);
@@ -986,7 +1010,6 @@ app.get('/api/lookup-nombre', requireAuth, async (req, res) => {
 			.select('ruc, nombre')
 			.limit(80);
 
-		// Filtrar por tipo de contribuyente via prefijo RUC
 		if (tipo === 'persona') query = query.like('ruc', '10%');
 		if (tipo === 'empresa') query = query.like('ruc', '20%');
 		tokens.forEach(token => { query = query.ilike('nombre', `%${token}%`); });
@@ -1019,4 +1042,12 @@ app.get('/api/lookup-nombre', requireAuth, async (req, res) => {
 		console.error('lookup-nombre error:', err);
 		res.status(500).json({ error: 'Error interno del servidor' });
 	}
+});
+
+// ── Global error handler ──
+// FIX #6: captura cualquier Error no manejado en middlewares/rutas
+// Sin esto Express devuelve HTML 500 por defecto, revelando stack traces y crasheando CORS
+app.use((err, req, res, next) => {
+	console.error(`[ERROR] ${req.method} ${req.path} — ${err.message}`);
+	res.status(err.status || 500).json({ error: 'Error interno del servidor' });
 });

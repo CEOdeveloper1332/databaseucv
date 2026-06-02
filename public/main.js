@@ -39,7 +39,11 @@ async function authFetch(url, options = {}) {
         hasAuth: !!headers['Authorization']
     });
     
-    return fetch(url, Object.assign({}, options, { headers }));
+    const response = await fetch(url, Object.assign({}, options, { headers }));
+    if (response.status === 401) {
+        clearStoredSession();
+    }
+    return response;
 }
 
 /**
@@ -68,6 +72,32 @@ async function initSession(id_token) {
 
 // Helper: ¿el usuario actual es admin? (solo para UI — el server decide el acceso real)
 function isAdmin() { return window.__userRole === 'admin'; }
+
+function hasStoredSessionToken() {
+    const token = localStorage.getItem('sessionToken');
+    return !!(token && token !== 'undefined' && token !== 'null' && token.trim() !== '');
+}
+
+function clearStoredSession() {
+    window.__sessionToken = null;
+    window.__userRole     = 'user';
+    window.__userEmail    = null;
+    localStorage.removeItem('sessionToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userApproved');
+}
+
+function showLoggedOutState() {
+    const loginContainer    = document.getElementById('loginContainer');
+    const sidebarUserBlock  = document.getElementById('sidebarUserBlock');
+    const sidebarLoginBlock = document.getElementById('sidebarLoginBlock');
+    if (loginContainer)    loginContainer.style.display    = '';
+    if (sidebarLoginBlock) sidebarLoginBlock.style.display = '';
+    if (sidebarUserBlock)  sidebarUserBlock.style.display  = 'none';
+    applyRoleVisibility('user', false);
+}
 
 // ── GOOGLE SIGN-IN ─────────────────────────────────────────────────────────────
 
@@ -203,14 +233,7 @@ function showUserProfile(userName, userEmail) {
 
 function handleLogout() {
     // Limpiar estado en memoria y localStorage
-    window.__sessionToken = null;
-    window.__userRole     = 'user';
-    window.__userEmail    = null;
-    localStorage.removeItem('sessionToken');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userApproved');
+    clearStoredSession();
     location.reload();
 }
 
@@ -291,15 +314,45 @@ function restoreSessionFromStorage() {
     const token = localStorage.getItem('sessionToken');
     const role = localStorage.getItem('userRole');
     const email = localStorage.getItem('userEmail');
-    
-    if (token) {
+    const name = localStorage.getItem('userName');
+    const approved = localStorage.getItem('userApproved') === 'true';
+
+    if (token && token !== 'undefined' && token !== 'null' && token.trim() !== '') {
         window.__sessionToken = token;
         window.__userRole = role || 'user';
         window.__userEmail = email || null;
+        showUserProfile(name || email || 'Usuario', email || '');
+        applyRoleVisibility(window.__userRole, approved);
         console.log('[restoreSessionFromStorage] Sesion restaurada desde localStorage');
         return true;
     }
     return false;
+}
+
+async function verifyRestoredSession() {
+    if (!hasStoredSessionToken()) return false;
+    try {
+        const resp = await authFetch('/status');
+        if (resp.status === 401) {
+            showLoggedOutState();
+            console.warn('[verifyRestoredSession] Token expirado o invalido; sesion local limpiada');
+            return false;
+        }
+        if (!resp.ok) {
+            console.warn('[verifyRestoredSession] No se pudo validar la sesion restaurada:', resp.status);
+            return true;
+        }
+
+        const data = await resp.json();
+        window.__userRole = String(data.role || 'user');
+        localStorage.setItem('userRole', window.__userRole);
+        localStorage.setItem('userApproved', data.approved ? 'true' : 'false');
+        applyRoleVisibility(window.__userRole, data.approved === true);
+        return true;
+    } catch (err) {
+        console.warn('[verifyRestoredSession] Error validando sesion restaurada:', err);
+        return true;
+    }
 }
 
 // ── DOMContentLoaded — punto de entrada principal ──────────────────────────────
@@ -322,13 +375,17 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     // ── Verificar sesion existente ────────────────────────────────────────────
     // Primero intentar restaurar desde localStorage
-    const sessionRestored = restoreSessionFromStorage();
+    let sessionRestored = restoreSessionFromStorage();
     if (sessionRestored) {
         console.log('[DOMContentLoaded] Sesion previa restaurada');
+        sessionRestored = await verifyRestoredSession();
     }
 
-    // Inicializar Google Sign-In (con retry por timing async)
-    waitForGSI();
+    // Inicializar Google Sign-In solo cuando se necesita mostrar el login.
+    if (!sessionRestored && document.getElementById('loginContainer')) {
+        showLoggedOutState();
+        waitForGSI();
+    }
 
     // ── PERFILES ──────────────────────────────────────────────────────────────
     const searchInput  = document.getElementById('searchInput');

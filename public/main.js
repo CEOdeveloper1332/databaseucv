@@ -23,13 +23,22 @@ window.__userEmail    = null;   // email verificado, viene del server post-auth
 async function authFetch(url, options = {}) {
     // Intentar recuperar token desde localStorage si no está en memoria
     let token = window.__sessionToken || localStorage.getItem('sessionToken');
-    if (!token) {
-        console.warn('[authFetch] Sin token de sesion para', url);
+    
+    // Validar que el token sea un string válido (no vacío, no "undefined", no "null")
+    if (!token || token === 'undefined' || token === 'null' || token.trim() === '') {
+        console.warn('[authFetch] Sin token de sesion para', url, { token });
         return new Response(JSON.stringify({ error: 'No autenticado' }), { status: 401 });
     }
+    
     window.__sessionToken = token; // Restaurar en memoria
     const headers = Object.assign({}, options.headers || {});
     headers['Authorization'] = 'Bearer ' + token;
+    
+    console.debug('[authFetch] Enviando peticion a', url, { 
+        tokenLength: token.length,
+        hasAuth: !!headers['Authorization']
+    });
+    
     return fetch(url, Object.assign({}, options, { headers }));
 }
 
@@ -626,7 +635,17 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    if (profilesList) renderAllProfiles();
+    if (profilesList) {
+        // Solo cargar perfiles si hay sesión válida
+        const token = localStorage.getItem('sessionToken');
+        if (token && token !== 'undefined' && token !== 'null' && token.trim() !== '') {
+            console.log('[DOMContentLoaded] Token válido encontrado, cargando perfiles...');
+            renderAllProfiles();
+        } else {
+            console.warn('[DOMContentLoaded] Sin token válido, no cargando perfiles');
+            profilesList.innerHTML = '<div class="empty-state"><p>Por favor, inicia sesión para ver los perfiles.</p></div>';
+        }
+    }
 
     // ── CALENDAR ──────────────────────────────────────────────────────────────
     const daysGrid         = document.getElementById('daysGrid');

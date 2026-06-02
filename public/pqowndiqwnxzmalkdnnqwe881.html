@@ -895,13 +895,18 @@
             });
         });
 
+        function getAuthHeaders(extra = {}) {
+            const token = localStorage.getItem('sessionToken');
+            return token ? Object.assign({}, extra, { 'Authorization': 'Bearer ' + token }) : extra;
+        }
+
         async function checkUserStatus() {
             try {
                 const userEmail = localStorage.getItem('userEmail');
                 const userName  = localStorage.getItem('userName');
                 const userRole  = localStorage.getItem('userRole');
                 if (!userEmail) { updateUserStatus('No autenticado', false); return; }
-                const response = await fetch('/status?email=' + encodeURIComponent(userEmail));
+                const response = await fetch('/status?email=' + encodeURIComponent(userEmail), { headers: getAuthHeaders() });
                 if (!response.ok) { updateUserStatus('Error', false); return; }
                 const data = await response.json();
                 currentUser = userEmail;
@@ -931,7 +936,7 @@
         async function loadPublications() {
             try {
                 document.getElementById('loadingState').style.display = 'block';
-                const response = await fetch('/api/publications');
+                const response = await fetch('/api/publications', { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error('Error cargando publicaciones');
                 allPublications = await response.json();
                 filteredPublications = [...allPublications];
@@ -1107,14 +1112,14 @@
                 if (coverFile) {
                     const formData = new FormData();
                     formData.append('coverFile', coverFile);
-                    const uploadResponse = await fetch('/api/upload-cover', { method: 'POST', body: formData });
+                    const uploadResponse = await fetch('/api/upload-cover', { method: 'POST', headers: getAuthHeaders(), body: formData });
                     if (!uploadResponse.ok) { const e = await uploadResponse.json().catch(()=>({})); throw new Error(e.error || 'Error al subir carátula'); }
                     const uploadData = await uploadResponse.json();
                     coverUrl = uploadData.url;
                 }
                 const response = await fetch(`/api/publications/${currentEditingId}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ title, subtitle, keywords, content, coverUrl, userEmail: currentUser })
                 });
                 if (!response.ok) { const error = await response.json(); throw new Error(error.error || 'Error editando'); }
@@ -1200,14 +1205,14 @@
                 if (coverFile) {
                     const formData = new FormData();
                     formData.append('coverFile', coverFile);
-                    const uploadResponse = await fetch('/api/upload-cover', { method: 'POST', body: formData });
+                    const uploadResponse = await fetch('/api/upload-cover', { method: 'POST', headers: getAuthHeaders(), body: formData });
                     if (!uploadResponse.ok) { const e = await uploadResponse.json().catch(()=>({})); throw new Error(e.error || `Error al subir carátula (${uploadResponse.status})`); }
                     const uploadData = await uploadResponse.json();
                     coverUrl = uploadData.url;
                 }
                 const response = await fetch('/api/publications', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ title, subtitle, keywords, content, author: currentUser, role: currentUserRole, coverUrl })
                 });
                 if (!response.ok) { const error = await response.json(); throw new Error(error.error || 'Error publicando'); }
@@ -1225,7 +1230,7 @@
             try {
                 const response = await fetch(`/api/publications/${pubId}`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ userEmail: currentUser, userRole: currentUserRole })
                 });
                 if (!response.ok) { const error = await response.json(); throw new Error(error.error || 'Error eliminando'); }

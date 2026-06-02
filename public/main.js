@@ -10,22 +10,26 @@
    [FIX-8] Google Sign-In inicializado en main.js con waitForGSI() para manejar timing async
 */
 
-// ── AUTH STATE — en memoria de sesion, nunca en localStorage ──────────────────
+// ── AUTH STATE — en memoria de sesion, respaldado en localStorage ──────────────────
 window.__sessionToken = null;   // id_token de Google (Bearer)
 window.__userRole     = 'user'; // 'admin' | 'user' — SOLO para adaptar la UI
 window.__userEmail    = null;   // email verificado, viene del server post-auth
 
 /**
  * authFetch — wrapper sobre fetch() que inyecta el Bearer token en cada peticion.
+ * Recupera el token desde localStorage si no está en memoria.
  * Usarlo en TODAS las llamadas a /api/* y /status.
  */
 async function authFetch(url, options = {}) {
-    if (!window.__sessionToken) {
+    // Intentar recuperar token desde localStorage si no está en memoria
+    let token = window.__sessionToken || localStorage.getItem('sessionToken');
+    if (!token) {
         console.warn('[authFetch] Sin token de sesion para', url);
         return new Response(JSON.stringify({ error: 'No autenticado' }), { status: 401 });
     }
+    window.__sessionToken = token; // Restaurar en memoria
     const headers = Object.assign({}, options.headers || {});
-    headers['Authorization'] = 'Bearer ' + window.__sessionToken;
+    headers['Authorization'] = 'Bearer ' + token;
     return fetch(url, Object.assign({}, options, { headers }));
 }
 
@@ -90,10 +94,15 @@ async function handleCredentialResponse(response) {
 
         const data = await verifyResp.json();
 
-        // Guardar token en memoria de sesion (NO localStorage — [FIX-3])
+        // Guardar token y datos en memoria y localStorage para persistencia
         window.__sessionToken = id_token;
         window.__userRole     = String(data.role || 'user');
         window.__userEmail    = data.email || null;
+        
+        // Persistir en localStorage
+        localStorage.setItem('sessionToken', id_token);
+        localStorage.setItem('userRole', window.__userRole);
+        localStorage.setItem('userEmail', window.__userEmail);
 
         // Aplicar visibilidad de elementos admin
         applyRoleVisibility(data.role, data.approved);
@@ -182,10 +191,13 @@ function showUserProfile(userName, userEmail) {
 }
 
 function handleLogout() {
-    // Limpiar estado en memoria
+    // Limpiar estado en memoria y localStorage
     window.__sessionToken = null;
     window.__userRole     = 'user';
     window.__userEmail    = null;
+    localStorage.removeItem('sessionToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
     location.reload();
 }
 
@@ -258,6 +270,25 @@ function getPhotoUrl(profileOrUrl) {
     return placeholder;
 }
 
+/**
+ * restoreSessionFromStorage — recupera la sesion guardada en localStorage.
+ * Se ejecuta al cargar la página para restaurar la autenticación previa.
+ */
+function restoreSessionFromStorage() {
+    const token = localStorage.getItem('sessionToken');
+    const role = localStorage.getItem('userRole');
+    const email = localStorage.getItem('userEmail');
+    
+    if (token) {
+        window.__sessionToken = token;
+        window.__userRole = role || 'user';
+        window.__userEmail = email || null;
+        console.log('[restoreSessionFromStorage] Sesion restaurada desde localStorage');
+        return true;
+    }
+    return false;
+}
+
 // ── DOMContentLoaded — punto de entrada principal ──────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -277,10 +308,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     window.showToast     = showToast;
 
     // ── Verificar sesion existente ────────────────────────────────────────────
-    // NOTA: ya no usamos localStorage para el token (eliminado en [FIX-3]).
-    // Si el usuario recarga la pagina, Google One Tap puede re-emitir el token
-    // automaticamente si la sesion de Google sigue activa.
-    // Para usuarios que ya estaban logueados, intentamos re-iniciar sesion via GSI.
+    // Primero intentar restaurar desde localStorage
+    const sessionRestored = restoreSessionFromStorage();
+    if (sessionRestored) {
+        console.log('[DOMContentLoaded] Sesion previa restaurada');
+    }
 
     // Inicializar Google Sign-In (con retry por timing async)
     waitForGSI();

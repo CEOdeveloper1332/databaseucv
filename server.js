@@ -141,7 +141,7 @@ app.use((req, res, next) => {
 	res.setHeader('X-Content-Type-Options', 'nosniff');
 	res.setHeader('X-Frame-Options', 'SAMEORIGIN');
 	res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-	res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+	res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
 	res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 	res.setHeader('Content-Security-Policy', [
 		"default-src 'self'",
@@ -319,23 +319,66 @@ app.post('/api/upload-cover', requireAuth, upload.single('coverFile'), async (re
 	} catch (err) { return res.status(500).json({ error: 'Server error' }); }
 });
 
+function mapProfileRow(row) {
+	if (!row) return row;
+	return {
+		id: row.id,
+		...row,
+		firstName: row.firstName ?? row.first_name ?? '',
+		lastName: row.lastName ?? row.last_name ?? '',
+		fullName: row.fullName ?? row.full_name ?? '',
+		createdAt: row.createdAt ?? row.created_at,
+		updatedAt: row.updatedAt ?? row.updated_at
+	};
+}
+
+function buildProfileUpdate(body = {}) {
+	const update = {};
+	const fields = {
+		firstName: 'first_name',
+		lastName: 'last_name',
+		fullName: 'full_name',
+		dni: 'dni',
+		photo: 'photo',
+		email: 'email',
+		phone: 'phone',
+		location: 'location',
+		country: 'country',
+		department: 'department',
+		province: 'province',
+		locality: 'locality',
+		city: 'city',
+		address: 'address',
+		birthday: 'birthday',
+		lat: 'lat',
+		lng: 'lng',
+		stats: 'stats',
+		author: 'author'
+	};
+	for (const [from, to] of Object.entries(fields)) {
+		if (body[from] !== undefined) update[to] = body[from];
+		if (body[to] !== undefined) update[to] = body[to];
+	}
+	return update;
+}
+
 // ── /api/profiles ──
 app.get('/api/profiles', requireAuth, async (req, res) => {
 	try {
 		const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
 		if (error) throw error;
-		res.json(data.map(d => ({ id: d.id, ...d })));
+		res.json(data.map(mapProfileRow));
 	} catch (err) { console.error(err); res.status(500).json({ error: 'db error' }); }
 });
 
 app.post('/api/profiles', requireAuth, async (req, res) => {
 	try {
 		if (req.body.id) {
-			const { id, ...update } = req.body;
+			const update = buildProfileUpdate(req.body);
 			update.updated_at = new Date().toISOString();
-			const { data, error } = await supabase.from('profiles').update(update).eq('id', id).select().single();
+			const { data, error } = await supabase.from('profiles').update(update).eq('id', req.body.id).select().single();
 			if (error) throw error;
-			return res.json({ id: data.id, ...data });
+			return res.json(mapProfileRow(data));
 		}
 		const doc = {
 			id: uuidv4(),
@@ -350,26 +393,17 @@ app.post('/api/profiles', requireAuth, async (req, res) => {
 		};
 		const { data, error } = await supabase.from('profiles').insert(doc).select().single();
 		if (error) throw error;
-		res.json({ id: data.id, ...data });
+		res.json(mapProfileRow(data));
 	} catch (err) { console.error(err); res.status(500).json({ error: 'db error' }); }
 });
 
 app.put('/api/profiles/:id', requireAuth, async (req, res) => {
 	try {
-		const { id, _id, ...dataToSet } = req.body;
-		const update = {
-			first_name: dataToSet.firstName, last_name: dataToSet.lastName,
-			dni: dataToSet.dni, photo: dataToSet.photo, email: dataToSet.email,
-			phone: dataToSet.phone, location: dataToSet.location, country: dataToSet.country,
-			department: dataToSet.department, province: dataToSet.province,
-			locality: dataToSet.locality, city: dataToSet.city, address: dataToSet.address,
-			birthday: dataToSet.birthday, lat: dataToSet.lat, lng: dataToSet.lng,
-			stats: dataToSet.stats, author: dataToSet.author,
-			updated_at: new Date().toISOString()
-		};
+		const update = buildProfileUpdate(req.body);
+		update.updated_at = new Date().toISOString();
 		const { data, error } = await supabase.from('profiles').update(update).eq('id', req.params.id).select().single();
 		if (error) throw error;
-		res.json({ id: data.id, ...data });
+		res.json(mapProfileRow(data));
 	} catch (err) { console.error(err); res.status(500).json({ error: 'db error' }); }
 });
 

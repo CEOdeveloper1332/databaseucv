@@ -69,13 +69,16 @@ async function getUserRole(email) {
 const app = express();
 
 // ── CORS ──
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
-	.split(',').map(o => o.trim()).filter(Boolean);
+const DEFAULT_ALLOWED_ORIGINS = ['https://databaseucv.onrender.com'];
+const ALLOWED_ORIGINS = [
+	...DEFAULT_ALLOWED_ORIGINS,
+	...(process.env.ALLOWED_ORIGINS || '').split(',').map(o => o.trim()).filter(Boolean)
+];
 const LOCALHOST_REGEX = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
 app.use(cors({
 	origin: function (origin, callback) {
-		if (!origin) return callback(null, false);
+		if (!origin) return callback(null, true);
 		if (LOCALHOST_REGEX.test(origin)) return callback(null, true);
 		if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
 		console.warn(`[CORS] Origin rechazado: ${origin}`);

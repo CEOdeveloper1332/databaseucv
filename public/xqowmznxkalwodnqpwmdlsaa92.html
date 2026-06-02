@@ -697,10 +697,18 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            const sessionToken = localStorage.getItem('sessionToken');
             const userEmail    = localStorage.getItem('userEmail');
             const userName     = localStorage.getItem('userName');
             const userApproved = localStorage.getItem('userApproved');
             const userRole     = localStorage.getItem('userRole');
+
+            // Verificar que haya token válido y permisos de admin
+            if (!sessionToken) {
+                console.warn('[Admin Panel] No hay token de sesion, redirigiendo...');
+                window.location.href = 'index.html';
+                return;
+            }
 
             if (userRole === 'admin' && userApproved === 'true') {
                 const nameEl   = document.getElementById('sidebarName');
@@ -711,16 +719,17 @@
                 if (emailEl)  emailEl.textContent = userEmail || '';
                 if (avatarEl) avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userName || userEmail)}&background=1d4f1d&color=d4ead0`;
             } else {
+                console.warn('[Admin Panel] Permisos insuficientes, redirigiendo...');
                 window.location.href = 'index.html';
             }
         });
 
         function handleAdminLogout() {
+            localStorage.removeItem('sessionToken');
             localStorage.removeItem('userEmail');
             localStorage.removeItem('userName');
             localStorage.removeItem('userApproved');
             localStorage.removeItem('userRole');
-            localStorage.removeItem('id_token');
             window.location.href = 'index.html';
         }
     </script>

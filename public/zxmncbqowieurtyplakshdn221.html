@@ -1621,6 +1621,11 @@
         let allPublications = [];
         let filteredPublications = [];
 
+        function getAuthHeaders(extra = {}) {
+            const token = localStorage.getItem('sessionToken');
+            return token ? Object.assign({}, extra, { 'Authorization': 'Bearer ' + token }) : extra;
+        }
+
         // INICIALIZACIÓN
         document.addEventListener('DOMContentLoaded', async () => {
             await checkUserStatus();
@@ -1676,7 +1681,7 @@
                 }
 
                 // Obtener status actualizado del servidor
-                const response = await fetch('/status?email=' + encodeURIComponent(userEmail));
+const response = await fetch('/status?email=' + encodeURIComponent(userEmail), { headers: getAuthHeaders() });
                 if (!response.ok) {
                     updateUserStatus('Error', false);
                     return;
@@ -1722,7 +1727,7 @@
                 const loading = document.getElementById('loadingState');
                 loading.style.display = 'block';
 
-                const response = await fetch('/api/publications-admin');
+                const response = await fetch('/api/publications-admin', { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error('Error cargando publicaciones');
                 
                 allPublications = await response.json();
@@ -2025,6 +2030,7 @@
                     
                     const uploadResponse = await fetch('/api/upload-cover', {
                         method: 'POST',
+                        headers: getAuthHeaders(),
                         body: formData
                     });
 
@@ -2040,7 +2046,7 @@
 
                 const response = await fetch(`/api/publications-admin/${currentEditingId}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({
                         title,
                         subtitle,
@@ -2210,6 +2216,7 @@
                     
                     const uploadResponse = await fetch('/api/upload-cover', {
                         method: 'POST',
+                        headers: getAuthHeaders(),
                         body: formData
                     });
 
@@ -2224,7 +2231,7 @@
                 }
                 const response = await fetch('/api/publications-admin', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({
                         title,
                         subtitle,
@@ -2257,7 +2264,7 @@
             try {
                 const response = await fetch(`/api/publications-admin/${pubId}`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ 
                         userEmail: currentUser, 
                         userRole: currentUserRole 

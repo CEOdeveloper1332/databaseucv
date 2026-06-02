@@ -103,6 +103,8 @@ async function handleCredentialResponse(response) {
         localStorage.setItem('sessionToken', id_token);
         localStorage.setItem('userRole', window.__userRole);
         localStorage.setItem('userEmail', window.__userEmail);
+        localStorage.setItem('userName', data.name || '');
+        localStorage.setItem('userApproved', data.approved ? 'true' : 'false');
 
         // Aplicar visibilidad de elementos admin
         applyRoleVisibility(data.role, data.approved);
@@ -198,6 +200,8 @@ function handleLogout() {
     localStorage.removeItem('sessionToken');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userApproved');
     location.reload();
 }
 

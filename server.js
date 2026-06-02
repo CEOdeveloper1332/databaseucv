@@ -362,11 +362,25 @@ function buildProfileUpdate(body = {}) {
 	return update;
 }
 
+async function fetchAllRows(table, buildQuery, pageSize = 1000) {
+	const rows = [];
+	for (let from = 0; ; from += pageSize) {
+		const to = from + pageSize - 1;
+		const query = buildQuery(supabase.from(table)).range(from, to);
+		const { data, error } = await query;
+		if (error) throw error;
+		rows.push(...(data || []));
+		if (!data || data.length < pageSize) break;
+	}
+	return rows;
+}
+
 // ── /api/profiles ──
 app.get('/api/profiles', requireAuth, async (req, res) => {
 	try {
-		const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-		if (error) throw error;
+		const data = await fetchAllRows('profiles', query =>
+			query.select('*').order('created_at', { ascending: false })
+		);
 		res.json(data.map(mapProfileRow));
 	} catch (err) { console.error(err); res.status(500).json({ error: 'db error' }); }
 });

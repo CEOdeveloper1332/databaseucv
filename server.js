@@ -146,11 +146,12 @@ app.use((req, res, next) => {
 	res.setHeader('Content-Security-Policy', [
 		"default-src 'self'",
 		"img-src * data: blob:",
-		"script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com",
-		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
+		"script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://unpkg.com",
+		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://unpkg.com",
 		"font-src 'self' https://fonts.gstatic.com",
-		"connect-src 'self' https://nominatim.openstreetmap.org https://overpass.openstreetmap.fr https://accounts.google.com https://szurscobpuayftnhusif.supabase.co",
+		"connect-src 'self' https://nominatim.openstreetmap.org https://overpass.openstreetmap.fr https://demotiles.maplibre.org https://server.arcgisonline.com https://accounts.google.com https://szurscobpuayftnhusif.supabase.co",
 		"frame-src https://accounts.google.com",
+		"worker-src 'self' blob:",
 		"object-src 'none'",
 		"base-uri 'self'"
 	].join('; '));
@@ -284,6 +285,7 @@ const frontendAliases = {
 	'/investigation.html': 'qowieurznmxclakshdpp774.html',
 	'/locations.html': 'zzxmncbqowieurytplaks991.html',
 	'/neural.html': 'plakdjqowieuryxmncbvv821.html',
+	'/padron.html': 'padron-dni.html',
 	'/pdf.html': 'mqowieuryznxcbalkspp441.html'
 };
 
@@ -907,7 +909,7 @@ app.get('/api/lookup-dni/:dni', requireAuth, async (req, res) => {
 		const { data, error } = await supabase
 			.from('padron_sunat')
 			.select('ruc, nombre')
-			.like('ruc', `10${dni}%`)
+			.like('ruc', `10${dni}_`)
 			.limit(1)
 			.single();
 

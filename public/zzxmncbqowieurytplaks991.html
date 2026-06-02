@@ -462,7 +462,9 @@ document.getElementById('sidebarSearch').addEventListener('input', function() {
 /* ── LOAD PROFILES ── */
 async function loadProfiles() {
   try {
-    const r = await fetch(`${API}/api/profiles`);
+    const token = localStorage.getItem('sessionToken');
+    const headers = token ? { Authorization: 'Bearer ' + token } : {};
+    const r = await fetch(`${API}/api/profiles`, { headers });
     if (!r.ok) throw new Error('Error del servidor');
     allProfiles = await r.json();
   } catch(e) {

@@ -58,6 +58,12 @@ body{margin:0;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;background:v
 .lbl{color:var(--gris4);font-weight:700}
 .val{color:var(--texto);min-width:0;overflow-wrap:anywhere}
 .muted{color:var(--gris4);font-size:12px}
+.db-loader{position:fixed;right:18px;bottom:18px;z-index:20;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--borde);border-radius:8px;background:#fff;box-shadow:0 8px 24px rgba(15,48,16,.14);color:var(--gris5);font-size:12.5px;font-weight:700;transition:opacity .22s,transform .22s}
+.db-loader.hidden{opacity:0;pointer-events:none;transform:translateY(8px)}
+.loader-circle{width:20px;height:20px;border:3px solid var(--v7);border-top-color:var(--v2);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+.db-loader.ready .loader-circle{animation:none;border-color:var(--v3);position:relative}
+.db-loader.ready .loader-circle::after{content:"";position:absolute;left:4px;top:2px;width:6px;height:10px;border:solid var(--v3);border-width:0 2px 2px 0;transform:rotate(45deg)}
+@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:860px){.shell{grid-template-columns:1fr}.nav{display:none}.source-grid{grid-template-columns:1fr}.topbar{flex-direction:column}.header-inner{align-items:flex-start;flex-direction:column}.person-head{flex-direction:column}}
 </style>
 </head>
@@ -125,6 +131,11 @@ body{margin:0;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;background:v
   </section>
 </main>
 
+<div class="db-loader" id="dbLoader" role="status" aria-live="polite">
+  <span class="loader-circle" aria-hidden="true"></span>
+  <span id="dbLoaderText">Cargando bases...</span>
+</div>
+
 <script>
 (function(){
   const form = document.getElementById('searchForm');
@@ -138,7 +149,10 @@ body{margin:0;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;background:v
   const queryLabel = document.getElementById('queryLabel');
   const hintText = document.getElementById('hintText');
   const userEmail = document.getElementById('userEmail');
+  const dbLoader = document.getElementById('dbLoader');
+  const dbLoaderText = document.getElementById('dbLoaderText');
   let mode = 'nombre';
+  let hideLoaderTimer = null;
 
   userEmail.textContent = window.getUserEmail ? (window.getUserEmail() || '') : '';
 
@@ -170,9 +184,23 @@ body{margin:0;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;background:v
     input.focus();
   }
 
+  function showDbLoader(text) {
+    clearTimeout(hideLoaderTimer);
+    dbLoader.classList.remove('hidden', 'ready');
+    dbLoaderText.textContent = text || 'Cargando bases...';
+  }
+
+  function markDbReady(text) {
+    dbLoader.classList.add('ready');
+    dbLoaderText.textContent = text || 'Listo';
+    clearTimeout(hideLoaderTimer);
+    hideLoaderTimer = setTimeout(() => dbLoader.classList.add('hidden'), 900);
+  }
+
   function setLoading(isLoading) {
     submitBtn.disabled = isLoading;
     submitBtn.textContent = isLoading ? 'Buscando...' : 'Buscar';
+    if (isLoading) showDbLoader('Consultando en tiempo real...');
   }
 
   function row(label, value) {
@@ -249,6 +277,23 @@ body{margin:0;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;background:v
     return payload.data || [];
   }
 
+  async function loadDatabaseStatus() {
+    showDbLoader('Cargando bases...');
+    try {
+      const response = await authFetch('/api/persona-integral/status');
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || payload.detail || 'No se pudo verificar la base integrada');
+      const missing = (payload.sources || []).filter(source => !source.ready).map(source => source.name);
+      if (missing.length) {
+        statusText.textContent = 'Atencion: faltan fuentes por conectar: ' + missing.join(', ');
+      }
+      markDbReady('Listo');
+    } catch (error) {
+      statusText.textContent = error.message;
+      markDbReady('Listo');
+    }
+  }
+
   modeName.addEventListener('click', () => setMode('nombre'));
   modeDni.addEventListener('click', () => setMode('dni'));
   document.getElementById('clearBtn').addEventListener('click', () => {
@@ -271,13 +316,16 @@ body{margin:0;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;background:v
       const rows = await search(q);
       renderCards(rows);
       resultSummary.textContent = rows.length === 1 ? '1 ficha integrada encontrada.' : rows.length + ' fichas integradas encontradas.';
+      markDbReady('Listo');
     } catch (error) {
       results.innerHTML = '<div class="empty">' + esc(error.message) + '</div>';
       resultSummary.textContent = 'Error en la consulta.';
+      markDbReady('Listo');
     } finally {
       setLoading(false);
     }
   });
+  loadDatabaseStatus();
 })();
 </script>
 </body>

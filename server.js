@@ -30,7 +30,7 @@ const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
 const SUPABASE_URL_1 = process.env.SUPABASE_URL_1 || process.env.NEXT_PUBLIC_SUPABASE_URL_1 || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY_1 = process.env.SUPABASE_ANON_KEY_1 || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY_1 || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const SUPABASE_KEY_1 = process.env.SUPABASE_ANON_KEY_1 || process.env.SUPABASE_JWT_1 || process.env.SUPABASE_PUBLISHABLE_KEY_1 || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY_1 || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const SUPABASE_BUCKET = 'images';
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
@@ -1170,6 +1170,28 @@ app.get('/api/persona-integral', requireAuth, async (req, res) => {
 	} catch (err) {
 		console.error('persona-integral error:', err);
 		res.status(500).json({ error: 'Error consultando bases integradas', detail: err.message || 'Supabase error' });
+	}
+});
+
+app.get('/api/persona-integral/status', requireAuth, async (req, res) => {
+	try {
+		const checks = await Promise.all([
+			supabase.from('padron_sunat').select('ruc', { count: 'exact', head: true }).limit(1),
+			supabase.from('profiles').select('id', { count: 'exact', head: true }).limit(1),
+			supabase1 ? supabase1.from('sunedu_grados').select('id', { count: 'exact', head: true }).limit(1) : Promise.resolve({ error: { message: 'SUPABASE_URL_1/SUPABASE_ANON_KEY_1 no configurado' } }),
+			supabase1 ? supabase1.from('shalom_resultados').select('id', { count: 'exact', head: true }).limit(1) : Promise.resolve({ error: { message: 'SUPABASE_URL_1/SUPABASE_ANON_KEY_1 no configurado' } })
+		]);
+		const names = ['padron_sunat', 'profiles', 'sunedu_grados', 'shalom_resultados'];
+		const sources = checks.map((check, index) => ({
+			name: names[index],
+			ready: !check.error,
+			count: typeof check.count === 'number' ? check.count : null,
+			error: check.error ? check.error.message : null
+		}));
+		res.json({ success: true, ready: sources.every(source => source.ready), sources });
+	} catch (err) {
+		console.error('persona-integral status error:', err);
+		res.status(500).json({ error: 'Error verificando bases integradas', detail: err.message || 'Supabase error' });
 	}
 });
 

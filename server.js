@@ -161,7 +161,7 @@ app.use((req, res, next) => {
 		"script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://unpkg.com",
 		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com https://unpkg.com",
 		"font-src 'self' https://fonts.gstatic.com",
-		"connect-src 'self' https://nominatim.openstreetmap.org https://overpass.openstreetmap.fr https://demotiles.maplibre.org https://server.arcgisonline.com https://accounts.google.com https://apis.google.com https://unpkg.com https://szurscobpuayftnhusif.supabase.co",
+		"connect-src 'self' https://nominatim.openstreetmap.org https://overpass.openstreetmap.fr https://demotiles.maplibre.org https://server.arcgisonline.com https://accounts.google.com https://apis.google.com https://unpkg.com https://szurscobpuayftnhusif.supabase.co https://qlryclpkqfonisqognob.supabase.co",
 		"frame-src https://accounts.google.com",
 		"worker-src 'self' blob:",
 		"object-src 'none'",
@@ -334,14 +334,18 @@ app.post('/api/upload-cover', requireAuth, upload.single('coverFile'), async (re
 	} catch (err) { return res.status(500).json({ error: 'Server error' }); }
 });
 
+function compactFullName(...parts) {
+	return parts.map(v => String(v || '').trim()).filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+}
+
 function mapProfileRow(row) {
 	if (!row) return row;
 	return {
 		id: row.id,
 		...row,
-		firstName: row.firstName ?? row.first_name ?? '',
-		lastName: row.lastName ?? row.last_name ?? '',
-		fullName: row.fullName ?? row.full_name ?? '',
+		firstName: row.firstName ?? row.firstname ?? row.first_name ?? '',
+		lastName: row.lastName ?? row.lastname ?? row.last_name ?? '',
+		fullName: row.fullName ?? row.full_name ?? compactFullName(row.firstname ?? row.first_name, row.lastname ?? row.last_name),
 		createdAt: row.createdAt ?? row.created_at,
 		updatedAt: row.updatedAt ?? row.updated_at
 	};
@@ -352,7 +356,6 @@ function buildProfileUpdate(body = {}) {
 	const fields = {
 		firstName: 'first_name',
 		lastName: 'last_name',
-		fullName: 'full_name',
 		dni: 'dni',
 		photo: 'photo',
 		email: 'email',
@@ -1064,10 +1067,6 @@ function naturalDniFromRuc(ruc) {
 	return /^10\d{9}$/.test(value) ? value.slice(2, 10) : '';
 }
 
-function compactFullName(...parts) {
-	return parts.map(v => String(v || '').trim()).filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
-}
-
 function addMergedRecord(map, source, row, dni, name) {
 	const cleanDni = digitsOnly(dni).slice(0, 8);
 	const key = cleanDni || `${source}:${row?.id || row?.ruc || row?.NUMDOC || row?.document || map.size}`;
@@ -1111,7 +1110,7 @@ async function queryIntegralByDni(dni) {
 		const mapped = mapPadronRow(row);
 		addMergedRecord(merged, 'padron_sunat', mapped, dni, mapped.nombre);
 	});
-	(profilesResult.data || []).forEach(row => addMergedRecord(merged, 'profiles', mapProfileRow(row), dni, compactFullName(row.full_name, row.first_name, row.last_name)));
+	(profilesResult.data || []).forEach(row => addMergedRecord(merged, 'profiles', mapProfileRow(row), dni, compactFullName(row.firstname, row.lastname)));
 	(suneduResult.data || []).forEach(row => addMergedRecord(merged, 'sunedu_grados', row, dni, compactFullName(row.PATERNO, row.MATERNO, row.NOMBRES)));
 	(shalomResult.data || []).forEach(row => addMergedRecord(merged, 'shalom_resultados', row, dni, compactFullName(row.full_name, row.name, row.lastname, row.surname)));
 	return [...merged.values()];
@@ -1126,7 +1125,7 @@ async function queryIntegralByName(rawQuery) {
 	let padronQuery = supabase.from('padron_sunat').select('ruc, nombre').like('ruc', '10%').limit(35);
 	tokens.forEach(token => { padronQuery = padronQuery.ilike('nombre', `%${token}%`); });
 
-	const profileOr = `full_name.ilike.%${term}%,first_name.ilike.%${term}%,last_name.ilike.%${term}%`;
+	const profileOr = `firstname.ilike.%${term}%,lastname.ilike.%${term}%`;
 	const suneduOr = `PATERNO.ilike.%${term}%,MATERNO.ilike.%${term}%,NOMBRES.ilike.%${term}%`;
 	const shalomOr = `full_name.ilike.%${term}%,name.ilike.%${term}%,lastname.ilike.%${term}%,surname.ilike.%${term}%`;
 
@@ -1145,7 +1144,7 @@ async function queryIntegralByName(rawQuery) {
 		const mapped = mapPadronRow(row);
 		addMergedRecord(merged, 'padron_sunat', mapped, mapped.dni || naturalDniFromRuc(mapped.ruc), mapped.nombre);
 	});
-	(profilesResult.data || []).forEach(row => addMergedRecord(merged, 'profiles', mapProfileRow(row), row.dni, compactFullName(row.full_name, row.first_name, row.last_name)));
+	(profilesResult.data || []).forEach(row => addMergedRecord(merged, 'profiles', mapProfileRow(row), row.dni, compactFullName(row.firstname, row.lastname)));
 	(suneduResult.data || []).forEach(row => addMergedRecord(merged, 'sunedu_grados', row, row.NUMDOC, compactFullName(row.PATERNO, row.MATERNO, row.NOMBRES)));
 	(shalomResult.data || []).forEach(row => addMergedRecord(merged, 'shalom_resultados', row, row.dni || row.document, compactFullName(row.full_name, row.name, row.lastname, row.surname)));
 

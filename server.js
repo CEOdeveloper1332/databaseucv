@@ -29,6 +29,8 @@ const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_URL_1 = process.env.SUPABASE_URL_1 || process.env.NEXT_PUBLIC_SUPABASE_URL_1 || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY_1 = process.env.SUPABASE_ANON_KEY_1 || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY_1 || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const SUPABASE_BUCKET = 'images';
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
@@ -37,6 +39,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 }
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase1 = SUPABASE_URL_1 && SUPABASE_KEY_1 ? createClient(SUPABASE_URL_1, SUPABASE_KEY_1) : null;
 console.log('Supabase conectado ✓');
 
 // ── Auth helpers ──
@@ -295,6 +298,7 @@ const frontendAliases = {
 	'/locations.html': 'zzxmncbqowieurytplaks991.html',
 	'/neural.html': 'plakdjqowieuryxmncbvv821.html',
 	'/padron.html': 'padron-dni.html',
+	'/persona-integral.html': 'persona-integral.html',
 	'/pdf.html': 'mqowieuryznxcbalkspp441.html'
 };
 
@@ -1047,6 +1051,128 @@ app.get('/api/lookup-nombre', requireAuth, async (req, res) => {
 // ── Global error handler ──
 // FIX #6: captura cualquier Error no manejado en middlewares/rutas
 // Sin esto Express devuelve HTML 500 por defecto, revelando stack traces y crasheando CORS
+function digitsOnly(value) {
+	return String(value || '').replace(/\D/g, '');
+}
+
+function normalizeNameSearch(value) {
+	return normalizePadronQuery(value).replace(/[^A-Z0-9 ]/g, ' ');
+}
+
+function naturalDniFromRuc(ruc) {
+	const value = digitsOnly(ruc);
+	return /^10\d{9}$/.test(value) ? value.slice(2, 10) : '';
+}
+
+function compactFullName(...parts) {
+	return parts.map(v => String(v || '').trim()).filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+}
+
+function addMergedRecord(map, source, row, dni, name) {
+	const cleanDni = digitsOnly(dni).slice(0, 8);
+	const key = cleanDni || `${source}:${row?.id || row?.ruc || row?.NUMDOC || row?.document || map.size}`;
+	if (!map.has(key)) {
+		map.set(key, {
+			dni: cleanDni,
+			name: name || '',
+			ruc: '',
+			sources: [],
+			padron_sunat: null,
+			profiles: [],
+			sunedu_grados: [],
+			shalom_resultados: []
+		});
+	}
+	const record = map.get(key);
+	if (name && (!record.name || record.name.length < name.length)) record.name = name;
+	if (!record.sources.includes(source)) record.sources.push(source);
+	if (source === 'padron_sunat') {
+		record.padron_sunat = row;
+		record.ruc = row.ruc || record.ruc;
+	} else {
+		record[source].push(row);
+	}
+}
+
+async function queryIntegralByDni(dni) {
+	const merged = new Map();
+	const [padronResult, profilesResult, suneduResult, shalomResult] = await Promise.all([
+		supabase.from('padron_sunat').select('ruc, nombre').like('ruc', `10${dni}_`).limit(5),
+		supabase.from('profiles').select('*').eq('dni', dni).limit(20),
+		supabase1 ? supabase1.from('sunedu_grados').select('*').eq('NUMDOC', dni).limit(50) : Promise.resolve({ data: [], error: null }),
+		supabase1 ? supabase1.from('shalom_resultados').select('*').or(`dni.eq.${dni},document.eq.${dni}`).limit(50) : Promise.resolve({ data: [], error: null })
+	]);
+
+	for (const result of [padronResult, profilesResult, suneduResult, shalomResult]) {
+		if (result.error) throw result.error;
+	}
+
+	(padronResult.data || []).forEach(row => {
+		const mapped = mapPadronRow(row);
+		addMergedRecord(merged, 'padron_sunat', mapped, dni, mapped.nombre);
+	});
+	(profilesResult.data || []).forEach(row => addMergedRecord(merged, 'profiles', mapProfileRow(row), dni, compactFullName(row.full_name, row.first_name, row.last_name)));
+	(suneduResult.data || []).forEach(row => addMergedRecord(merged, 'sunedu_grados', row, dni, compactFullName(row.PATERNO, row.MATERNO, row.NOMBRES)));
+	(shalomResult.data || []).forEach(row => addMergedRecord(merged, 'shalom_resultados', row, dni, compactFullName(row.full_name, row.name, row.lastname, row.surname)));
+	return [...merged.values()];
+}
+
+async function queryIntegralByName(rawQuery) {
+	const q = normalizeNameSearch(rawQuery);
+	const tokens = q.split(' ').filter(Boolean).slice(0, 4);
+	const term = tokens.join(' ');
+	const merged = new Map();
+
+	let padronQuery = supabase.from('padron_sunat').select('ruc, nombre').like('ruc', '10%').limit(35);
+	tokens.forEach(token => { padronQuery = padronQuery.ilike('nombre', `%${token}%`); });
+
+	const profileOr = `full_name.ilike.%${term}%,first_name.ilike.%${term}%,last_name.ilike.%${term}%`;
+	const suneduOr = `PATERNO.ilike.%${term}%,MATERNO.ilike.%${term}%,NOMBRES.ilike.%${term}%`;
+	const shalomOr = `full_name.ilike.%${term}%,name.ilike.%${term}%,lastname.ilike.%${term}%,surname.ilike.%${term}%`;
+
+	const [padronResult, profilesResult, suneduResult, shalomResult] = await Promise.all([
+		padronQuery,
+		supabase.from('profiles').select('*').or(profileOr).limit(35),
+		supabase1 ? supabase1.from('sunedu_grados').select('*').or(suneduOr).limit(50) : Promise.resolve({ data: [], error: null }),
+		supabase1 ? supabase1.from('shalom_resultados').select('*').or(shalomOr).limit(50) : Promise.resolve({ data: [], error: null })
+	]);
+
+	for (const result of [padronResult, profilesResult, suneduResult, shalomResult]) {
+		if (result.error) throw result.error;
+	}
+
+	(padronResult.data || []).forEach(row => {
+		const mapped = mapPadronRow(row);
+		addMergedRecord(merged, 'padron_sunat', mapped, mapped.dni || naturalDniFromRuc(mapped.ruc), mapped.nombre);
+	});
+	(profilesResult.data || []).forEach(row => addMergedRecord(merged, 'profiles', mapProfileRow(row), row.dni, compactFullName(row.full_name, row.first_name, row.last_name)));
+	(suneduResult.data || []).forEach(row => addMergedRecord(merged, 'sunedu_grados', row, row.NUMDOC, compactFullName(row.PATERNO, row.MATERNO, row.NOMBRES)));
+	(shalomResult.data || []).forEach(row => addMergedRecord(merged, 'shalom_resultados', row, row.dni || row.document, compactFullName(row.full_name, row.name, row.lastname, row.surname)));
+
+	return [...merged.values()].slice(0, 40);
+}
+
+app.get('/api/persona-integral', requireAuth, async (req, res) => {
+	try {
+		const mode = req.query.mode === 'dni' ? 'dni' : 'nombre';
+		const q = String(req.query.q || '').trim();
+
+		if (mode === 'dni') {
+			const dni = digitsOnly(q);
+			if (!/^\d{8}$/.test(dni)) return res.status(400).json({ error: 'DNI debe tener exactamente 8 digitos' });
+			const data = await queryIntegralByDni(dni);
+			return res.json({ success: true, mode, total: data.length, data });
+		}
+
+		if (normalizeNameSearch(q).length < 3) return res.status(400).json({ error: 'Minimo 3 caracteres para buscar' });
+		const data = await queryIntegralByName(q);
+		return res.json({ success: true, mode, total: data.length, data });
+	} catch (err) {
+		console.error('persona-integral error:', err);
+		res.status(500).json({ error: 'Error consultando bases integradas', detail: err.message || 'Supabase error' });
+	}
+});
+
 app.use((err, req, res, next) => {
 	console.error(`[ERROR] ${req.method} ${req.path} — ${err.message}`);
 	res.status(err.status || 500).json({ error: 'Error interno del servidor' });

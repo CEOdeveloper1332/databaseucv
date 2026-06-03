@@ -1093,18 +1093,35 @@ function addMergedRecord(map, source, row, dni, name) {
 	}
 }
 
+async function safeIntegralQuery(source, query) {
+	try {
+		const result = await query;
+		if (result.error) {
+			console.error(`persona-integral ${source} error:`, result.error);
+			return { source, data: [], error: result.error.message || 'Supabase error' };
+		}
+		return { source, data: result.data || [], error: null };
+	} catch (err) {
+		console.error(`persona-integral ${source} error:`, err);
+		return { source, data: [], error: err.message || 'Supabase error' };
+	}
+}
+
+function sourceWarnings(results) {
+	return results.filter(result => result.error).map(result => ({
+		source: result.source,
+		error: result.error
+	}));
+}
+
 async function queryIntegralByDni(dni) {
 	const merged = new Map();
 	const [padronResult, profilesResult, suneduResult, shalomResult] = await Promise.all([
-		supabase.from('padron_sunat').select('ruc, nombre').like('ruc', `10${dni}_`).limit(5),
-		supabase.from('profiles').select('*').eq('dni', dni).limit(20),
-		supabase1 ? supabase1.from('sunedu_grados').select('*').eq('NUMDOC', dni).limit(50) : Promise.resolve({ data: [], error: null }),
-		supabase1 ? supabase1.from('shalom_resultados').select('*').or(`dni.eq.${dni},document.eq.${dni}`).limit(50) : Promise.resolve({ data: [], error: null })
+		safeIntegralQuery('padron_sunat', supabase.from('padron_sunat').select('ruc, nombre').like('ruc', `10${dni}_`).limit(5)),
+		safeIntegralQuery('profiles', supabase.from('profiles').select('*').eq('dni', dni).limit(20)),
+		safeIntegralQuery('sunedu_grados', supabase1 ? supabase1.from('sunedu_grados').select('*').eq('NUMDOC', dni).limit(50) : Promise.resolve({ data: [], error: null })),
+		safeIntegralQuery('shalom_resultados', supabase1 ? supabase1.from('shalom_resultados').select('*').or(`dni.eq.${dni},document.eq.${dni}`).limit(50) : Promise.resolve({ data: [], error: null }))
 	]);
-
-	for (const result of [padronResult, profilesResult, suneduResult, shalomResult]) {
-		if (result.error) throw result.error;
-	}
 
 	(padronResult.data || []).forEach(row => {
 		const mapped = mapPadronRow(row);
@@ -1113,7 +1130,7 @@ async function queryIntegralByDni(dni) {
 	(profilesResult.data || []).forEach(row => addMergedRecord(merged, 'profiles', mapProfileRow(row), dni, compactFullName(row.firstname, row.lastname)));
 	(suneduResult.data || []).forEach(row => addMergedRecord(merged, 'sunedu_grados', row, dni, compactFullName(row.PATERNO, row.MATERNO, row.NOMBRES)));
 	(shalomResult.data || []).forEach(row => addMergedRecord(merged, 'shalom_resultados', row, dni, compactFullName(row.full_name, row.name, row.lastname, row.surname)));
-	return [...merged.values()];
+	return { data: [...merged.values()], warnings: sourceWarnings([padronResult, profilesResult, suneduResult, shalomResult]) };
 }
 
 async function queryIntegralByName(rawQuery) {
@@ -1125,20 +1142,16 @@ async function queryIntegralByName(rawQuery) {
 	let padronQuery = supabase.from('padron_sunat').select('ruc, nombre').like('ruc', '10%').limit(35);
 	tokens.forEach(token => { padronQuery = padronQuery.ilike('nombre', `%${token}%`); });
 
-	const profileOr = `firstname.ilike.%${term}%,lastname.ilike.%${term}%`;
-	const suneduOr = `PATERNO.ilike.%${term}%,MATERNO.ilike.%${term}%,NOMBRES.ilike.%${term}%`;
-	const shalomOr = `full_name.ilike.%${term}%,name.ilike.%${term}%,lastname.ilike.%${term}%,surname.ilike.%${term}%`;
+	const profileOr = tokens.flatMap(token => [`firstname.ilike.%${token}%`, `lastname.ilike.%${token}%`]).join(',');
+	const suneduOr = tokens.flatMap(token => [`PATERNO.ilike.%${token}%`, `MATERNO.ilike.%${token}%`, `NOMBRES.ilike.%${token}%`]).join(',');
+	const shalomOr = tokens.flatMap(token => [`full_name.ilike.%${token}%`, `name.ilike.%${token}%`, `lastname.ilike.%${token}%`, `surname.ilike.%${token}%`]).join(',');
 
 	const [padronResult, profilesResult, suneduResult, shalomResult] = await Promise.all([
-		padronQuery,
-		supabase.from('profiles').select('*').or(profileOr).limit(35),
-		supabase1 ? supabase1.from('sunedu_grados').select('*').or(suneduOr).limit(50) : Promise.resolve({ data: [], error: null }),
-		supabase1 ? supabase1.from('shalom_resultados').select('*').or(shalomOr).limit(50) : Promise.resolve({ data: [], error: null })
+		safeIntegralQuery('padron_sunat', padronQuery),
+		safeIntegralQuery('profiles', supabase.from('profiles').select('*').or(profileOr).limit(35)),
+		safeIntegralQuery('sunedu_grados', supabase1 ? supabase1.from('sunedu_grados').select('*').or(suneduOr).limit(50) : Promise.resolve({ data: [], error: null })),
+		safeIntegralQuery('shalom_resultados', supabase1 ? supabase1.from('shalom_resultados').select('*').or(shalomOr).limit(50) : Promise.resolve({ data: [], error: null }))
 	]);
-
-	for (const result of [padronResult, profilesResult, suneduResult, shalomResult]) {
-		if (result.error) throw result.error;
-	}
 
 	(padronResult.data || []).forEach(row => {
 		const mapped = mapPadronRow(row);
@@ -1148,7 +1161,7 @@ async function queryIntegralByName(rawQuery) {
 	(suneduResult.data || []).forEach(row => addMergedRecord(merged, 'sunedu_grados', row, row.NUMDOC, compactFullName(row.PATERNO, row.MATERNO, row.NOMBRES)));
 	(shalomResult.data || []).forEach(row => addMergedRecord(merged, 'shalom_resultados', row, row.dni || row.document, compactFullName(row.full_name, row.name, row.lastname, row.surname)));
 
-	return [...merged.values()].slice(0, 40);
+	return { data: [...merged.values()].slice(0, 40), warnings: sourceWarnings([padronResult, profilesResult, suneduResult, shalomResult]) };
 }
 
 app.get('/api/persona-integral', requireAuth, async (req, res) => {
@@ -1159,13 +1172,13 @@ app.get('/api/persona-integral', requireAuth, async (req, res) => {
 		if (mode === 'dni') {
 			const dni = digitsOnly(q);
 			if (!/^\d{8}$/.test(dni)) return res.status(400).json({ error: 'DNI debe tener exactamente 8 digitos' });
-			const data = await queryIntegralByDni(dni);
-			return res.json({ success: true, mode, total: data.length, data });
+			const result = await queryIntegralByDni(dni);
+			return res.json({ success: true, mode, total: result.data.length, data: result.data, warnings: result.warnings });
 		}
 
 		if (normalizeNameSearch(q).length < 3) return res.status(400).json({ error: 'Minimo 3 caracteres para buscar' });
-		const data = await queryIntegralByName(q);
-		return res.json({ success: true, mode, total: data.length, data });
+		const result = await queryIntegralByName(q);
+		return res.json({ success: true, mode, total: result.data.length, data: result.data, warnings: result.warnings });
 	} catch (err) {
 		console.error('persona-integral error:', err);
 		res.status(500).json({ error: 'Error consultando bases integradas', detail: err.message || 'Supabase error' });
